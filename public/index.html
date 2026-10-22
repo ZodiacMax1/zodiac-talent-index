@@ -347,6 +347,7 @@
     </div>
     <div class="toggle-stack">
       <button class="btn ghost" id="saved-decks-btn">Saved Decks <span class="count-pill" id="saved-decks-count">0</span></button>
+      <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
       <button class="btn ghost" id="add-talent-btn" style="display:none;">+ Add Talent</button>
       <button class="btn ghost" id="unlock-edit-btn" style="display:none;">Unlock Editing</button>
       <div class="header-total" id="header-total"></div>
@@ -1442,6 +1443,7 @@ document.getElementById('modal-back').addEventListener('mousedown', e => { if(e.
 
 function applyRole(){
   document.getElementById('add-talent-btn').style.display = canEdit() ? '' : 'none';
+  document.getElementById('import-btn').style.display = canEdit() ? '' : 'none';
   document.getElementById('unlock-edit-btn').style.display = (ROLE === 'view') ? '' : 'none';
 }
 
@@ -1542,6 +1544,192 @@ function openTalentForm(r){
   });
 }
 document.getElementById('add-talent-btn').addEventListener('click', () => openTalentForm(null));
+
+/* ---------- spreadsheet import ---------- */
+const REGION_MAP = {'united kingdom':'UK','uk':'UK','great britain':'UK','england':'UK','scotland':'UK','wales':'UK',
+  'united arab emirates':'UAE','uae':'UAE','dubai':'UAE','abu dhabi':'UAE',
+  'united states of america':'US','united states':'US','usa':'US','us':'US','america':'US'};
+const NICHE_MAP = {'food & drink':'F&B','food and drink':'F&B','food & beverage':'F&B','food and beverage':'F&B','f&b':'F&B',
+  'fashion & style':'Fashion','fashion and style':'Fashion'};
+const HEADER_ALIASES = {
+  name:['name','creator','talent','talent name'],
+  exclusivity:['exclusivity','exclusive'],
+  region:['region','location','location by country','country'],
+  gender:['gender'],
+  niche:['niche','niches','category','categories'],
+  instagram:['instagram','instagram url','instagram link','ig link','ig url'],
+  ig_followers:['instagram followers','ig followers','ig following','instagram following'],
+  tiktok:['tiktok','tiktok url','tiktok link','tt link','tt url'],
+  tt_followers:['tiktok followers','tt followers','tt following','tiktok following'],
+  youtube:['youtube','youtube url','youtube link','yt link','yt url'],
+  yt_followers:['youtube followers','yt followers','yt following','youtube following'],
+  rate:['rate','typical rate','rate card'],
+  photo:['photo','photo url','image','image url'],
+  public_bio:['bio','public bio']
+};
+function parseFollowers(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(typeof v === 'number') return Number.isFinite(v) && v >= 0 ? Math.round(v) : NaN;
+  const t = String(v).trim().toLowerCase().replace(/,/g,'').replace(/\s/g,'');
+  if(!t) return null;
+  const m = t.match(/^(\d+(?:\.\d+)?)([km]?)$/);
+  if(!m) return NaN;
+  return Math.round(parseFloat(m[1]) * (m[2]==='k' ? 1e3 : m[2]==='m' ? 1e6 : 1));
+}
+function normNicheList(str, knownLower){
+  return String(str||'').split(/[,;/]/).map(x => x.trim()).filter(Boolean).map(x => {
+    const k = x.toLowerCase();
+    return NICHE_MAP[k] || knownLower[k] || x;
+  }).filter((x,i,a) => a.indexOf(x) === i).join(', ');
+}
+function handleOf(url){
+  if(!url) return '';
+  const m = String(url).toLowerCase().match(/(?:instagram\.com|tiktok\.com|youtube\.com)\/(@?[a-z0-9._-]+)/);
+  return m ? m[1].replace(/^@/,'') : '';
+}
+const normName = n => String(n||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+
+function buildImportPlan(sheetRows){
+  const knownLower = {}; getNicheSet().forEach(n => knownLower[n.toLowerCase()] = n);
+  const keys = Object.keys(sheetRows[0] || {});
+  const colFor = {};
+  for(const field in HEADER_ALIASES){
+    colFor[field] = keys.find(k => HEADER_ALIASES[field].includes(k.toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim()));
+  }
+  if(!colFor.name) return {error:'Could not find a Name column. The first row needs headings such as Name, Region, Niche, Instagram URL.'};
+  const byIg = {}, byTt = {}, byName = {};
+  DATA.forEach(r => {
+    const i = handleOf(r.instagram), t = handleOf(r.tiktok);
+    if(i) byIg[i] = r; if(t) byTt[t] = r; byName[normName(r.name)] = r;
+  });
+  const plan = {fresh:[], existing:[], problems:[], skippedBlank:0};
+  const seen = new Set();
+  sheetRows.forEach((raw, idx) => {
+    const get = f => colFor[f] ? raw[colFor[f]] : undefined;
+    const name = String(get('name') ?? '').trim();
+    if(!name && !Object.values(raw).some(v => String(v).trim())) { plan.skippedBlank++; return; }
+    const rowNo = idx + 2;
+    if(!name){ plan.problems.push({rowNo, name:'(no name)', why:'Missing name'}); return; }
+    const rec = {name};
+    const issues = [];
+    const txt = f => { const v = get(f); return (v === undefined || v === null || String(v).trim() === '') ? null : String(v).trim(); };
+    let v;
+    if((v = txt('exclusivity'))){
+      const x = v.toLowerCase();
+      if(x === 'exclusive') rec.exclusivity = 'Exclusive';
+      else if(x === 'non-exclusive' || x === 'non exclusive' || x === 'nonexclusive') rec.exclusivity = 'Non-Exclusive';
+      else issues.push('Exclusivity must be Exclusive or Non-Exclusive');
+    }
+    if((v = txt('region'))) rec.region = REGION_MAP[v.toLowerCase()] || v;
+    if((v = txt('gender'))){
+      const x = v.toLowerCase();
+      if(['f','female','woman'].includes(x)) rec.gender = 'F';
+      else if(['m','male','man'].includes(x)) rec.gender = 'M';
+      else if(['mixed','couple','duo'].includes(x)) rec.gender = 'Mixed';
+      else issues.push('Gender "' + v + '" not recognised');
+    }
+    if((v = txt('niche'))) rec.niche = normNicheList(v, knownLower);
+    ['instagram','tiktok','youtube','rate','photo','public_bio'].forEach(f => { if((v = txt(f))) rec[f] = v; });
+    ['ig_followers','tt_followers','yt_followers'].forEach(f => {
+      const n = parseFollowers(get(f));
+      if(Number.isNaN(n)) issues.push('Could not read ' + f.replace('_followers','').toUpperCase() + ' followers "' + get(f) + '"');
+      else if(n !== null) rec[f] = n;
+    });
+    if(issues.length){ plan.problems.push({rowNo, name, why: issues.join('; ')}); return; }
+
+    const ig = handleOf(rec.instagram), tt = handleOf(rec.tiktok);
+    const dupKey = ig ? 'ig:'+ig : tt ? 'tt:'+tt : 'n:'+normName(name);
+    if(seen.has(dupKey)){ plan.problems.push({rowNo, name, why:'Duplicate of another row in this file'}); return; }
+    seen.add(dupKey);
+    const match = (ig && byIg[ig]) || (tt && byTt[tt]) || byName[normName(name)];
+    if(match) plan.existing.push({rowNo, rec, match});
+    else plan.fresh.push({rowNo, rec});
+  });
+  return plan;
+}
+
+function downloadImportTemplate(){
+  const headers = ['Name','Exclusivity','Region','Gender','Niche','Instagram URL','Instagram Followers','TikTok URL','TikTok Followers','YouTube URL','YouTube Followers','Rate'];
+  const example = ['Jane Creator','Non-Exclusive','UK','Female','Fashion, Beauty','https://www.instagram.com/janecreator/',234000,'https://www.tiktok.com/@janecreator',87000,'',null,''];
+  const notes = [['Zodiac Talent Index – import template'],[],
+    ['One row per talent on the first sheet. Delete the example row before uploading.'],
+    ['Only Name is required. Leave anything unknown blank – do not guess.'],
+    ['Exclusivity: Exclusive or Non-Exclusive (blank = Non-Exclusive for new talent).'],
+    ['Gender: Female, Male or Mixed.'],
+    ['Followers: plain numbers (234000) or shorthand (234K, 1.2M).'],
+    ['Niche: comma separated, e.g. Fashion, Beauty. Region: UK, UAE, US, etc.'],
+    ['Talent already in the database (matched on Instagram/TikTok handle, then name) are skipped unless you tick "Update existing".']];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, example]);
+  ws['!cols'] = headers.map(h => ({wch: Math.max(14, h.length + 2)}));
+  XLSX.utils.book_append_sheet(wb, ws, 'Talent Import');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(notes), 'Read Me');
+  XLSX.writeFile(wb, 'zodiac-talent-import-template.xlsx');
+}
+
+function openImportDialog(){
+  openModal(`<h3>Import Spreadsheet</h3>
+    <p style="font-size:13.5px;color:var(--grey);line-height:1.55;margin:0 0 14px;">Upload an Excel or CSV file with one row per talent. You'll see a preview before anything is saved.</p>
+    <div class="form-actions" style="justify-content:flex-start;margin:0 0 14px;">
+      <button type="button" class="btn ghost" id="imp-template">Download template</button>
+      <label class="btn" style="cursor:pointer;margin:0;">Choose file<input type="file" id="imp-file" accept=".xlsx,.xls,.csv" style="display:none"></label>
+    </div>
+    <div id="imp-body"></div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>`);
+  document.getElementById('form-cancel').onclick = closeModal;
+  document.getElementById('imp-template').onclick = downloadImportTemplate;
+  document.getElementById('imp-file').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const body = document.getElementById('imp-body');
+    try{
+      const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:'', raw:true});
+      if(!rows.length){ body.innerHTML = '<div class="form-error">No rows found in that file.</div>'; return; }
+      const plan = buildImportPlan(rows);
+      if(plan.error){ body.innerHTML = '<div class="form-error">' + escapeHtml(plan.error) + '</div>'; return; }
+      renderImportPreview(plan);
+    }catch(ex){ body.innerHTML = '<div class="form-error">Could not read that file: ' + escapeHtml(ex.message) + '</div>'; }
+  });
+}
+
+function renderImportPreview(plan){
+  const body = document.getElementById('imp-body');
+  const probs = plan.problems.slice(0, 12).map(p => `<li>Row ${p.rowNo} – ${escapeHtml(p.name)}: ${escapeHtml(p.why)}</li>`).join('');
+  body.innerHTML = `
+    <div style="background:var(--cream);border-radius:4px;padding:12px 14px;font-size:13.5px;line-height:1.7;">
+      <strong>${plan.fresh.length}</strong> new talent to add<br>
+      <strong>${plan.existing.length}</strong> already in the database
+      <br><strong>${plan.problems.length}</strong> with problems (these will not be imported)
+    </div>
+    ${plan.problems.length ? `<ul style="font-size:12.5px;color:#9b1c1c;margin:10px 0 0 18px;padding:0;">${probs}${plan.problems.length > 12 ? '<li>…and ' + (plan.problems.length - 12) + ' more</li>' : ''}</ul>` : ''}
+    ${plan.existing.length ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;"><input type="checkbox" id="imp-update" style="margin-top:3px;">
+      <span>Also update the ${plan.existing.length} existing talent with the values in this file (blank cells never overwrite what's already there)</span></label>` : ''}
+    <div class="form-error" id="imp-error"></div>
+    <div class="form-actions"><button type="button" class="btn" id="imp-go" ${plan.fresh.length || plan.existing.length ? '' : 'disabled'}>Import</button></div>`;
+  document.getElementById('imp-go').onclick = async () => {
+    const update = !!(document.getElementById('imp-update') && document.getElementById('imp-update').checked);
+    const send = plan.fresh.map(x => x.rec);
+    if(update) plan.existing.forEach(x => send.push(Object.assign({}, x.rec, {id: x.match.id})));
+    if(!send.length){ document.getElementById('imp-error').textContent = 'Nothing to import — tick "Update existing" to apply changes.'; return; }
+    const btn = document.getElementById('imp-go'); btn.disabled = true;
+    try{
+      let done = 0;
+      for(let i = 0; i < send.length; i += 200){
+        btn.textContent = 'Importing… ' + done + '/' + send.length;
+        await api('/talents/bulk', {method:'POST', body:{rows: send.slice(i, i + 200)}});
+        done += Math.min(200, send.length - i);
+      }
+      closeModal();
+      await loadState();
+      showToast(send.length + ' talent imported');
+    }catch(ex){
+      document.getElementById('imp-error').textContent = ex.message + (send.length > 200 ? ' — some rows may already have been added; re-upload the file to check.' : '');
+      btn.disabled = false; btn.textContent = 'Import';
+    }
+  };
+}
+document.getElementById('import-btn').addEventListener('click', openImportDialog);
 
 /* ---------- unlock editing ---------- */
 document.getElementById('unlock-edit-btn').addEventListener('click', () => {
