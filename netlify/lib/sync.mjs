@@ -266,7 +266,7 @@ export async function syncDeals() {
           { column_id: 'color_mm12gdy9', compare_value: [1, 7, 8], operator: 'any_of' },
           { column_id: 'board_relation_mkxm5h8p', compare_value: [], operator: 'is_not_empty' },
         ],
-      });
+      }, 500);
       const rows = [];
       for (const it of items) {
         const rel = cv(it, 'board_relation_mkxm5h8p');
@@ -282,9 +282,16 @@ export async function syncDeals() {
       try {
         await client.query('BEGIN');
         await client.query('DELETE FROM monday_deals');
-        for (const r of rows) {
+        // One bulk insert per 500 rows (much faster than row-by-row over the network)
+        for (let i = 0; i < rows.length; i += 500) {
+          const chunk = rows.slice(i, i + 500);
+          const col = (n) => chunk.map((r) => r[n]);
           await client.query(
-            'INSERT INTO monday_deals (item_id, roster_item_id, campaign, brand, value, currency, value_gbp, status, deal_date) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (item_id) DO NOTHING', r);
+            `INSERT INTO monday_deals (item_id, roster_item_id, campaign, brand, value, currency, value_gbp, status, deal_date)
+             SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::text[], $5::numeric[], $6::text[], $7::numeric[], $8::text[], $9::date[])
+             ON CONFLICT (item_id) DO NOTHING`,
+            [col(0), col(1), col(2), col(3), col(4), col(5), col(6), col(7), col(8)]
+          );
         }
         await bump(client);
         await client.query('COMMIT');
