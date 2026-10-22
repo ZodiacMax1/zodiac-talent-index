@@ -254,28 +254,34 @@ export async function syncTalent() {
   });
 }
 
-const DEAL_COLS = ['board_relation_mkxm5h8p', 'deal_account', 'dropdown_mm28tj8', 'deal_value', 'formula_mm1yvjqj', 'color_mm12gdy9', 'date_mkzkzk2e', 'date_mm1yhehr'];
+// The mirror (Company) and formula (GBP) columns make monday ~5x slower, so they are left out;
+// GBP is estimated here instead.
+const DEAL_COLS = ['board_relation_mkxm5h8p', 'dropdown_mm28tj8', 'deal_value', 'color_mm12gdy9', 'date_mkzkzk2e', 'date_mm1yhehr'];
+const GBP_RATE = { GBP: 1, USD: 0.75, AED: 0.2, EUR: 0.86, AUD: 0.49 };
 
 export async function syncDeals() {
   return withLock(7002, async () => {
     try {
-      // Deal In Progress (1), Deal Agreed (7), Deal Completed (8), with a talent linked
-      const items = await fetchItems(DEALS, DEAL_COLS, {
+      // Deal In Progress (1), Deal Agreed (7), Deal Completed (8), with a talent linked.
+      // One query per status, run in parallel, so it finishes much sooner.
+      const perStatus = await Promise.all([1, 7, 8].map((st) => fetchItems(DEALS, DEAL_COLS, {
         operator: 'and',
         rules: [
-          { column_id: 'color_mm12gdy9', compare_value: [1, 7, 8], operator: 'any_of' },
+          { column_id: 'color_mm12gdy9', compare_value: [st], operator: 'any_of' },
           { column_id: 'board_relation_mkxm5h8p', compare_value: [], operator: 'is_not_empty' },
         ],
-      }, 500);
+      }, 500)));
+      const items = perStatus.flat();
       const rows = [];
       for (const it of items) {
         const rel = cv(it, 'board_relation_mkxm5h8p');
         const ids = (rel && rel.linked_item_ids) || [];
-        const brand = (cv(it, 'deal_account') || {}).display_value || null;
+        const brand = null;
         const num = (id) => { const t = (cv(it, id) || {}).text; const n = t === undefined || t === '' ? null : Number(String(t).replace(/,/g, '')); return Number.isFinite(n) ? n : null; };
+        const gbp = (x) => { const v = num('deal_value'); const c = (cv(x, 'dropdown_mm28tj8') || {}).text; return v === null ? null : Math.round(v * (GBP_RATE[c] ?? 1) * 100) / 100; };
         const date = (cv(it, 'date_mkzkzk2e') || {}).text || (cv(it, 'date_mm1yhehr') || {}).text || null;
         for (const rid of ids) {
-          rows.push([it.id + ':' + rid, String(rid), it.name, brand, num('deal_value'), (cv(it, 'dropdown_mm28tj8') || {}).text || null, num('formula_mm1yvjqj'), (cv(it, 'color_mm12gdy9') || {}).text || null, date || null]);
+          rows.push([it.id + ':' + rid, String(rid), it.name, brand, num('deal_value'), (cv(it, 'dropdown_mm28tj8') || {}).text || null, gbp(it), (cv(it, 'color_mm12gdy9') || {}).text || null, date || null]);
         }
       }
       const client = await pool().connect();
