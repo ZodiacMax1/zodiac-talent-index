@@ -102,7 +102,7 @@ export default async (req) => {
           await client.query('BEGIN');
           const ids = [];
           for (const raw of rows) {
-            const t = clean({ exclusivity: 'Non-Exclusive', ...raw });
+            const t = clean(raw.id ? raw : { exclusivity: 'Non-Exclusive', ...raw });
             if (!t.name) continue;
             const id = raw.id || newId('t');
             const cols = Object.keys(t);
