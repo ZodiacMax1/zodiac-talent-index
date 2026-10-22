@@ -347,6 +347,7 @@
     </div>
     <div class="toggle-stack">
       <button class="btn ghost" id="saved-decks-btn">Saved Decks <span class="count-pill" id="saved-decks-count">0</span></button>
+      <button class="btn ghost" id="sync-btn" style="display:none;">monday Sync</button>
       <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
       <button class="btn ghost" id="add-talent-btn" style="display:none;">+ Add Talent</button>
       <button class="btn ghost" id="unlock-edit-btn" style="display:none;">Unlock Editing</button>
@@ -888,6 +889,9 @@ function render(){
       renderShortlist();
     });
   });
+  tbody.querySelectorAll('[data-deals]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openDealsModal(DATA.find(r => r.id === btn.dataset.deals)); });
+  });
   tbody.querySelectorAll('[data-edit]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); openTalentForm(DATA.find(r => r.id === btn.dataset.edit)); });
   });
@@ -945,6 +949,7 @@ function detailHtml(r){
     <div class="detail-col">
       <div class="detail-label">Typical Rate</div>
       <div class="detail-value">${r.rate ? escapeHtml(r.rate) : 'Not on file'}</div>
+      ${r.deal_count > 0 ? `<div style="margin-top:8px;"><button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-deals="${r.id}">Previous deals (${r.deal_count})</button></div>` : ''}
     </div>
     <div class="detail-col">
       <div class="detail-label">Followers</div>
@@ -1444,6 +1449,7 @@ document.getElementById('modal-back').addEventListener('mousedown', e => { if(e.
 function applyRole(){
   document.getElementById('add-talent-btn').style.display = canEdit() ? '' : 'none';
   document.getElementById('import-btn').style.display = canEdit() ? '' : 'none';
+  document.getElementById('sync-btn').style.display = canEdit() ? '' : 'none';
   document.getElementById('unlock-edit-btn').style.display = (ROLE === 'view') ? '' : 'none';
 }
 
@@ -1484,6 +1490,7 @@ function openTalentForm(r){
   const nicheList = [...getNicheSet()].sort();
   const v = x => escapeAttr(x == null ? '' : x);
   openModal(`<h3>${isNew ? 'Add Talent' : 'Edit ' + escapeHtml(r.name)}</h3>
+  ${r.monday_linked ? '<div style="background:var(--burgundy-tint);border-radius:4px;padding:9px 12px;font-size:12.5px;line-height:1.5;margin:0 0 14px;">This talent syncs from monday.com. Anything filled in on monday will overwrite changes made here, so edit those fields in monday.</div>' : ''}
   <form id="talent-form"><div class="form-grid">
     <div class="full"><label>Name</label><input name="name" value="${v(r.name)}" required></div>
     <div><label>Exclusivity</label><select name="exclusivity">
@@ -1730,6 +1737,72 @@ function renderImportPreview(plan){
   };
 }
 document.getElementById('import-btn').addEventListener('click', openImportDialog);
+
+/* ---------- previous deals ---------- */
+const CUR_SYMBOL = {GBP:'£', USD:'$', EUR:'€'};
+function fmtMoney(v, cur){
+  if(v === null || v === undefined) return '—';
+  const n = Math.round(v).toLocaleString('en-GB');
+  return CUR_SYMBOL[cur] ? CUR_SYMBOL[cur] + n : n + (cur ? ' ' + cur : '');
+}
+async function openDealsModal(r){
+  if(!r) return;
+  openModal(`<h3>Previous deals – ${escapeHtml(r.name)}</h3><div id="deals-body" style="font-size:13px;color:var(--grey);">Loading…</div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>`);
+  document.getElementById('form-cancel').onclick = closeModal;
+  try{
+    const j = await api('/talents/' + encodeURIComponent(r.id) + '/deals');
+    const body = document.getElementById('deals-body');
+    if(!j.deals.length){ body.textContent = 'No previous deals found.'; return; }
+    body.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="text-align:left;color:var(--grey);font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;">
+        <th style="padding:6px 8px 6px 0;">Date</th><th style="padding:6px 8px;">Brand</th><th style="padding:6px 8px;">Campaign</th><th style="padding:6px 8px;text-align:right;">Fee</th><th style="padding:6px 0 6px 8px;text-align:right;">≈ GBP</th></tr></thead>
+      <tbody>${j.deals.map(d => `<tr style="border-top:1px solid var(--line-strong);color:var(--ink);">
+        <td style="padding:8px 8px 8px 0;white-space:nowrap;">${d.date ? new Date(d.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '—'}</td>
+        <td style="padding:8px;">${d.brand ? escapeHtml(d.brand) : '—'}</td>
+        <td style="padding:8px;">${escapeHtml(d.campaign || '')}</td>
+        <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.value, d.currency)}</td>
+        <td style="padding:8px 0 8px 8px;text-align:right;white-space:nowrap;">${d.value_gbp !== null && d.currency !== 'GBP' ? fmtMoney(d.value_gbp, 'GBP') : (d.currency === 'GBP' ? '' : '—')}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(ex){ document.getElementById('deals-body').textContent = ex.message; }
+}
+
+/* ---------- monday sync status ---------- */
+function ago(iso){
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if(m < 1) return 'just now'; if(m < 60) return m + ' min ago';
+  const h = Math.round(m / 60); return h < 24 ? h + ' h ago' : Math.round(h / 24) + ' d ago';
+}
+async function openSyncModal(){
+  openModal(`<h3>monday Sync</h3><div id="sync-body" style="font-size:13.5px;line-height:1.6;">Loading…</div>
+    <div class="form-error" id="sync-error"></div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button><button type="button" class="btn" id="sync-now">Sync now</button></div>`);
+  document.getElementById('form-cancel').onclick = closeModal;
+  const draw = async () => {
+    const j = await api('/sync/status');
+    const log = Object.fromEntries(j.log.map(l => [l.kind, l]));
+    const line = (label, l, fmt) => l ? `<div>${label}: ${l.ok ? '<span style="color:#2e8b57;">●</span> ' + ago(l.ran_at) + ' — ' + fmt(l.summary) : '<span style="color:#9b1c1c;">failed ' + ago(l.ran_at) + '</span> — ' + escapeHtml(l.summary.error || '')}</div>` : `<div>${label}: not run yet</div>`;
+    const pend = j.pending.length ? `<div style="margin-top:12px;"><strong>Waiting on details (${j.pending.length})</strong>
+      <div style="font-size:12.5px;color:var(--grey);margin-bottom:4px;">These are on monday but not complete enough to add yet. They'll come through automatically once filled in.</div>
+      <ul style="margin:0 0 0 18px;padding:0;font-size:12.5px;max-height:220px;overflow:auto;">${j.pending.map(p => `<li>${escapeHtml(p.name)} <span style="color:var(--grey);">— missing ${escapeHtml(p.missing)}</span></li>`).join('')}</ul></div>` : '<div style="margin-top:12px;color:var(--grey);">Nothing waiting on details.</div>';
+    document.getElementById('sync-body').innerHTML =
+      '<div style="color:var(--grey);margin-bottom:8px;">Talent is pulled from the Talent Index, Talent Roster and Talent Outreach boards every 5 minutes. Exclusive status follows the Roster groups.</div>' +
+      line('Talent', log.talent, s => `${s.created || 0} added, ${s.updated || 0} updated`) +
+      line('Previous deals', log.deals, s => `${s.deals || 0} deals`) + pend;
+  };
+  try{ await draw(); }catch(ex){ document.getElementById('sync-body').textContent = ex.message; }
+  document.getElementById('sync-now').onclick = async () => {
+    const b = document.getElementById('sync-now'); b.disabled = true; b.textContent = 'Syncing…';
+    try{
+      const r = await api('/sync/run', {method:'POST'});
+      if(r.skipped) showToast('A sync is already running');
+      else showToast((r.created || 0) + ' added, ' + (r.updated || 0) + ' updated');
+      await loadStateKeepModal(); await draw();
+    }catch(ex){ document.getElementById('sync-error').textContent = ex.message; }
+    b.disabled = false; b.textContent = 'Sync now';
+  };
+}
+async function loadStateKeepModal(){ await loadState(); }
+document.getElementById('sync-btn').addEventListener('click', openSyncModal);
 
 /* ---------- unlock editing ---------- */
 document.getElementById('unlock-edit-btn').addEventListener('click', () => {

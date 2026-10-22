@@ -1,5 +1,6 @@
 import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
+import { syncTalent } from '../lib/sync.mjs';
 
 export const config = { path: '/api/*' };
 
@@ -49,6 +50,7 @@ function shapeTalent(r) {
     total_followers: (ig || 0) + (tt || 0) + (yt || 0),
     rate: r.rate, instagram: r.instagram, tiktok: r.tiktok, youtube: r.youtube,
     photo: r.photo, public_bio: r.public_bio,
+    deal_count: Number(r.deal_count || 0), monday_linked: !!r.monday_linked,
   };
 }
 
@@ -80,12 +82,49 @@ export default async (req) => {
     // ---- Full state
     if (route === 'state' && method === 'GET') {
       const [talents, lists, decks, version] = await Promise.all([
-        query('SELECT * FROM talents ORDER BY lower(name)'),
+        query(`SELECT t.*,
+          (SELECT count(*) FROM monday_deals d JOIN monday_links l ON l.item_id = d.roster_item_id AND l.board_id = '5092522353' WHERE l.talent_id = t.id) AS deal_count,
+          EXISTS (SELECT 1 FROM monday_links l WHERE l.talent_id = t.id) AS monday_linked
+        FROM talents t ORDER BY lower(t.name)`),
         query('SELECT id, name, data, updated_at FROM lists ORDER BY updated_at DESC'),
         query('SELECT id, name, data, updated_at FROM decks ORDER BY updated_at DESC'),
         currentVersion(),
       ]);
       return json({ version, role, talents: talents.map(shapeTalent), lists, decks });
+    }
+
+    // ---- Previous deals for a talent (any signed-in user)
+    if (route === 'talents' && parts[2] === 'deals' && method === 'GET') {
+      const rows = await query(
+        `SELECT d.campaign, d.brand, d.value, d.currency, d.value_gbp, d.status, to_char(d.deal_date, 'YYYY-MM-DD') AS deal_date
+           FROM monday_deals d JOIN monday_links l ON l.item_id = d.roster_item_id AND l.board_id = '5092522353'
+          WHERE l.talent_id = $1 ORDER BY d.deal_date DESC NULLS LAST, d.campaign`,
+        [parts[1]]
+      );
+      return json({
+        deals: rows.map((r) => ({
+          campaign: r.campaign, brand: r.brand, status: r.status, date: r.deal_date || null,
+          value: r.value == null ? null : Number(r.value), currency: r.currency, value_gbp: r.value_gbp == null ? null : Number(r.value_gbp),
+        })),
+      });
+    }
+
+    // ---- monday sync status / run
+    if (route === 'sync' && parts[1] === 'status' && method === 'GET') {
+      const [log, pending] = await Promise.all([
+        query('SELECT kind, ran_at, ok, summary FROM monday_sync_log'),
+        query(`SELECT board_id, name, missing FROM monday_pending ORDER BY name`),
+      ]);
+      return json({ log, pending });
+    }
+    if (route === 'sync' && parts[1] === 'run' && method === 'POST') {
+      const denied = needEdit();
+      if (denied) return denied;
+      try {
+        return json(await syncTalent());
+      } catch (e) {
+        return json({ error: String(e.message || e).slice(0, 200) }, 500);
+      }
     }
 
     // ---- Talents
