@@ -1,6 +1,6 @@
 import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
-import { syncTalent, syncDeals } from '../lib/sync.mjs';
+import { syncTalent } from '../lib/sync.mjs';
 
 export const config = { path: '/api/*' };
 
@@ -131,9 +131,13 @@ export default async (req) => {
       const denied = needEdit();
       if (denied) return denied;
       try {
-        return json(await syncDeals());
+        const res = await fetch(`${url.origin}/.netlify/functions/sync-deals-background`, {
+          method: 'POST',
+          headers: { 'x-sync-key': process.env.AUTH_SECRET || '' },
+        });
+        return json({ started: res.status === 202 || res.ok });
       } catch (e) {
-        return json({ error: String(e.message || e).slice(0, 200) }, 500);
+        return json({ error: 'Could not start the deals sync' }, 500);
       }
     }
 
