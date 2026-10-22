@@ -1,6 +1,6 @@
 import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
-import { syncTalent } from '../lib/sync.mjs';
+import { syncTalent, syncDeals } from '../lib/sync.mjs';
 
 export const config = { path: '/api/*' };
 
@@ -122,6 +122,16 @@ export default async (req) => {
       if (denied) return denied;
       try {
         return json(await syncTalent());
+      } catch (e) {
+        return json({ error: String(e.message || e).slice(0, 200) }, 500);
+      }
+    }
+
+    if (route === 'sync' && parts[1] === 'deals' && method === 'POST') {
+      const denied = needEdit();
+      if (denied) return denied;
+      try {
+        return json(await syncDeals());
       } catch (e) {
         return json({ error: String(e.message || e).slice(0, 200) }, 500);
       }
