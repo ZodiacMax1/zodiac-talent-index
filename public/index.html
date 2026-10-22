@@ -1756,13 +1756,13 @@ async function openDealsModal(r){
     if(!j.deals.length){ body.textContent = 'No previous deals found.'; return; }
     body.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead><tr style="text-align:left;color:var(--grey);font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;">
-        <th style="padding:6px 8px 6px 0;">Date</th><th style="padding:6px 8px;">Brand</th><th style="padding:6px 8px;">Campaign</th><th style="padding:6px 8px;text-align:right;">Fee</th><th style="padding:6px 0 6px 8px;text-align:right;">≈ GBP</th></tr></thead>
+        <th style="padding:6px 8px 6px 0;">Date</th>${j.deals.some(d => d.brand) ? '<th style="padding:6px 8px;">Brand</th>' : ''}<th style="padding:6px 8px;">Campaign</th><th style="padding:6px 0 6px 8px;text-align:right;">Fee</th></tr></thead>
       <tbody>${j.deals.map(d => `<tr style="border-top:1px solid var(--line-strong);color:var(--ink);">
         <td style="padding:8px 8px 8px 0;white-space:nowrap;">${d.date ? new Date(d.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '—'}</td>
-        <td style="padding:8px;">${d.brand ? escapeHtml(d.brand) : '—'}</td>
+        ${j.deals.some(x => x.brand) ? `<td style="padding:8px;">${d.brand ? escapeHtml(d.brand) : '—'}</td>` : ''}
         <td style="padding:8px;">${escapeHtml(d.campaign || '')}</td>
-        <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.value, d.currency)}</td>
-        <td style="padding:8px 0 8px 8px;text-align:right;white-space:nowrap;">${d.value_gbp !== null && d.currency !== 'GBP' ? fmtMoney(d.value_gbp, 'GBP') : (d.currency === 'GBP' ? '' : '—')}</td></tr>`).join('')}</tbody></table></div>`;
+        <td style="padding:8px 0 8px 8px;text-align:right;white-space:nowrap;">${fmtMoney(d.value, d.currency)}</td>
+        </tr>`).join('')}</tbody></table></div>`;
   }catch(ex){ document.getElementById('deals-body').textContent = ex.message; }
 }
 
@@ -1798,7 +1798,7 @@ async function openSyncModal(){
       let d = null, dealErr = '';
       try{ d = await api('/sync/deals', {method:'POST'}); }catch(ex){ dealErr = ' Deals failed: ' + ex.message; }
       if(r.skipped) showToast('A sync is already running');
-      else showToast((r.created || 0) + ' added, ' + (r.updated || 0) + ' updated' + (d && d.deals !== undefined ? ', ' + d.deals + ' deals' : '') + dealErr);
+      else showToast((r.created || 0) + ' added, ' + (r.updated || 0) + ' updated' + (d && d.started ? '. Previous deals are syncing in the background — reopen this screen in a minute.' : '') + dealErr);
       await loadStateKeepModal(); await draw();
     }catch(ex){ document.getElementById('sync-error').textContent = ex.message; }
     b.disabled = false; b.textContent = 'Sync now';
