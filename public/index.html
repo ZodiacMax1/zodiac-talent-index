@@ -82,6 +82,38 @@
   .card-num{font-family:'DM Sans',sans-serif;font-weight:700;font-size:27px;color:var(--ink);letter-spacing:-0.01em;}
   .card-sub{color:var(--grey-light);font-size:12px;margin-top:4px;}
 
+  /* stat tiles (5) */
+  .card-grid{grid-template-columns:repeat(5,1fr);margin-bottom:32px;}
+  .card-grid .card:nth-child(6n){border-right:1px solid var(--line);}
+  .card-grid .card:nth-child(5n), .card-grid .card:last-child{border-right:none;}
+  .card-num{font-size:30px;font-variant-numeric:tabular-nums;}
+  .card .pl{display:flex;align-items:center;gap:7px;}
+  .card .pl svg{width:15px;height:15px;color:var(--burgundy);}
+  .card .share{height:4px;border-radius:2px;background:var(--cream);margin-top:12px;overflow:hidden;}
+  .card .share i{display:block;height:100%;background:var(--burgundy);border-radius:2px;transition:width .6s cubic-bezier(.2,.7,.2,1);}
+  .card .card-sub{margin-top:8px;}
+  @media(max-width:900px){.card-grid{grid-template-columns:repeat(2,1fr);}.card-grid .card:nth-child(5n){border-right:1px solid var(--line);}.card-grid .card:nth-child(2n){border-right:none;}}
+
+  /* brief matcher */
+  .modal-card.wide{max-width:780px;}
+  .bm-text{width:100%;min-height:170px;font:inherit;font-size:14px;line-height:1.5;padding:12px 14px;border:1px solid var(--line-strong);border-radius:8px;box-sizing:border-box;resize:vertical;}
+  .bm-text:focus{outline:2px solid var(--burgundy);outline-offset:-1px;}
+  .bm-load{padding:36px 8px;text-align:center;color:var(--grey);font-size:14px;}
+  .bm-dots{display:inline-flex;gap:6px;margin-bottom:14px;}
+  .bm-dots i{width:9px;height:9px;border-radius:50%;background:var(--burgundy);animation:bm 1.1s infinite ease-in-out;}
+  .bm-dots i:nth-child(2){animation-delay:.15s;} .bm-dots i:nth-child(3){animation-delay:.3s;}
+  @keyframes bm{0%,80%,100%{opacity:.2;transform:scale(.7);}40%{opacity:1;transform:scale(1);}}
+  .bm-sum{background:var(--burgundy-tint);border-radius:8px;padding:12px 14px;font-size:13.5px;line-height:1.5;margin-bottom:12px;}
+  .bm-row{display:grid;grid-template-columns:22px 46px 1fr auto;gap:12px;align-items:start;padding:12px 4px;border-bottom:1px solid var(--line);}
+  .bm-row:last-child{border-bottom:none;}
+  .bm-row .av{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--burgundy);font-weight:700;}
+  .bm-row .nm{font-weight:700;font-size:14.5px;}
+  .bm-row .mt{font-size:12px;color:var(--grey);margin:1px 0 4px;}
+  .bm-row .rs{font-size:13px;line-height:1.45;}
+  .bm-score{font:700 12px 'DM Mono',monospace;background:var(--burgundy);color:#fff;border-radius:999px;padding:4px 10px;white-space:nowrap;}
+  .bm-score.mid{background:#9A2B47;} .bm-score.low{background:#C98693;}
+  .bm-gaps{font-size:12.5px;color:var(--grey);margin-top:10px;line-height:1.5;}
+
   /* niche breakdown */
   .niche-panel{border:1px solid var(--line-strong);border-radius:6px;background:var(--card);padding:22px 26px;margin-bottom:32px;}
   .niche-row{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
@@ -411,6 +443,7 @@
       </div>
     </div>
     <div class="toggle-stack">
+      <button class="btn ghost" id="brief-btn">Brief Matcher</button>
       <button class="btn ghost" id="saved-decks-btn">Decks &amp; Links <span class="count-pill" id="saved-decks-count">0</span></button>
       <button class="btn ghost" id="sync-btn" style="display:none;">monday Sync</button>
       <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
@@ -422,11 +455,6 @@
   </header>
 
   <div class="card-grid" id="card-grid"></div>
-
-  <div class="niche-panel">
-    <div class="card-label" style="margin-bottom:14px;">Talent by Niche — Top Categories</div>
-    <div id="niche-bars"></div>
-  </div>
 
   <div class="section-head">
     <div class="section-title">
@@ -721,42 +749,48 @@ function niches(r){
 }
 
 /* ---------- stat cards ---------- */
+const countTweens = new WeakMap();
+function tweenNumber(el, to, fmt){
+  const from = Number(el.dataset.v || 0);
+  el.dataset.v = to;
+  if(from === to || window.matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 700;
+  cancelAnimationFrame(countTweens.get(el) || 0);
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmt(Math.round(from + (to - from) * e));
+    if(k < 1) countTweens.set(el, requestAnimationFrame(step));
+  };
+  countTweens.set(el, requestAnimationFrame(step));
+}
 function renderStatCards(rows){
-  const totalCount = rows.length;
-  const exclCount = rows.filter(isExclusive).length;
-  const nonExclCount = totalCount - exclCount;
-  const ukCount = rows.filter(r=>regionsOf(r).includes('UK')).length;
-  const uaeCount = rows.filter(r=>regionsOf(r).includes('UAE')).length;
-  const megaCount = rows.filter(r=>r.total_followers && r.total_followers>=1000000).length;
-  const followerVals = rows.map(r=>r.total_followers).filter(Boolean);
-  const totalFollowersSum = followerVals.length ? followerVals.reduce((a,b)=>a+b,0) : 0;
-
-  const nicheCounts = {};
-  rows.forEach(r => niches(r).forEach(n => nicheCounts[n] = (nicheCounts[n]||0)+1));
-  const topNicheEntry = Object.entries(nicheCounts).sort((a,b)=>b[1]-a[1])[0];
-
+  const sum = k => rows.reduce((a, r) => a + (r[k] || 0), 0);
+  const has = k => rows.filter(r => r[k]).length;
+  const ig = sum('ig_followers'), tt = sum('tt_followers'), yt = sum('yt_followers'), total = ig + tt + yt;
+  const pct = v => total ? Math.max(2, Math.round(v / total * 100)) : 0;
   const cards = [
-    {label:'Total On File', num:totalCount, sub:'Roster + prospects', action:'reset'},
-    {label:'Total Followers', num:fmtFollowers(totalFollowersSum), sub:'Everyone shown', action:null},
-    {label:'Top Niche', num:topNicheEntry?topNicheEntry[0]:'—', sub: topNicheEntry ? topNicheEntry[1] + ' talent' : '', action: topNicheEntry ? 'niche:'+topNicheEntry[0] : null},
-    {label:'UK Talent', num:ukCount, sub:'On file', action:'location:UK'},
-    {label:'UAE Talent', num:uaeCount, sub:'On file', action:'location:UAE'},
-    {label:'1M+ Followers', num:megaCount, sub:'Across roster & prospects', action:'mega'},
+    {k:'count', label:'Talent', val:rows.length, sub: rows.length === DATA.length ? 'Roster + prospects' : 'of ' + DATA.length + ' on file', action:'reset', fmt:v => v.toLocaleString('en-GB')},
+    {k:'total', label:'Total followers', val:total, sub: rows.length === DATA.length ? 'Across all platforms' : 'In your current filter', action:null, fmt:fmtFollowers},
+    {k:'ig', label:'Instagram', icon:'ig', val:ig, sub:has('ig_followers') + ' creators', action:'plat:ig', share:pct(ig), fmt:fmtFollowers},
+    {k:'tt', label:'TikTok', icon:'tt', val:tt, sub:has('tt_followers') + ' creators', action:'plat:tt', share:pct(tt), fmt:fmtFollowers},
+    {k:'yt', label:'YouTube', icon:'yt', val:yt, sub:has('yt_followers') + ' creators', action:'plat:yt', share:pct(yt), fmt:fmtFollowers},
   ];
-  document.getElementById('card-grid').innerHTML = cards.map(c => `
-    <div class="card ${c.action ? '' : 'no-click'}" data-action="${c.action||''}">
-      <div class="card-label">${c.label}</div>
-      <div class="card-num">${c.num}</div>
-    </div>`).join('');
-
-  const topNiches = Object.entries(nicheCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const maxNicheCount = topNiches.length ? topNiches[0][1] : 1;
-  document.getElementById('niche-bars').innerHTML = topNiches.length ? topNiches.map(([name,count]) => `
-    <div class="niche-row">
-      <div class="niche-name">${escapeHtml(name)}</div>
-      <div class="niche-bar-track"><div class="niche-bar-fill" style="width:${Math.round(count/maxNicheCount*100)}%"></div></div>
-      <div class="niche-count">${count}</div>
-    </div>`).join('') : '<div class="niche-row"><div class="niche-name" style="color:var(--grey-light);">No niches in current filter</div></div>';
+  const grid = document.getElementById('card-grid');
+  if(grid.children.length !== cards.length){
+    grid.innerHTML = cards.map(c => `
+      <div class="card ${c.action ? '' : 'no-click'}" data-action="${c.action||''}" data-k="${c.k}">
+        <div class="card-label ${c.icon ? 'pl' : ''}">${c.icon ? PLAT_ICON[c.icon] : ''}${c.label}</div>
+        <div class="card-num" data-v="0">0</div>
+        <div class="card-sub"></div>
+        ${c.icon ? '<div class="share"><i style="width:0"></i></div>' : ''}
+      </div>`).join('');
+  }
+  cards.forEach(c => {
+    const el = grid.querySelector(`[data-k="${c.k}"]`);
+    tweenNumber(el.querySelector('.card-num'), c.val, c.fmt);
+    el.querySelector('.card-sub').textContent = c.sub + (c.share !== undefined ? ' · ' + c.share + '% of reach' : '');
+    const sh = el.querySelector('.share i'); if(sh) sh.style.width = c.share + '%';
+  });
 }
 
 /* ---------- filters ---------- */
@@ -1336,6 +1370,11 @@ document.getElementById('card-grid').addEventListener('click', (e) => {
   if(!action) return;
   if(action === 'reset'){ resetFilters(); }
   else if(action === 'mega'){ resetFilters(); state.minFollowers = 1000000; document.getElementById('min-followers').value = '1000000'; render(); }
+  else if(action.startsWith('plat:')){
+    resetFilters(); const k = action.split(':')[1]; state.platforms = [k];
+    document.querySelectorAll('#platform-toggle-group .ptoggle').forEach(b => b.classList.toggle('active', b.dataset.val === k));
+    render();
+  }
   else if(action === 'exclusive'){ resetFilters(); setSource('exclusive'); }
   else if(action === 'nonexclusive'){ resetFilters(); setSource('nonexclusive'); }
   else if(action.startsWith('location:')){ resetFilters(); setLocation(action.split(':')[1]); }
@@ -1816,7 +1855,8 @@ const sharedDeck = parseDeckHash();
 
 /* ---------- live state ---------- */
 function modalOpen(){ return document.getElementById('modal-back').classList.contains('open'); }
-function closeModal(){ document.getElementById('modal-back').classList.remove('open'); }
+function closeModal(){
+  document.getElementById('modal-card').classList.remove('wide'); document.getElementById('modal-back').classList.remove('open'); }
 function openModal(html){
   document.getElementById('modal-card').innerHTML = html;
   document.getElementById('modal-back').classList.add('open');
@@ -2373,6 +2413,87 @@ async function openActivity(){
     catch(ex){ showToast(ex.message); b.disabled = false; }
   }));
 }
+
+
+/* ---------- brief matcher ---------- */
+let bmBrief = '';
+function openBriefMatcher(){
+  openModal(`<h3>Brief Matcher</h3>
+    <p style="font-size:13px;line-height:1.5;color:var(--grey);margin:0 0 12px;">Paste a brand brief or the key points (product, audience, market, platforms, budget, anything they've said they want). You'll get the best fits from the roster with a reason for each.</p>
+    <textarea class="bm-text" id="bm-text" placeholder="e.g. Summer launch for a UAE-based skincare brand. Female creators 22-35 in Dubai, Instagram and TikTok, mid-tier (50K-300K), authentic routines, no previous work with competitor brands...">${escapeHtml(bmBrief)}</textarea>
+    <div class="form-error" id="form-error"></div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Cancel</button><button type="button" class="btn" id="bm-go">Find matches</button></div>`);
+  document.getElementById('modal-card').classList.add('wide');
+  document.getElementById('form-cancel').onclick = closeBM;
+  document.getElementById('bm-text').focus();
+  document.getElementById('bm-go').onclick = runBrief;
+}
+function closeBM(){ document.getElementById('modal-card').classList.remove('wide'); closeModal(); }
+async function runBrief(){
+  const txt = document.getElementById('bm-text').value.trim();
+  const err = document.getElementById('form-error');
+  err.textContent = '';
+  if(txt.length < 20){ err.textContent = 'Paste the brief first (a couple of sentences at least).'; return; }
+  bmBrief = txt;
+  document.getElementById('modal-card').innerHTML = `<h3>Brief Matcher</h3><div class="bm-load"><div class="bm-dots"><i></i><i></i><i></i></div><div id="bm-stage">Reading the brief…</div><div style="font-size:12px;margin-top:6px;">This usually takes 10–30 seconds.</div></div>`;
+  const stages = ['Reading the brief…', 'Looking through the roster…', 'Matching niches and audiences…', 'Ranking the best fits…'];
+  let si = 0; const st = setInterval(() => { const el = document.getElementById('bm-stage'); if(el && si < stages.length - 1) el.textContent = stages[++si]; }, 5000);
+  try{
+    const { id } = await api('/matcher', {method:'POST', body:{brief: txt}});
+    const t0 = Date.now();
+    while(true){
+      await new Promise(r => setTimeout(r, 2000));
+      if(!document.getElementById('bm-stage')){ clearInterval(st); return; } // modal closed
+      const j = await api('/matcher/' + encodeURIComponent(id));
+      if(j.status === 'done'){ clearInterval(st); showBriefResults(j.result); return; }
+      if(j.status === 'failed') throw new Error(j.error || 'Matching failed');
+      if(Date.now() - t0 > 240000) throw new Error('This is taking too long. Try again.');
+    }
+  }catch(ex){
+    clearInterval(st);
+    document.getElementById('modal-card').innerHTML = `<h3>Brief Matcher</h3><div class="form-error" style="display:block;">${escapeHtml(ex.message)}</div>
+      <div class="form-actions"><button class="btn ghost" id="form-cancel">Close</button><button class="btn" id="bm-back">Back to the brief</button></div>`;
+    document.getElementById('form-cancel').onclick = closeBM;
+    document.getElementById('bm-back').onclick = openBriefMatcher;
+  }
+}
+function showBriefResults(res){
+  const byId = Object.fromEntries(DATA.map(r => [r.id, r]));
+  const rows = (res.matches || []).filter(m => byId[m.id]);
+  const body = rows.length ? rows.map((m, i) => {
+    const t = byId[m.id];
+    const av = t.photo ? `<img class="av" src="${escapeAttr(t.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;av&quot;>${escapeAttr((t.name||'?').charAt(0))}</div>'">` : `<div class="av">${escapeHtml((t.name||'?').charAt(0))}</div>`;
+    const plats = [t.ig_followers ? 'IG ' + fmtFollowers(t.ig_followers) : '', t.tt_followers ? 'TikTok ' + fmtFollowers(t.tt_followers) : '', t.yt_followers ? 'YT ' + fmtFollowers(t.yt_followers) : ''].filter(Boolean).join(' · ');
+    const tier = m.score >= 8 ? '' : (m.score >= 7 ? 'mid' : 'low');
+    return `<div class="bm-row"><input type="checkbox" data-bm="${escapeAttr(t.id)}" ${i < 10 ? 'checked' : ''} style="margin-top:14px;">
+      ${av}
+      <div><div class="nm">${escapeHtml(t.name)} ${isExclusive(t) ? '<span style="font-size:10.5px;font-weight:600;color:var(--burgundy);letter-spacing:.05em;">EXCLUSIVE</span>' : ''}</div>
+        <div class="mt">${escapeHtml(plats || 'No follower counts')}${locs(t).length ? ' · ' + escapeHtml(locs(t).join(', ')) : ''}${niches(t).length ? ' · ' + escapeHtml(niches(t).slice(0, 3).join(', ')) : ''}</div>
+        <div class="rs">${escapeHtml(m.reason)}</div></div>
+      <div class="bm-score ${tier}">${m.score}/10</div></div>`;
+  }).join('') : '<div style="padding:18px 4px;color:var(--grey);">No strong matches found for this brief.</div>';
+  document.getElementById('modal-card').innerHTML = `<h3>Brief Matcher</h3>
+    ${res.understood ? `<div class="bm-sum"><strong>How I read it:</strong> ${escapeHtml(res.understood)}</div>` : ''}
+    <div style="max-height:52vh;overflow:auto;">${body}</div>
+    ${res.gaps ? `<div class="bm-gaps"><strong>Worth knowing:</strong> ${escapeHtml(res.gaps)}</div>` : ''}
+    <div class="form-actions" style="flex-wrap:wrap;">
+      <button class="btn ghost" id="bm-edit">Edit brief</button>
+      <button class="btn ghost" id="form-cancel">Close</button>
+      ${rows.length ? `<button class="btn" id="bm-add">Add selected to “${escapeHtml(store.active)}”</button>` : ''}
+    </div>`;
+  document.getElementById('form-cancel').onclick = closeBM;
+  document.getElementById('bm-edit').onclick = openBriefMatcher;
+  const add = document.getElementById('bm-add');
+  if(add) add.onclick = () => {
+    const picked = [...document.querySelectorAll('[data-bm]:checked')].map(x => x.dataset.bm);
+    if(!picked.length){ showToast('Tick at least one talent'); return; }
+    const ids = store.lists[store.active] || (store.lists[store.active] = []);
+    let added = 0; picked.forEach(id => { if(!ids.includes(id)){ ids.push(id); added++; } });
+    saveStore(); renderShortlist(); render();
+    closeBM(); showToast(added + ' added to “' + store.active + '”');
+  };
+}
+document.getElementById('brief-btn').addEventListener('click', openBriefMatcher);
 
 /* ---------- start ---------- */
 (async function boot(){

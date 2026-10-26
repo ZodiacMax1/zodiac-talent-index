@@ -26,3 +26,17 @@ Once happy, either point the old site's domain at this project or just share the
 - If two people edit the same field at the same moment, the last save wins. Different fields on the same talent don't clash.
 - Two people editing the same brand list at the same moment: last save wins.
 - Deleting talent is permanent for everyone (a confirm box appears first).
+
+
+## monday.com sync (added)
+Set one more environment variable in Netlify (mark it secret): MONDAY_TOKEN – a monday API token (monday: your avatar > Developers > My access tokens). Then redeploy.
+
+- Talent is pulled every 5 minutes from three boards: Talent Index (new intake board), Talent Roster and Talent Outreach.
+- Roster talent: Exclusive Talent group = Exclusive, Non-Exclusive Talent group = Non-Exclusive. Moving someone between groups updates the Index.
+- New talent only come through when complete: name, region, niche and at least one platform with link + following. Incomplete rows are listed under "monday Sync" in the header and come through on their own once filled in.
+- No duplicates: every synced talent remembers its monday item; otherwise it is matched on Instagram handle, TikTok handle, then name.
+- Where monday has a value it overwrites the Index. Blank monday cells never wipe anything.
+- Previous deals (Deal Agreed / In Progress / Completed) for Roster talent are copied every 30 minutes and appear behind a "Previous deals" button.
+
+## Brief Matcher (update 10)
+Add one environment variable in Netlify: ANTHROPIC_API_KEY (from console.anthropic.com). Optional: ANTHROPIC_MODEL to choose the model.

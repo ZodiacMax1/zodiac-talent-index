@@ -373,6 +373,41 @@ export default async (req, context) => {
       }
     }
 
+    // ---- Brief matcher (any signed-in user): paste a brief, get ranked talent with reasons
+    if (route === 'matcher') {
+      if (method === 'POST' && !parts[1]) {
+        const b = await req.json().catch(() => ({}));
+        const brief = String(b.brief || '').trim();
+        if (brief.length < 20) return json({ error: 'Paste the brief (at least a couple of sentences)' }, 400);
+        if (brief.length > 8000) return json({ error: 'That brief is too long. Paste the key details (under 8,000 characters).' }, 400);
+        if (!process.env.ANTHROPIC_API_KEY) return json({ error: 'The brief matcher is not switched on yet. Add ANTHROPIC_API_KEY in Netlify.' }, 400);
+        const [{ n }] = await query(`SELECT count(*)::int AS n FROM brief_matches WHERE created_by = $1 AND created_at > now() - interval '1 day'`, [actor]);
+        if (n >= 40) return json({ error: 'Daily limit reached (40 briefs per person). Try again tomorrow.' }, 429);
+        const id = newId('m');
+        await query('INSERT INTO brief_matches (id, created_by, brief) VALUES ($1,$2,$3)', [id, actor, brief]);
+        try {
+          await fetch(`${url.origin}/.netlify/functions/match-brief-background`, {
+            method: 'POST',
+            headers: { 'x-sync-key': process.env.AUTH_SECRET || '', 'content-type': 'application/json' },
+            body: JSON.stringify({ id }),
+          });
+        } catch (e) {
+          await query(`UPDATE brief_matches SET status = 'failed', error = 'Could not start the matcher' WHERE id = $1`, [id]);
+          return json({ error: 'Could not start the matcher' }, 500);
+        }
+        return json({ id }, 202);
+      }
+      if (method === 'GET' && parts[1]) {
+        const [r] = await query('SELECT status, result, error, created_at FROM brief_matches WHERE id = $1', [parts[1]]);
+        if (!r) return json({ error: 'Not found' }, 404);
+        if (r.status === 'running' && Date.now() - new Date(r.created_at).getTime() > 4 * 60 * 1000) {
+          await query(`UPDATE brief_matches SET status = 'failed', error = 'Timed out. Try again.' WHERE id = $1`, [parts[1]]);
+          return json({ status: 'failed', error: 'Timed out. Try again.' });
+        }
+        return json({ status: r.status, result: r.result, error: r.error });
+      }
+    }
+
     // ---- Account: change own password
     if (route === 'me' && parts[1] === 'password' && method === 'POST') {
       if (!me.uid) return json({ error: 'Shared logins have no personal password' }, 400);
