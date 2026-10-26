@@ -2,6 +2,7 @@ import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
 import { syncTalent } from '../lib/sync.mjs';
 import { normLocation } from '../lib/places.mjs';
+import { randomBytes } from 'node:crypto';
 
 export const config = { path: '/api/*' };
 
@@ -75,6 +76,28 @@ export default async (req) => {
       return json({ token: issueToken(role), role });
     }
 
+    // ---- PUBLIC: a stored talent photo (these are the same photos shown on the public website)
+    if (route === 'img' && method === 'GET') {
+      const rows = await query('SELECT content_type, data FROM talent_photos WHERE talent_id = $1', [decodeURIComponent(parts[1] || '')]);
+      if (!rows.length) return json({ error: 'Not found' }, 404);
+      return new Response(rows[0].data, { headers: { 'content-type': rows[0].content_type, 'cache-control': 'public, max-age=31536000, immutable' } });
+    }
+
+    // ---- PUBLIC: a shared deck snapshot (no login). Only ever returns the snapshot, never anything else.
+    if (route === 'public' && parts[1] === 'deck' && method === 'GET') {
+      const code = String(parts[2] || '');
+      if (!/^[A-Za-z0-9]{10,40}$/.test(code)) return json({ error: 'Not found' }, 404);
+      const rows = await query(
+        `UPDATE shared_decks SET views = views + 1, last_viewed_at = now()
+          WHERE code = $1 AND NOT revoked AND (expires_at IS NULL OR expires_at > now()) RETURNING snapshot`,
+        [code]
+      );
+      if (!rows.length) return json({ error: 'This link is no longer available' }, 404);
+      return new Response(JSON.stringify(rows[0].snapshot), {
+        headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' },
+      });
+    }
+
     const role = roleFromRequest(req);
     if (!role) return json({ error: 'Unauthorised' }, 401);
     const canEdit = role === 'edit';
@@ -141,6 +164,44 @@ export default async (req) => {
       }
     }
 
+    // ---- Shared deck links (any signed-in user)
+    if (route === 'shares') {
+      if (method === 'GET' && !parts[1]) {
+        const rows = await query(`SELECT code, name, brand, talent_count, created_at, expires_at, revoked, views, last_viewed_at FROM shared_decks ORDER BY created_at DESC LIMIT 200`);
+        return json({ shares: rows });
+      }
+      if (method === 'POST' && !parts[1]) {
+        const b = await req.json().catch(() => ({}));
+        const ids = Array.isArray(b.ids) ? [...new Set(b.ids.map(String))].slice(0, 300) : [];
+        if (!ids.length) return json({ error: 'Deck is empty' }, 400);
+        const found = await query('SELECT * FROM talents WHERE id = ANY($1::text[])', [ids]);
+        const byId = new Map(found.map((r) => [r.id, r]));
+        const plats = Array.isArray(b.platforms) ? b.platforms.filter((x) => ['ig', 'tt', 'yt'].includes(x)) : ['ig', 'tt', 'yt'];
+        const talents = ids.map((i) => byId.get(i)).filter(Boolean).map((r) => ({
+          name: r.name, photo: r.photo || null, bio: r.public_bio || null,
+          ig: plats.includes('ig') ? { n: r.ig_followers == null ? null : Number(r.ig_followers), url: r.instagram || null } : null,
+          tt: plats.includes('tt') ? { n: r.tt_followers == null ? null : Number(r.tt_followers), url: r.tiktok || null } : null,
+          yt: plats.includes('yt') ? { n: r.yt_followers == null ? null : Number(r.yt_followers), url: r.youtube || null } : null,
+        }));
+        talents.sort((a, c) => (c.ig?.n || 0) + (c.tt?.n || 0) + (c.yt?.n || 0) - ((a.ig?.n || 0) + (a.tt?.n || 0) + (a.yt?.n || 0)));
+        const brand = String(b.brand || '').trim().slice(0, 80) || null;
+        const domain = String(b.domain || '').trim().slice(0, 80) || null;
+        const days = Number(b.expiresInDays);
+        const expires = Number.isFinite(days) && days > 0 ? new Date(Date.now() + Math.min(days, 730) * 864e5) : null;
+        const code = randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 12);
+        const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view: b.view === 'list' ? 'list' : 'cards', talents, createdAt: new Date().toISOString() };
+        await query(
+          'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at) VALUES ($1,$2,$3,$4::jsonb,$5,$6)',
+          [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires]
+        );
+        return json({ code, url: `${url.origin}/d/${code}`, talent_count: talents.length, expires_at: expires }, 201);
+      }
+      if (method === 'DELETE' && parts[1]) {
+        await query('UPDATE shared_decks SET revoked = true WHERE code = $1', [parts[1]]);
+        return json({ ok: true });
+      }
+    }
+
     // ---- monday sync status / run
     if (route === 'sync' && parts[1] === 'status' && method === 'GET') {
       const [log, pending] = await Promise.all([
@@ -157,6 +218,15 @@ export default async (req) => {
       } catch (e) {
         return json({ error: String(e.message || e).slice(0, 200) }, 500);
       }
+    }
+
+    if (route === 'sync' && parts[1] === 'website' && method === 'POST') {
+      const denied = needEdit();
+      if (denied) return denied;
+      try {
+        const res = await fetch(`${url.origin}/.netlify/functions/sync-website-background`, { method: 'POST', headers: { 'x-sync-key': process.env.AUTH_SECRET || '' } });
+        return json({ started: res.status === 202 || res.ok });
+      } catch (e) { return json({ error: 'Could not start the website sync' }, 500); }
     }
 
     if (route === 'sync' && parts[1] === 'deals' && method === 'POST') {
