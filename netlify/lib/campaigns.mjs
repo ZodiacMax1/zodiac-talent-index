@@ -70,6 +70,20 @@ export function rateToGbp(rateText) {
   return n;
 }
 
+// Keep the Talent Index "typical rate" in step with the latest rate entered on any campaign
+export function rateText(n, cur) {
+  const f = Math.round(n).toLocaleString('en-GB');
+  return cur === 'GBP' ? '£' + f : cur === 'USD' ? '$' + f : f + ' ' + cur;
+}
+async function saveRateToIndex(logAct, tid, n, cur, campaignName) {
+  if (!(n > 0)) return;
+  const text = rateText(n, cur);
+  const [t] = await query('SELECT name, rate FROM talents WHERE id = $1 AND deleted_at IS NULL', [tid]);
+  if (!t || t.rate === text) return;
+  await query('UPDATE talents SET rate = $2, updated_at = now() WHERE id = $1', [tid, text]);
+  await logAct('talent.edit', tid, t.name, { before: { rate: t.rate }, after: { rate: text }, via: campaignName });
+}
+
 async function fxFor(cur) {
   const [r] = await query('SELECT value FROM app_settings WHERE key = $1', ['fx_' + cur]);
   const n = r ? Number(r.value) : NaN;
@@ -204,6 +218,21 @@ export async function handleCampaigns(ctx) {
       made.push(cid);
     }
     return json({ imported: made.length });
+  }
+
+  // ---- Every rate we have entered for a talent across campaigns
+  if (id === 'talent-rates' && method === 'GET') {
+    const rows = await query(
+      `SELECT c.name AS campaign, c.client, c.cur, COALESCE(c.start_date, c.created_at::date) AS date,
+              ct.initial, ct.neg, ct.approved, ct.archived
+         FROM campaign_talents ct JOIN campaigns c ON c.id = ct.campaign_id
+        WHERE ct.talent_id = $1 AND (ct.initial > 0 OR ct.neg > 0)
+        ORDER BY COALESCE(c.start_date, c.created_at::date) DESC, c.created_at DESC`, [parts[2]]);
+    return json({ rates: rows.map((r) => ({
+      campaign: r.campaign, client: r.client, cur: r.cur, date: r.date,
+      initial: Number(r.initial) || null, neg: r.neg == null ? null : Number(r.neg),
+      outcome: r.archived ? 'Archived' + (r.archived.reason ? ' · ' + r.archived.reason : '') : r.approved === 'Yes' ? 'Selected' : r.approved === 'Declined' ? 'Declined' : 'Proposed',
+    })) });
   }
 
   // ---- Talent profile contact details (manager) saved back to the Index
@@ -418,6 +447,11 @@ export async function handleCampaigns(ctx) {
           const [t] = await query('SELECT name FROM talents WHERE id = $1', [ct.talent_id]);
           await logAct('campaign.talent.edit', id, exists.name, { talent: t && t.name, fields: cols });
         }
+      }
+      if (money && ('initial' in b || 'neg' in b)) {
+        const [cp] = await query('SELECT cur FROM campaigns WHERE id = $1', [id]);
+        await saveRateToIndex(logAct, ct.talent_id, neg || initial, cp.cur, exists.name);
+        await bump();
       }
       return json({ campaign: await loadFull(id) });
     }

@@ -1113,6 +1113,9 @@ function render(){
     });
   });
   if(expandedId) loadNotes(expandedId);
+  tbody.querySelectorAll('[data-crates]').forEach(btn => {
+    btn.addEventListener('click', (e) => { e.stopPropagation(); openRatesModal(DATA.find(r => r.id === btn.dataset.crates)); });
+  });
   tbody.querySelectorAll('[data-deals]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); openDealsModal(DATA.find(r => r.id === btn.dataset.deals)); });
   });
@@ -1173,6 +1176,7 @@ function detailHtml(r){
     <div class="detail-col">
       <div class="detail-label">Typical Rate</div>
       <div class="detail-value">${r.rate ? escapeHtml(r.rate) : 'Not on file'}</div>
+      ${r.rate_count > 0 ? `<div style="margin-top:8px;"><button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-crates="${r.id}">Campaign rates (${r.rate_count})</button></div>` : ''}
       ${r.deal_count > 0 ? `<div style="margin-top:8px;"><button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-deals="${r.id}">Previous deals (${r.deal_count})</button></div>` : ''}
     </div>
     <div class="detail-col">
@@ -1183,6 +1187,10 @@ function detailHtml(r){
         ${r.yt_followers ? `YouTube: ${fmtFollowersFull(r.yt_followers)}<br>` : ''}
         <strong>Total: ${fmtFollowersFull(r.total_followers)}</strong>
               </div>
+    </div>
+    <div class="detail-col">
+      <div class="detail-label">Contact</div>
+      <div class="detail-value" style="font-size:14px;line-height:1.5">${(r.manager_name||r.manager_email||r.manager_phone) ? `${r.manager_name?escapeHtml(r.manager_name)+'<br>':''}${r.manager_email?`<a href="mailto:${escapeHtml(r.manager_email)}">${escapeHtml(r.manager_email)}</a><br>`:''}${r.manager_phone?escapeHtml(r.manager_phone):''}` : 'Not on file'}</div>
     </div>
     <div class="detail-col">
       <div class="detail-label">Links</div>
@@ -2083,6 +2091,9 @@ function openTalentForm(r){
       <option value="M" ${r.gender==='M'?'selected':''}>Male</option>
       <option value="Mixed" ${r.gender==='Mixed'?'selected':''}>Mixed</option></select></div>
     <div><label>Typical Rate</label><input name="rate" value="${v(r.rate)}"></div>
+    <div><label>Contact Name</label><input name="manager_name" value="${v(r.manager_name)}"></div>
+    <div><label>Contact Email</label><input name="manager_email" value="${v(r.manager_email)}"></div>
+    <div><label>Contact Phone</label><input name="manager_phone" value="${v(r.manager_phone)}"></div>
     <div class="full"><label>Locations (tap to select, or type a new one and press Enter)</label>${chipPick('location', locOpts, locs(r), 'Add a new location, e.g. Spain')}</div>
     <div class="full"><label>Niches (tap to select, or type a new one and press Enter)</label>${chipPick('niche', nicheList, niches(r), 'Add a new niche, e.g. Padel')}</div>
     <div><label>Instagram Followers</label><input name="ig_followers" inputmode="numeric" value="${v(r.ig_followers)}"></div>
@@ -2338,6 +2349,28 @@ async function openDealsModal(r){
         <td style="padding:8px 0 8px 8px;text-align:right;white-space:nowrap;">${fmtMoney(d.value, d.currency)}</td>
         </tr>`).join('')}</tbody></table></div>`;
   }catch(ex){ document.getElementById('deals-body').textContent = ex.message; }
+}
+
+async function openRatesModal(r){
+  if(!r) return;
+  openModal(`<h3>Campaign rates – ${escapeHtml(r.name)}</h3><div id="rates-body" style="font-size:13px;color:var(--grey);">Loading…</div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>`);
+  document.getElementById('form-cancel').onclick = closeModal;
+  try{
+    const j = await api('/campaigns/talent-rates/' + encodeURIComponent(r.id));
+    const body = document.getElementById('rates-body');
+    if(!j.rates.length){ body.textContent = 'No campaign rates entered yet.'; return; }
+    const th = 'padding:6px 8px;';
+    body.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="text-align:left;color:var(--grey);font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;">
+        <th style="${th}padding-left:0;">Date</th><th style="${th}">Campaign</th><th style="${th}text-align:right;">Initial</th><th style="${th}text-align:right;">Negotiated</th><th style="${th}padding-right:0;">Outcome</th></tr></thead>
+      <tbody>${j.rates.map(d => `<tr style="border-top:1px solid var(--line-strong);color:var(--ink);">
+        <td style="padding:8px 8px 8px 0;white-space:nowrap;">${d.date ? new Date(d.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '—'}</td>
+        <td style="padding:8px;">${escapeHtml(d.campaign || '')}${d.client ? `<div style="color:var(--grey);font-size:12px;">${escapeHtml(d.client)}</div>` : ''}</td>
+        <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.initial, d.cur)}</td>
+        <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.neg, d.cur)}</td>
+        <td style="padding:8px 0 8px 8px;">${escapeHtml(d.outcome)}</td></tr>`).join('')}</tbody></table></div>`;
+  }catch(ex){ document.getElementById('rates-body').textContent = ex.message; }
 }
 
 /* ---------- monday sync status ---------- */

@@ -17,6 +17,7 @@ const TALENT_FIELDS = [
   'name', 'exclusivity', 'region', 'location', 'niche', 'gender',
   'ig_followers', 'tt_followers', 'yt_followers',
   'rate', 'instagram', 'tiktok', 'youtube', 'photo', 'public_bio',
+  'manager_name', 'manager_email', 'manager_phone',
 ];
 const NUMERIC = ['ig_followers', 'tt_followers', 'yt_followers'];
 
@@ -58,7 +59,8 @@ function shapeTalent(r) {
     total_followers: (ig || 0) + (tt || 0) + (yt || 0),
     rate: r.rate, instagram: r.instagram, tiktok: r.tiktok, youtube: r.youtube,
     photo: r.photo, public_bio: r.public_bio,
-    deal_count: Number(r.deal_count || 0), monday_linked: !!r.monday_linked, note_count: Number(r.note_count || 0),
+    manager_name: r.manager_name || null, manager_email: r.manager_email || null, manager_phone: r.manager_phone || null,
+    deal_count: Number(r.deal_count || 0), rate_count: Number(r.rate_count || 0), monday_linked: !!r.monday_linked, note_count: Number(r.note_count || 0),
   };
 }
 
@@ -178,6 +180,7 @@ export default async (req, context) => {
       const [talents, lists, decks, version] = await Promise.all([
         query(`SELECT t.*,
           (SELECT count(*) FROM monday_deals d JOIN monday_links l ON l.item_id = d.roster_item_id AND l.board_id = '5092522353' WHERE l.talent_id = t.id) AS deal_count,
+          (SELECT count(*) FROM campaign_talents x WHERE x.talent_id = t.id AND (x.initial > 0 OR x.neg > 0)) AS rate_count,
           EXISTS (SELECT 1 FROM monday_links l WHERE l.talent_id = t.id) AS monday_linked,
           (SELECT count(*) FROM talent_notes n WHERE n.talent_id = t.id) AS note_count
         FROM talents t WHERE t.deleted_at IS NULL ORDER BY lower(t.name)`),

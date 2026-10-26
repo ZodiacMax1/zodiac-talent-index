@@ -56,3 +56,13 @@ A new Campaign Management section sits in the left-hand menu beside Talent Index
 - The Deliverables tab is now a table: Influencer | Deliverable | Content due | To be posted by.
 - The deadlines strip at the top of a campaign is a single compact row.
 - Follower counts removed from influencer rows. Deliverables added on influencer lines now show in the tab.
+
+## Update 23: rates and contacts build the Index database
+- Any rate entered on a campaign (initial or negotiated) is saved to the talent's Typical Rate in the Index, in the campaign currency, even if the deal is archived or doesn't go ahead. The latest entry wins.
+- Contact name, email and phone entered on a campaign show on the talent's Index profile (new Contact block) and can be edited there.
+- Migration 13 fills blank Index rates from rates already entered on campaigns. Existing Index rates are not overwritten by it.
+
+## Update 24
+- Deliverables tab has a Stage column (six-step bar plus stage name); the Influencers tab lists each deliverable's stage under its summary.
+- Talent Index: "Campaign rates (n)" button on a profile lists every rate entered on a campaign (date, campaign, initial, negotiated, outcome).
+- Fix: saving a rate to the Index no longer errors.
