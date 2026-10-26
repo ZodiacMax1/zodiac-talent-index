@@ -62,7 +62,7 @@ h2.sh{font:500 13px var(--display);letter-spacing:.16em;text-transform:uppercase
 .cell .v{font:500 32px/1.1 var(--display);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .cell .v .bud{font:inherit;letter-spacing:inherit;width:100%;text-align:left;padding:0 6px;margin-left:-6px;border-radius:8px}
 .cell .s{font-size:13px;color:var(--muted);margin-top:2px}
-.gbp{font:500 13px var(--mono);color:var(--gold);margin-top:3px}.cell.hl{background:var(--accent-soft)}.cell.hl .v{color:var(--accent)}
+.gbp{font:500 13px var(--mono);color:var(--gold);margin-top:3px}.cell.ok{background:var(--ok-bg)}.cell.ok .v{color:var(--ok-fg)}.cell.bad{background:var(--bad-bg)}.cell.bad .v{color:var(--bad-fg)}
 .prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:20px}
 .pcell{padding:16px 22px;border-right:1px solid var(--line)}.pcell:last-child{border-right:0}
 .pcell .v{font:500 28px/1 var(--display);margin:6px 0 8px;font-variant-numeric:tabular-nums}
@@ -269,7 +269,7 @@ function progress(c){
 function prog(c){
   return '<div class="prog">'+progress(c).map(function(p){var v=pct(p[1],p[2]);return '<div class="pcell"><div class="lbl">'+p[0]+'</div><div class="v">'+v+'%<small>'+p[1]+' of '+p[2]+'</small></div><div class="bar"><i class="'+(v===100?'full':'')+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div>';
 }
-function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' hl':'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div>'+(g?'<div class="gbp">≈ '+g+'</div>':'')+'<div class="s">'+s+'</div></div>';}
+function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' '+hl:'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div>'+(g?'<div class="gbp">≈ '+g+'</div>':'')+'<div class="s">'+s+'</div></div>';}
 function toast(m){var t=document.getElementById('toast');t.innerHTML='<div class="toast">'+esc(m)+'</div>';setTimeout(function(){t.innerHTML='';},2600);}
 
 function mondayImport(){
@@ -295,7 +295,7 @@ function viewCampaigns(){
     var s={cost:c.cost,price:c.price,m:c.margin,pc:c.price>0?c.margin/c.price*100:0,n:c.selected};
     h+='<tr class="clk" data-open="'+c.id+'"><td><div class="who2"><div class="ini">'+initials(c.name)+'</div><div><b>'+esc(c.name)+'</b><div class="small">'+esc(c.client)+'</div></div></div></td><td><span class="pill '+(won(c)?'ok':'warn')+'">'+esc(c.stage)+'</span></td><td class="r num">'+moneyIn(c.budget,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(c.budget,c)+'</div>':'')+'</td><td class="r num">'+moneyIn(s.cost,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.cost,c)+'</div>':'')+'</td><td class="r num"><b>'+moneyIn(s.m,c)+'</b>'+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.m,c)+'</div>':'')+'</td><td class="r num"><b>'+(s.price?s.pc.toFixed(1)+'%':'–')+'</b>'+(s.price&&s.pc<c.target?'<div class="small" style="color:var(--bad-fg)">below target</div>':'')+'</td><td>'+s.n+' of '+c.total+'</td><td>'+esc(c.owner)+'</td></tr>';
   });
-  return h+'</tbody></table></div><div class="note">Creator costs, margin and margin % count selected (approved) influencers only. Margin = client price − creator costs. Margin % = margin ÷ client price.</div>';
+  return h+'</tbody></table></div>';
 }
 function deadlines(c){
   var items=[],dn=0,tot=0;
@@ -316,7 +316,7 @@ function viewCampaign(){
    +'<div class="row"><span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div><label class="small" for="mstage" style="margin-left:6px">monday</label><select id="mstage" class="sel '+(w?'ok':'warn')+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div></div>';
   var below=s.price&&s.pc<c.target;
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
-  h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),money(Math.max(0,c.budget-s.price))+' left after client price',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',money(s.m),'client price '+money(s.price),false,ng?gbpIn(s.m,c):'')+cellS('Margin %',s.price?s.pc.toFixed(1)+'%':'–','target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below target</b>':''),true,'')+'</div>';
+  h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),money(Math.max(0,c.budget-s.price))+' left after client price',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',money(s.m),'client price '+money(s.price),false,ng?gbpIn(s.m,c):'')+cellS('Margin %',s.price?s.pc.toFixed(1)+'%':'–','target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below target</b>':''),s.price?(below?'bad':'ok'):'','')+'</div>';
   if(ng)h+='<div class="small" style="margin:-10px 0 18px">Shown in '+c.cur+'. £ equivalent at £'+c.fx+' per '+c.cur+'.</div>';
   if(w){h+=prog(c)+deadlines(c);}
   var tabs=['Influencers'].concat(w?['Archive']:[]).concat(['Decks & links','Deliverables','Brief & setup']);
@@ -347,7 +347,7 @@ function tabInfl(c){
      +'<td class="r"><input class="in pc" inputmode="decimal" data-f="margin" data-i="'+i.id+'" value="'+(Math.round(i.margin*10)/10)+'%" aria-label="Margin percent" title="Click to edit"></td>'
      +(w?'<td>'+sel('contract',i.contract,CONTRACT,i.id)+'</td><td>'+dsum(i)+'</td><td>'+sel('invoice',i.invoice,INVOICE,i.id)+'</td><td class="r"><button class="btn sm" data-archrow="'+i.id+'">Archive</button></td>':'')+'</tr>';
   });
-  return h+'</tbody></table></div><div class="note"><b>Margin and client rate work both ways.</b> Type 30% and the client rate fills in (rate ÷ (1 − margin)). Or type a client rate and the % updates. Press Enter or click away to apply. Rates are in the campaign currency (switch at the top).'+(w?'':' Contract, content and invoicing appear once the campaign is Closed Won.')+'</div>';
+  return h+'</tbody></table></div>';
 }
 function tabArchive(c){
   var list=c.infl.filter(function(i){return i.approved!=='Yes'||i.archived;});
@@ -383,7 +383,7 @@ function tabDeliv(c){
   var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content received</th><th>Posted</th><th></th><th></th></tr></thead><tbody>';
   if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Open an influencer to add them.')+'</td></tr>';
   rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td><b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td><span class="pill '+cls(d.stage)+'">'+esc(d.stage)+'</span></td><td>'+rcell(d)+'</td><td>'+lcell(d)+'</td><td>'+dchip(d)+'</td><td class="small">'+(d.links.length?d.links.length+' links ':'')+(d.comments.length?d.comments.length+' notes':'')+'</td></tr>';});
-  return h+'</tbody></table></div><div class="note">Click a row for dates, links, comments and insights.</div>';
+  return h+'</tbody></table></div>';
 }
 function fcf(label,key,c,type,ph){return '<label><span class="lbl">'+label+'</span><input class="fld" data-cf="'+key+'" type="'+(type||'text')+'" value="'+esc(c[key])+'" placeholder="'+(ph||'')+'"></label>';}
 function kvr(pairs){return '<div class="kv" style="grid-template-columns:150px 1fr">'+pairs.map(function(p){return '<span class="k">'+p[0]+'</span><span>'+(p[1]===''||p[1]==null?'<span class="small">Not set</span>':p[1])+'</span>';}).join('')+'</div>';}
