@@ -440,6 +440,28 @@
   .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
   .form-error{color:#9b1c1c;font-size:12.5px;margin-top:10px;min-height:16px;}
   @media(max-width:560px){.form-grid{grid-template-columns:1fr;}}
+  /* ---- app shell: burgundy side navigation (Talent Index / Campaign Management) ---- */
+  body.zshell{padding-left:236px;}
+  .zside{position:fixed;top:0;left:0;bottom:0;width:236px;background:linear-gradient(180deg,#4D0011,#3B000D);color:#F3EFE8;padding:26px 16px 20px;display:flex;flex-direction:column;gap:4px;z-index:40;}
+  .zside .zbrand{display:flex;align-items:center;gap:12px;padding:2px 8px 22px;font-family:'Oswald',sans-serif;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:13px;line-height:1.25;}
+  .zside .zmark{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(243,239,232,.55);display:flex;align-items:center;justify-content:center;font-size:18px;letter-spacing:0;}
+  .zside .zsec{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;padding:8px 10px 6px;}
+  .zside .znav{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:10px;color:inherit;font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 12px;cursor:pointer;opacity:.82;}
+  .zside .znav:hover{background:rgba(255,255,255,.07);opacity:1;}
+  .zside .znav.on{background:rgba(255,255,255,.12);opacity:1;font-weight:500;}
+  .zside .znav.on::before{content:"";position:absolute;left:-16px;top:10px;bottom:10px;width:3px;background:var(--gold);border-radius:0 3px 3px 0;}
+  .zside .znav svg{width:20px;height:20px;flex:none;}
+  .zside .zwho{margin-top:auto;padding:14px 10px 0;border-top:1px solid rgba(243,239,232,.16);font-size:13px;display:flex;gap:10px;align-items:center;}
+  .zside .zav{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex:none;}
+  .cm-view{position:fixed;top:0;left:236px;right:0;bottom:0;background:var(--cream);z-index:30;}
+  .cm-view iframe{width:100%;height:100%;border:0;display:block;}
+  @media(max-width:900px){
+    body.zshell{padding-left:0;padding-top:58px;}
+    .zside{right:0;bottom:auto;width:auto;height:58px;flex-direction:row;align-items:center;padding:0 12px;gap:4px;}
+    .zside .zbrand span,.zside .zsec,.zside .zwho{display:none;}.zside .zbrand{padding:0 8px 0 0;}
+    .zside .znav{width:auto;padding:9px 12px;font-size:14px;}.zside .znav.on::before{display:none;}
+    .cm-view{left:0;top:58px;}
+  }
 </style>
 </head>
 <body>
@@ -456,6 +478,14 @@
     </form>
   </div>
 </div>
+<aside class="zside" id="zside" aria-label="Main navigation">
+  <div class="zbrand"><div class="zmark">Z</div><span>Zodiac<br>Global</span></div>
+  <div class="zsec">Workspace</div>
+  <button class="znav on" id="nav-talent" data-view="talent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.4c1.8.8 3 2.7 3 5.6"/></svg>Talent Index</button>
+  <button class="znav" id="nav-campaigns" data-view="campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M8 13h4M8 16h8"/></svg>Campaign Management</button>
+  <div class="zwho"><div class="zav" id="zav">Z</div><div><b id="zname" style="font-weight:500">Zodiac team</b><br><span id="zrole" style="opacity:.7"></span></div></div>
+</aside>
+<div class="cm-view" id="cm-view" hidden><iframe id="cm-frame" title="Campaign Management" src="about:blank"></iframe></div>
 <div class="wrap">
 
   <header>
@@ -2600,5 +2630,38 @@ document.getElementById('brief-btn').addEventListener('click', openBriefMatcher)
 render();
 renderShortlist();
 </script>
+<script>
+/* ---- app shell: switch between Talent Index and Campaign Management ---- */
+(function(){
+  document.body.classList.add('zshell');
+  const frame = document.getElementById('cm-frame'), box = document.getElementById('cm-view'), wrap = document.querySelector('.wrap');
+  function showView(v){
+    const cm = v === 'campaigns';
+    box.hidden = !cm; document.getElementById('shortlist-fab').style.visibility = cm ? 'hidden' : ''; wrap.style.display = cm ? 'none' : '';
+    document.getElementById('nav-talent').classList.toggle('on', !cm);
+    document.getElementById('nav-campaigns').classList.toggle('on', cm);
+    if(cm && !frame.dataset.loaded){ frame.src = '/campaigns.html'; frame.dataset.loaded = '1'; }
+    try{ history.replaceState(null, '', cm ? '#campaigns' : location.pathname + location.search); }catch(e){}
+  }
+  document.querySelectorAll('.znav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  window.addEventListener('message', e => { if(e.origin === location.origin && e.data === 'zodiac-locked'){ try{ lockGate(); }catch(x){} } });
+  function who(){
+    const n = (typeof ME !== 'undefined' && ME && ME.name) || 'Zodiac team';
+    document.getElementById('zname').textContent = n;
+    document.getElementById('zav').textContent = n.split(/\s+/).map(p => p[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('zrole').textContent = typeof ROLE !== 'undefined' && ROLE === 'edit' ? ((ME && ME.admin) ? 'Admin' : 'Editor') : (ROLE ? 'View only' : '');
+  }
+  new MutationObserver(() => {
+    const open = document.getElementById('password-gate').classList.contains('unlocked');
+    who();
+    // if someone signs out and back in, make sure the embedded page picks up the new session
+    if(!open){ frame.src = 'about:blank'; delete frame.dataset.loaded; }
+    else if(location.hash === '#campaigns' && !frame.dataset.loaded) showView('campaigns');
+  }).observe(document.getElementById('password-gate'), {attributes:true, attributeFilter:['class']});
+  who();
+  if(location.hash === '#campaigns') showView('campaigns');
+})();
+</script>
+
 </body>
 </html>

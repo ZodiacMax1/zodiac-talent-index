@@ -41,3 +41,11 @@ Set one more environment variable in Netlify (mark it secret): MONDAY_TOKEN – 
 ## Brief Matcher (update 10)
 Add one environment variable in Netlify: ANTHROPIC_API_KEY (from console.anthropic.com). Optional: ANTHROPIC_MODEL to choose the model.
 Optional: ANTHROPIC_WORKSPACE_ID if your key is not scoped to a workspace.
+
+## Campaign Management (update 13)
+A new Campaign Management section sits in the left-hand menu beside Talent Index. Nothing extra to set up: the database tables are created automatically on the first deploy (migration 11), and it reuses the same ANTHROPIC_API_KEY for reading insights screenshots.
+- Each campaign has its own currency (£, $ or AED). Changing it converts every amount.
+- Manager details and rates entered on a campaign are saved back to the Talent Index. Talent added from a campaign is added to the Index.
+- Signed client agreements: PDF or image, up to 4MB.
+- Viewers (view password) can look but not edit.
+- "Import from monday" lists Agency Sales Pipeline deals at 3 - Proposal Sent (where the creator list is built), with budget, currency, target margin, owner and start date. Already-imported deals are ticked and locked. Needs MONDAY_TOKEN, which the sync already uses. After import the stage is changed here by hand; it isn't written back to monday yet.

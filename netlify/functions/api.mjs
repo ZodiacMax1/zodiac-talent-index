@@ -2,6 +2,7 @@ import { roleForPassword, issueToken, identityFromRequest, hashPassword, verifyP
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
 import { syncTalent } from '../lib/sync.mjs';
 import { normLocation } from '../lib/places.mjs';
+import { handleCampaigns } from '../lib/campaigns.mjs';
 import { randomBytes, createHash } from 'node:crypto';
 
 export const config = { path: '/api/*' };
@@ -601,6 +602,9 @@ export default async (req, context) => {
         return json({ ok: true, version: await bump() });
       }
     }
+
+    // ---- Campaign Management
+    if (route === 'campaigns') return handleCampaigns({ req, parts, method, json, needEdit, actor, logAct });
 
     // ---- Shared lists and decks (anyone logged in can save)
     if (route === 'lists' || route === 'decks') {
