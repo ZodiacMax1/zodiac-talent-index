@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/png" href="/favicon.png">
 <title>Campaign Management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Oswald:wght@400;500;600&display=swap">
@@ -441,6 +442,7 @@ function drawer(){
       h+='<div><h2 class="sh">Contract and invoicing</h2><div class="kv"><span class="k">Contract</span><span>'+sel('contract',i.contract,CONTRACT,i.id)+'</span><span class="k">Invoicing</span><span>'+sel('invoice',i.invoice,INVOICE,i.id)+'</span></div></div>';
       h+='<div><h2 class="sh">Archive</h2>'+(S.archiving?'<form id="arch-form" style="display:grid;gap:8px"><div class="small">Use this when a selected creator falls off. They move to the Archive tab and stop counting toward budget, costs and margin.</div><select class="sel plain" id="ar-reason">'+REASONS.map(function(r){return '<option>'+r+'</option>';}).join('')+'</select><input class="fld" id="ar-note" placeholder="Note (what happened)" required><div class="row"><button class="btn pri" type="submit">Archive creator</button><button class="btn" type="button" data-act="archcancel">Cancel</button></div></form>':'<button class="btn" data-act="archstart">Archive creator…</button>')+'</div>';
     }
+    if(canEdit())h+='<div><h2 class="sh">Remove</h2>'+(S.rmi===i.id?'<div class="banner" style="background:var(--bad-bg);color:var(--bad-fg);margin:0">Remove '+esc(x.name)+' from this campaign, with their rates, comments and deliverables? This cannot be undone.<div class="row" style="margin-top:10px"><button class="btn pri" data-act="rmigo">Yes, remove</button><button class="btn" data-act="rmicancel">Keep them</button></div></div>':'<button class="btn" data-act="rmiask">Remove from campaign…</button>')+'</div>';
   }
   return h+'</aside>';
 }
@@ -607,10 +609,13 @@ document.addEventListener('click',function(e){
   else if(d.act==='rmgo'){var did=S.dd.did,iid=S.dd.iid;S.dd=null;S.rmd=null;post(P('/talents/'+iid+'/deliverables/'+did),'DELETE',undefined,{msg:'Deliverable removed'});}
   else if(d.act==='addq'){S.addQ=!S.addQ;render();}
   else if(d.act==='archstart'){S.archiving=true;render();}
+  else if(d.act==='rmiask'){S.rmi=S.sel;render();}
+  else if(d.act==='rmicancel'){S.rmi=null;render();}
+  else if(d.act==='rmigo'){var rid=S.rmi;S.rmi=null;S.sel=null;S.dd=null;post(P('/talents/'+rid),'DELETE',undefined,{msg:'Removed from the campaign'});}
   else if(d.act==='archcancel'){S.archiving=false;render();}
   else if(d.esec!==undefined){S.editSec=d.esec||null;render();}
   else if(d.act==='editc'){S.editC=!S.editC;render();}
-  else if(d.act==='close'){S.sel=null;S.dd=null;S.editC=false;S.archiving=false;render();}
+  else if(d.act==='close'){S.rmi=null;S.sel=null;S.dd=null;S.editC=false;S.archiving=false;render();}
   else if(d.act==='pick'){S.pick=true;S.pickTab='Index';S.pickSel={};S.pickQ='';S.pickReg='All';S.pickMsg='';S.pqFocus=false;render();}
   else if(d.act==='pickclose'){S.pick=false;render();}
   else if(d.act==='pickadd'){var ids=Object.keys(S.pickSel),added=0;S.pick=false;
