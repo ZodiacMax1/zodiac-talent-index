@@ -246,7 +246,7 @@
   .deck-card{display:flex;gap:0;border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;margin-bottom:28px;}
   .deck-card-photo{width:280px;flex:0 0 auto;object-fit:cover;background:var(--cream);min-height:320px;display:block;}
   .deck-card-photo.placeholder{display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:40px;color:var(--line-strong);}
-  .deck-card>a{flex:0 0 auto;cursor:pointer;}
+  .deck-card>a{flex:0 0 auto;cursor:pointer;text-decoration:none;color:inherit;}
   .deck-card-body{padding:26px 30px;flex:1;}
   .deck-card-body h3{font-family:'Oswald',sans-serif;font-size:24px;margin:0 0 10px;text-transform:none;}
   .deck-platform-row{display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
@@ -258,12 +258,32 @@
   .deck-meta-tag{background:var(--cream);border:1px solid var(--line-strong);color:var(--grey);font-size:11px;padding:3px 10px;border-radius:999px;}
   .deck-empty{text-align:center;color:var(--grey-light);padding:80px 20px;}
 
+  .deck-platform-row{gap:10px 22px;}
+  .deck-plat{display:inline-flex;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;color:var(--ink);text-decoration:none;}
+  a.deck-plat:hover{color:var(--burgundy);}
+  .deck-plat svg{width:20px;height:20px;flex:0 0 auto;color:var(--burgundy);}
+  .deck-plat .pn{font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.04em;text-transform:uppercase;}
+  .deck-plat-pick{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--grey);}
+  .deck-plat-pick label{display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:var(--ink);}
+  .chip-pick .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}
+  .chip-pick .chips span{cursor:pointer;background:var(--cream);border:1px solid var(--line-strong);color:var(--grey);font-size:12px;padding:3px 10px;border-radius:999px;user-select:none;}
+  .chip-pick .chips span.on{background:var(--burgundy);border-color:var(--burgundy);color:#fff;}
+  .notes-box{margin-top:2px;}
+  .note-item{background:var(--card);border:1px solid var(--line-strong);border-radius:6px;padding:9px 12px;margin-bottom:8px;font-size:13px;line-height:1.5;white-space:pre-wrap;}
+  .note-meta{display:flex;justify-content:space-between;gap:10px;color:var(--grey);font-size:11px;margin-top:4px;white-space:normal;}
+  .note-meta button{background:none;border:none;color:var(--grey);cursor:pointer;font-size:11px;text-decoration:underline;padding:0;}
+  .note-add{display:flex;flex-direction:column;gap:6px;max-width:620px;}
+  .note-add textarea{width:100%;min-height:62px;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--card);box-sizing:border-box;}
+  .note-add .row{display:flex;gap:8px;align-items:center;}
+  .note-add input{font:inherit;font-size:12.5px;padding:6px 9px;border:1px solid var(--line-strong);border-radius:6px;background:var(--card);width:150px;}
   @media print{
     body *{visibility:hidden;}
     .deck-overlay, .deck-overlay *{visibility:visible;}
     .deck-overlay{position:absolute;inset:0;overflow:visible;}
     .deck-topbar{display:none;}
     .deck-card{page-break-inside:avoid;}
+    .deck-plat-pick{display:none;}
+    a.deck-plat{color:var(--ink);}
     .shortlist-fab, .shortlist-panel{display:none !important;}
   }
 
@@ -291,7 +311,7 @@
     .tt-col::before{content:"TT Following: ";}
     .yt-col::before{content:"YT Following: ";}
     .total-col::before{content:"Total Followers: ";}
-    .region::before{content:"Region: ";color:var(--grey);}
+    .region::before{content:"Location: ";color:var(--grey);}
     .detail-inner{padding:16px;}
     .shortlist-panel{width:100vw;}
   }
@@ -396,6 +416,10 @@
         </select>
       </div>
       <div class="filter-field">
+        <label>Location</label>
+        <select id="location-select"><option value="">Any location</option></select>
+      </div>
+      <div class="filter-field">
         <label>Gender</label>
         <select id="gender-select">
           <option value="">Any</option>
@@ -452,7 +476,7 @@
         <tr>
           <th></th>
           <th data-key="name">Name</th>
-          <th data-key="region">Region</th>
+          <th data-key="region">Location</th>
           <th data-key="niche">Niche</th>
           <th style="text-align:right">IG Following</th>
           <th style="text-align:right">TT Following</th>
@@ -505,6 +529,11 @@
         <label for="brand-domain-input">Domain override:</label>
         <input type="text" id="brand-domain-input" placeholder="pepsi.com" autocomplete="off" style="width:130px;">
       </div>
+    </div>
+    <div class="deck-plat-pick" id="deck-plat-pick">Show:
+      <label><input type="checkbox" data-dp="ig" checked> Instagram</label>
+      <label><input type="checkbox" data-dp="tt" checked> TikTok</label>
+      <label><input type="checkbox" data-dp="yt" checked> YouTube</label>
     </div>
     <button class="btn ghost" id="deck-save-btn">Save Deck</button>
     <button class="btn ghost" id="deck-share-btn">Copy Shareable Link</button>
@@ -596,6 +625,25 @@ function fmtFollowersFull(n){
   if(n===null||n===undefined) return '—';
   return n.toLocaleString('en-GB');
 }
+function locs(r){
+  const t = r.location || r.region || '';
+  return t.split(',').map(x => x.trim()).filter(Boolean);
+}
+function regionsOf(r){ return (r.region || '').split(',').map(x => x.trim()).filter(Boolean); }
+function allLocations(){
+  const c = {};
+  DATA.forEach(r => locs(r).forEach(l => c[l] = (c[l]||0) + 1));
+  if(!c.UK) c.UK = 0; if(!c.UAE) c.UAE = 0;
+  return c;
+}
+function populateLocationSelect(){
+  const sel = document.getElementById('location-select');
+  const c = allLocations();
+  const names = Object.keys(c).sort((a,b) => a.localeCompare(b));
+  const cur = state.location || '';
+  sel.innerHTML = '<option value="">Any location</option>' + names.map(n => `<option value="${escapeAttr(n)}">${escapeHtml(n)} (${c[n]})</option>`).join('');
+  sel.value = names.includes(cur) ? cur : '';
+}
 function niches(r){
   if(!r.niche) return [];
   return r.niche.split(',').map(s => s.trim()).filter(Boolean);
@@ -606,8 +654,8 @@ function renderStatCards(rows){
   const totalCount = rows.length;
   const exclCount = rows.filter(isExclusive).length;
   const nonExclCount = totalCount - exclCount;
-  const ukCount = rows.filter(r=>r.region==='UK').length;
-  const uaeCount = rows.filter(r=>r.region==='UAE').length;
+  const ukCount = rows.filter(r=>regionsOf(r).includes('UK')).length;
+  const uaeCount = rows.filter(r=>regionsOf(r).includes('UAE')).length;
   const megaCount = rows.filter(r=>r.total_followers && r.total_followers>=1000000).length;
   const followerVals = rows.map(r=>r.total_followers).filter(Boolean);
   const totalFollowersSum = followerVals.length ? followerVals.reduce((a,b)=>a+b,0) : 0;
@@ -679,7 +727,7 @@ document.addEventListener('click', (e) => {
   if(ms && !ms.contains(e.target)) document.getElementById('niche-multiselect-panel').classList.remove('open');
 });
 
-let state = { source:'all', region:'', q:'', niche:'', minFollowers:0, sort:'desc', platforms:['all'], niches:[], gender:'' };
+let state = { source:'all', region:'', location:'', q:'', niche:'', minFollowers:0, sort:'desc', platforms:['all'], niches:[], gender:'' };
 let expandedId = null;
 renderNichePanel();
 
@@ -697,7 +745,7 @@ function renderTableHead(){
   document.getElementById('table-head').innerHTML = `<tr>
     <th></th>
     <th data-key="name">Name</th>
-    <th data-key="region">Region</th>
+    <th data-key="region">Location</th>
     <th data-key="niche">Niche</th>
     ${platformThs}
     <th style="text-align:right">Total Followers</th>
@@ -769,7 +817,8 @@ function toggleStar(id){
 function matches(r){
   if(state.source === 'exclusive' && !isExclusive(r)) return false;
   if(state.source === 'nonexclusive' && isExclusive(r)) return false;
-  if(state.region && r.region !== state.region) return false;
+  if(state.region && !regionsOf(r).includes(state.region)) return false;
+  if(state.location && !locs(r).includes(state.location)) return false;
   if(state.gender === '__blank__' && (r.gender||'') !== '') return false;
   if(state.gender && state.gender !== '__blank__' && (r.gender||'') !== state.gender) return false;
   if(state.niches.length > 0 && !niches(r).some(n => state.niches.includes(n))) return false;
@@ -779,7 +828,7 @@ function matches(r){
     if(!v || v < state.minFollowers) return false;
   }
   if(state.q){
-    const hay = [r.name, r.region, r.niche, r.instagram, r.tiktok].filter(Boolean).join(' ').toLowerCase();
+    const hay = [r.name, r.region, r.location, r.niche, r.instagram, r.tiktok].filter(Boolean).join(' ').toLowerCase();
     const words = state.q.split(/\s+/).filter(Boolean);
     if(!words.every(w => hay.includes(w))) return false;
   }
@@ -864,7 +913,7 @@ function render(){
         ${avatar}
         <div><span class="name">${escapeHtml(r.name)}</span><span class="status-label">${meta.label}</span></div>
       </td>
-      <td class="region">${r.region ? escapeHtml(r.region) : '<span class="dash">—</span>'}</td>
+      <td class="region">${(r.location||r.region) ? escapeHtml(r.location||r.region) : '<span class="dash">—</span>'}</td>
       <td class="niche-compact">${compactNiche(r)}</td>
       ${platformCells}
       <td class="followers total-col"><strong>${totalCell}</strong></td>
@@ -889,6 +938,7 @@ function render(){
       renderShortlist();
     });
   });
+  if(expandedId) loadNotes(expandedId);
   tbody.querySelectorAll('[data-deals]').forEach(btn => {
     btn.addEventListener('click', (e) => { e.stopPropagation(); openDealsModal(DATA.find(r => r.id === btn.dataset.deals)); });
   });
@@ -943,8 +993,8 @@ function detailHtml(r){
       <div class="detail-value">${genderText}</div>
     </div>
     <div class="detail-col">
-      <div class="detail-label">Region</div>
-      <div class="detail-value">${r.region ? escapeHtml(r.region) : 'Not on file'}</div>
+      <div class="detail-label">Location</div>
+      <div class="detail-value">${(r.location||r.region) ? escapeHtml(r.location||r.region) : 'Not on file'}</div>
     </div>
     <div class="detail-col">
       <div class="detail-label">Typical Rate</div>
@@ -964,6 +1014,10 @@ function detailHtml(r){
       <div class="detail-label">Links</div>
       <div class="detail-links">${links.join('') || '<span class="dash">None on file</span>'}</div>
     </div>
+    <div class="detail-col" style="flex-basis:100%;max-width:none;">
+      <div class="detail-label">Internal notes${r.note_count ? ' (' + r.note_count + ')' : ''} <span style="text-transform:none;letter-spacing:0;color:var(--grey);font-family:'DM Sans',sans-serif;">· team only, never shown in decks</span></div>
+      <div class="notes-box" data-notes="${r.id}"><span class="dash">Loading…</span></div>
+    </div>
     <div class="detail-col">
       <div class="detail-label">Pitch Tools</div>
       <div class="detail-actions">
@@ -974,6 +1028,49 @@ function detailHtml(r){
     </div>
     </div>
   </div>`;
+}
+
+/* ---------- notes ---------- */
+const noteDrafts = {};
+function noteAuthor(){ try{ return localStorage.getItem('zodiacNoteAuthor') || ''; }catch(e){ return ''; } }
+async function loadNotes(id){
+  const box = document.querySelector('[data-notes="' + id + '"]');
+  if(!box) return;
+  let notes = [];
+  try{ notes = (await api('/talents/' + encodeURIComponent(id) + '/notes')).notes; }
+  catch(e){ box.innerHTML = '<span class="dash">Could not load notes</span>'; return; }
+  const box2 = document.querySelector('[data-notes="' + id + '"]');
+  if(!box2) return;
+  const fmt = d => new Date(d).toLocaleString('en-GB', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+  box2.innerHTML = notes.map(n => `<div class="note-item">${escapeHtml(n.body)}<div class="note-meta"><span>${n.author ? escapeHtml(n.author) + ' · ' : ''}${fmt(n.created_at)}</span>${canEdit() ? `<button data-delnote="${n.id}">Delete</button>` : ''}</div></div>`).join('') + `
+    <div class="note-add">
+      <textarea placeholder="Add a note (e.g. prefers email, rate agreed on a call, avoid alcohol brands)">${escapeHtml(noteDrafts[id] || '')}</textarea>
+      <div class="row"><input type="text" placeholder="Your name" value="${escapeAttr(noteAuthor())}"><button class="btn" style="padding:7px 16px;font-size:12.5px;" data-addnote>Add note</button></div>
+    </div>`;
+  const ta = box2.querySelector('textarea'), nm = box2.querySelector('input');
+  ta.addEventListener('input', () => { noteDrafts[id] = ta.value; });
+  box2.addEventListener('click', e => e.stopPropagation());
+  box2.querySelector('[data-addnote]').addEventListener('click', async (e) => {
+    const body = ta.value.trim();
+    if(!body){ showToast('Write a note first'); return; }
+    try{ localStorage.setItem('zodiacNoteAuthor', nm.value.trim()); }catch(x){}
+    e.target.disabled = true;
+    try{
+      await api('/talents/' + encodeURIComponent(id) + '/notes', {method:'POST', body:{body, author:nm.value.trim()}});
+      noteDrafts[id] = '';
+      const t = DATA.find(r => r.id === id); if(t) t.note_count = (t.note_count||0) + 1;
+      render();
+      showToast('Note added');
+    }catch(ex){ showToast(ex.message); e.target.disabled = false; }
+  });
+  box2.querySelectorAll('[data-delnote]').forEach(b => b.addEventListener('click', async () => {
+    if(!confirm('Delete this note?')) return;
+    try{
+      await api('/talents/' + encodeURIComponent(id) + '/notes/' + b.dataset.delnote, {method:'DELETE'});
+      const t = DATA.find(r => r.id === id); if(t) t.note_count = Math.max(0, (t.note_count||1) - 1);
+      render();
+    }catch(ex){ showToast(ex.message); }
+  }));
 }
 
 /* ---------- brand lists panel ---------- */
@@ -999,7 +1096,7 @@ function renderShortlist(){
     return `<div class="shortlist-item">
       <div>
         <div class="name">${escapeHtml(r.name)}</div>
-        <div class="meta">${meta.label} · ${r.region||'—'} · ${fmtFollowers(r.total_followers)||'—'} total followers</div>
+        <div class="meta">${meta.label} · ${r.location||r.region||'—'} · ${fmtFollowers(r.total_followers)||'—'} total followers</div>
       </div>
       <button class="shortlist-remove" data-remove="${r.id}">&times;</button>
     </div>`;
@@ -1073,14 +1170,14 @@ function showToast(msg){
 }
 
 function downloadXlsx(rows, filename, sheetTitle){
-  const headers = ['Name','Exclusivity','Region','Niche','Total Followers','IG Followers','TikTok Followers','YouTube Followers','Rate','Bio','Photo URL','Instagram','TikTok','YouTube'];
+  const headers = ['Name','Exclusivity','Location','Niche','Total Followers','IG Followers','TikTok Followers','YouTube Followers','Rate','Bio','Photo URL','Instagram','TikTok','YouTube'];
   const aoa = [headers];
   rows.forEach(r => {
     const meta = statusMeta(r);
     aoa.push([
       r.name,
       meta.label,
-      r.region || '',
+      r.location || r.region || '',
       niches(r).join(', '),
       r.total_followers || '',
       r.ig_followers || '',
@@ -1119,6 +1216,7 @@ function setRegion(val){
 }
 document.getElementById('exclusivity-select').addEventListener('change', e => setSource(e.target.value));
 document.getElementById('region-select-bottom').addEventListener('change', e => setRegion(e.target.value));
+document.getElementById('location-select').addEventListener('change', e => { state.location = e.target.value; render(); });
 document.getElementById('gender-select').addEventListener('change', e => { state.gender = e.target.value; render(); });
 
 function setPlatforms(vals){
@@ -1147,10 +1245,11 @@ document.getElementById('export-btn').addEventListener('click', () => {
 });
 
 function resetFilters(){
-  state = { source:'all', region:'', q:'', minFollowers:0, sort:'desc', platforms:['all'], niches:[], gender:'' };
+  state = { source:'all', region:'', location:'', q:'', minFollowers:0, sort:'desc', platforms:['all'], niches:[], gender:'' };
   document.getElementById('search').value = '';
   document.getElementById('exclusivity-select').value = 'all';
   document.getElementById('region-select-bottom').value = '';
+  document.getElementById('location-select').value = '';
   document.getElementById('gender-select').value = '';
   updateNicheButtonLabel();
   renderNichePanel();
@@ -1260,7 +1359,7 @@ function renderSavedDecksList(){
       const d = deckStore[btn.dataset.openDeck];
       document.getElementById('saved-decks-panel').classList.remove('open');
       document.getElementById('deck-overlay').classList.add('open');
-      renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName});
+      renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms});
     });
   });
   body.querySelectorAll('[data-delete-deck]').forEach(btn => {
@@ -1291,7 +1390,27 @@ function deckRecords(){
   return records;
 }
 
+const PLAT_ICON = {
+  ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>',
+  tt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 3c.3 2.3 1.8 3.9 4 4.1v3.1a7.3 7.3 0 0 1-4-1.3v6.2a6 6 0 1 1-6-6c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2 2.7V3h3.1z"/></svg>',
+  yt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.800.4-4.800s0-3.200-.4-4.800zM10 15V9l5.200 3L10 15z"/></svg>'
+};
+const PLAT_NAME = {ig:'Instagram', tt:'TikTok', yt:'YouTube'};
+const PLAT_URL = {ig:'instagram', tt:'tiktok', yt:'youtube'};
+let deckPlats = ['ig','tt','yt'];
+function syncDeckPlatChecks(){
+  document.querySelectorAll('[data-dp]').forEach(cb => { cb.checked = deckPlats.includes(cb.dataset.dp); });
+}
+document.querySelectorAll('[data-dp]').forEach(cb => cb.addEventListener('change', () => {
+  deckPlats = ['ig','tt','yt'].filter(k => document.querySelector('[data-dp="' + k + '"]').checked);
+  renderDeck(deckOverride);
+}));
+let deckOverride = null;
+
 function renderDeck(override){
+  deckOverride = override || null;
+  if(override && override.platforms) deckPlats = override.platforms.slice();
+  syncDeckPlatChecks();
   let records, brand, domain, listLabel;
   if(override){
     records = override.ids.map(id => DATA.find(r => r.id === id)).filter(Boolean);
@@ -1315,7 +1434,7 @@ function renderDeck(override){
     brandLogo = `<span class="deck-x">×</span><img class="deck-logo-badge" src="https://www.google.com/s2/favicons?sz=128&domain=${escapeAttr(domain)}" alt="${escapeAttr(brand)}" onerror="this.outerHTML='<div class=&quot;deck-logo-badge placeholder&quot;>${escapeHtml(brand.charAt(0).toUpperCase())}</div>'">`;
   }
 
-  const totalFollowers = records.reduce((sum,r) => sum + (r.total_followers||0), 0);
+  const totalFollowers = records.reduce((sum,r) => sum + deckPlats.reduce((t,k) => t + (r[PLATFORM_FIELD[k]]||0), 0), 0);
 
   const header = `
     <div class="deck-header">
@@ -1333,7 +1452,6 @@ function renderDeck(override){
   }
 
   const cards = records.map(r => {
-    const meta = statusMeta(r);
     const photoInner = r.photo
       ? `<img class="deck-card-photo" src="${escapeAttr(r.photo)}" alt="${escapeAttr(r.name)}" onerror="this.outerHTML='<div class=&quot;deck-card-photo placeholder&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
       : `<div class="deck-card-photo placeholder">${escapeHtml(r.name.charAt(0))}</div>`;
@@ -1344,22 +1462,23 @@ function renderDeck(override){
     const nameHtml = r.instagram
       ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${nameInner} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>`
       : nameInner;
-    const followerStat = r.total_followers ? `<div class="deck-platform">${escapeHtml(fmtFollowers(r.total_followers))} Followers</div>` : '';
+    const platRow = deckPlats.map(k => {
+      const n = r[PLATFORM_FIELD[k]], url = r[PLAT_URL[k]];
+      if(!n && !url) return '';
+      const inner = `${PLAT_ICON[k]}<span>${n ? escapeHtml(fmtFollowers(n)) : '<span class="pn">' + PLAT_NAME[k] + '</span>'}</span>`;
+      return url
+        ? `<a class="deck-plat" href="${escapeAttr(url)}" target="_blank" rel="noopener" title="${escapeAttr(PLAT_NAME[k])}">${inner}</a>`
+        : `<span class="deck-plat" title="${escapeAttr(PLAT_NAME[k])}">${inner}</span>`;
+    }).join('');
     const bio = r.public_bio
       ? `<div class="deck-bio">${escapeHtml(r.public_bio)}</div>`
       : `<div class="deck-bio missing">Bio not on file.</div>`;
-    const nicheTags = niches(r).map(n => `<span class="deck-meta-tag">${escapeHtml(n)}</span>`).join('');
     return `<div class="deck-card">
       ${photo}
       <div class="deck-card-body">
         <h3>${nameHtml}</h3>
-        <div class="deck-platform-row">${followerStat}</div>
+        <div class="deck-platform-row">${platRow}</div>
         ${bio}
-        <div class="deck-meta-row">
-          <span class="deck-meta-tag" style="background:var(--burgundy-tint);color:var(--burgundy);">${meta.label}</span>
-          ${r.region ? `<span class="deck-meta-tag">${escapeHtml(r.region)}</span>` : ''}
-          ${nicheTags}
-        </div>
       </div>
     </div>`;
   }).join('');
@@ -1389,7 +1508,7 @@ document.getElementById('deck-save-btn').addEventListener('click', () => {
   const trimmed = name.trim();
   if(!trimmed) return;
   const id = 'deck_' + Date.now();
-  deckStore[id] = { id, name: trimmed, brand, domain, listName: store.active, ids: records.map(r => r.id), savedAt: Date.now() };
+  deckStore[id] = { id, name: trimmed, brand, domain, listName: store.active, ids: records.map(r => r.id), platforms: deckPlats.slice(), savedAt: Date.now() };
   saveDeckStoreToDisk();
   renderSavedDecksList();
   showToast('Deck saved — find it under "Saved Decks" on the main page');
@@ -1408,6 +1527,7 @@ function shareableDeckLink(){
   if(brand) params.set('brand', brand);
   if(domain) params.set('domain', domain);
   if(store.active) params.set('list', store.active);
+  params.set('pf', deckPlats.join(','));
   return location.origin + location.pathname + '#deck?' + params.toString();
 }
 document.getElementById('deck-share-btn').addEventListener('click', () => {
@@ -1432,7 +1552,8 @@ function parseDeckHash(){
     ids,
     brand: params.get('brand') || '',
     domain: params.get('domain') || '',
-    listName: params.get('list') || ''
+    listName: params.get('list') || '',
+    platforms: params.get('pf') ? params.get('pf').split(',').filter(x => ['ig','tt','yt'].includes(x)) : null
   };
 }
 const sharedDeck = parseDeckHash();
@@ -1464,6 +1585,7 @@ async function loadState(){
   document.getElementById('header-total').innerHTML = '<span class="live-dot"></span>' + DATA.length + ' talent on file';
   renderNichePanel();
   updateNicheButtonLabel();
+  populateLocationSelect();
   render();
   renderShortlist();
   renderSavedDecksList();
@@ -1483,10 +1605,34 @@ document.addEventListener('visibilitychange', () => { if(!document.hidden) poll(
 function distinct(field){
   return [...new Set(DATA.map(r => r[field]).filter(Boolean))].sort();
 }
+function chipPick(name, options, selected, addLabel){
+  const sel = new Set(selected);
+  const all = [...new Set([...options, ...selected])];
+  return `<div class="chip-pick" data-chip="${name}">
+    <input type="hidden" name="${name}" value="${escapeAttr(selected.join(', '))}">
+    <div class="chips">${all.map(o => `<span data-v="${escapeAttr(o)}" class="${sel.has(o)?'on':''}">${escapeHtml(o)}</span>`).join('')}</div>
+    <input type="text" placeholder="${addLabel}" autocomplete="off" style="width:100%;">
+  </div>`;
+}
+function wireChipPick(root){
+  const hidden = root.querySelector('input[type=hidden]'), chips = root.querySelector('.chips'), txt = root.querySelector('input[type=text]');
+  const sync = () => { hidden.value = [...chips.querySelectorAll('span.on')].map(x => x.dataset.v).join(', '); };
+  chips.addEventListener('click', e => { const sp = e.target.closest('span'); if(sp){ sp.classList.toggle('on'); sync(); } });
+  const add = () => {
+    txt.value.split(',').map(x => x.trim()).filter(Boolean).forEach(v => {
+      let sp = [...chips.querySelectorAll('span')].find(x => x.dataset.v.toLowerCase() === v.toLowerCase());
+      if(!sp){ sp = document.createElement('span'); sp.dataset.v = v; sp.textContent = v; chips.appendChild(sp); }
+      sp.classList.add('on');
+    });
+    txt.value = ''; sync();
+  };
+  txt.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ','){ e.preventDefault(); add(); } });
+  txt.addEventListener('blur', add);
+}
 function openTalentForm(r){
   const isNew = !r;
   r = r || {exclusivity:'Non-Exclusive'};
-  const regions = distinct('region');
+  const locOpts = Object.keys(allLocations()).sort((a,b) => a.localeCompare(b));
   const nicheList = [...getNicheSet()].sort();
   const v = x => escapeAttr(x == null ? '' : x);
   openModal(`<h3>${isNew ? 'Add Talent' : 'Edit ' + escapeHtml(r.name)}</h3>
@@ -1501,11 +1647,9 @@ function openTalentForm(r){
       <option value="F" ${r.gender==='F'?'selected':''}>Female</option>
       <option value="M" ${r.gender==='M'?'selected':''}>Male</option>
       <option value="Mixed" ${r.gender==='Mixed'?'selected':''}>Mixed</option></select></div>
-    <div><label>Region</label><input name="region" list="dl-regions" value="${v(r.region)}">
-      <datalist id="dl-regions">${regions.map(x => `<option value="${escapeAttr(x)}">`).join('')}</datalist></div>
     <div><label>Typical Rate</label><input name="rate" value="${v(r.rate)}"></div>
-    <div class="full"><label>Niches (comma separated)</label><input name="niche" id="niche-input" value="${v(r.niche)}">
-      <div class="niche-tags" style="margin-top:8px;">${nicheList.map(n => `<span class="niche-tag" data-addniche="${escapeAttr(n)}" style="cursor:pointer;">${escapeHtml(n)}</span>`).join('')}</div></div>
+    <div class="full"><label>Locations (tap to select, or type a new one and press Enter)</label>${chipPick('location', locOpts, locs(r), 'Add a new location, e.g. Spain')}</div>
+    <div class="full"><label>Niches (tap to select, or type a new one and press Enter)</label>${chipPick('niche', nicheList, niches(r), 'Add a new niche, e.g. Padel')}</div>
     <div><label>Instagram Followers</label><input name="ig_followers" inputmode="numeric" value="${v(r.ig_followers)}"></div>
     <div><label>Instagram Link</label><input name="instagram" value="${v(r.instagram)}"></div>
     <div><label>TikTok Followers</label><input name="tt_followers" inputmode="numeric" value="${v(r.tt_followers)}"></div>
@@ -1521,18 +1665,13 @@ function openTalentForm(r){
     <button type="submit" class="btn" id="form-save">${isNew ? 'Add Talent' : 'Save Changes'}</button>
   </div></form>`);
   document.getElementById('form-cancel').onclick = closeModal;
-  document.querySelectorAll('[data-addniche]').forEach(t => t.addEventListener('click', () => {
-    const inp = document.getElementById('niche-input');
-    const cur = inp.value.split(',').map(x => x.trim()).filter(Boolean);
-    const n = t.dataset.addniche;
-    inp.value = (cur.includes(n) ? cur.filter(x => x !== n) : cur.concat(n)).join(', ');
-  }));
+  document.querySelectorAll('.chip-pick').forEach(wireChipPick);
   document.getElementById('talent-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const body = {};
     for(const [k, val] of fd.entries()){
-      const orig = r[k] == null ? '' : String(r[k]);
+      const orig = k === 'location' ? locs(r).join(', ') : (r[k] == null ? '' : String(r[k]));
       if(isNew || String(val).trim() !== orig) body[k] = val;
     }
     if(!isNew && !Object.keys(body).length){ closeModal(); return; }
@@ -1561,7 +1700,7 @@ const NICHE_MAP = {'food & drink':'F&B','food and drink':'F&B','food & beverage'
 const HEADER_ALIASES = {
   name:['name','creator','talent','talent name'],
   exclusivity:['exclusivity','exclusive'],
-  region:['region','location','location by country','country'],
+  location:['location','locations','region','location by country','country'],
   gender:['gender'],
   niche:['niche','niches','category','categories'],
   instagram:['instagram','instagram url','instagram link','ig link','ig url'],
@@ -1627,7 +1766,7 @@ function buildImportPlan(sheetRows){
       else if(x === 'non-exclusive' || x === 'non exclusive' || x === 'nonexclusive') rec.exclusivity = 'Non-Exclusive';
       else issues.push('Exclusivity must be Exclusive or Non-Exclusive');
     }
-    if((v = txt('region'))) rec.region = REGION_MAP[v.toLowerCase()] || v;
+    if((v = txt('location'))) rec.location = v.split(/[,;\/&]+/).map(x => x.trim()).filter(Boolean).map(x => REGION_MAP[x.toLowerCase()] || x).join(', ');
     if((v = txt('gender'))){
       const x = v.toLowerCase();
       if(['f','female','woman'].includes(x)) rec.gender = 'F';
@@ -1656,8 +1795,8 @@ function buildImportPlan(sheetRows){
 }
 
 function downloadImportTemplate(){
-  const headers = ['Name','Exclusivity','Region','Gender','Niche','Instagram URL','Instagram Followers','TikTok URL','TikTok Followers','YouTube URL','YouTube Followers','Rate'];
-  const example = ['Jane Creator','Non-Exclusive','UK','Female','Fashion, Beauty','https://www.instagram.com/janecreator/',234000,'https://www.tiktok.com/@janecreator',87000,'',null,''];
+  const headers = ['Name','Exclusivity','Location','Gender','Niche','Instagram URL','Instagram Followers','TikTok URL','TikTok Followers','YouTube URL','YouTube Followers','Rate'];
+  const example = ['Jane Creator','Non-Exclusive','UK, UAE','Female','Fashion, Beauty','https://www.instagram.com/janecreator/',234000,'https://www.tiktok.com/@janecreator',87000,'',null,''];
   const notes = [['Zodiac Talent Index – import template'],[],
     ['One row per talent on the first sheet. Delete the example row before uploading.'],
     ['Only Name is required. Leave anything unknown blank – do not guess.'],
