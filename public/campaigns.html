@@ -62,6 +62,7 @@ h2.sh{font:500 13px var(--display);letter-spacing:.16em;text-transform:uppercase
 .cell:last-child{border-right:0}
 .cell .v{font:500 32px/1.1 var(--display);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
 .cell .v .bud{font:inherit;letter-spacing:inherit;width:100%;text-align:left;padding:0 6px;margin-left:-6px;border-radius:8px}
+.ftag{background:#000;color:#E4E2DD;border-radius:6px;padding:2px 8px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-right:8px}.dtx{font-weight:500}.dtx.late{color:var(--bad-fg)}
 .cell .s{font-size:13px;color:var(--muted);margin-top:2px}
 .gbp{font:500 13px var(--mono);color:var(--gold);margin-top:3px}.cell.ok{background:var(--ok-bg)}.cell.ok .v{color:var(--ok-fg)}.cell.bad{background:var(--bad-bg)}.cell.bad .v{color:var(--bad-fg)}
 .prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:20px}
@@ -177,7 +178,7 @@ function api(path,opts){
 function fmtFolT(n){return n>=1e6?(n/1e6).toFixed(n%1e6===0?0:1)+'M':n>=1e3?Math.round(n/1e3)+'K':String(n);}
 function platOf(t){var o=[];if(t.ig_followers)o.push('IG '+fmtFolT(t.ig_followers));if(t.tt_followers)o.push('TT '+fmtFolT(t.tt_followers));if(t.yt_followers)o.push('YT '+fmtFolT(t.yt_followers));return o.join(' · ');}
 function ix(t){var f=FULL&&FULL.infl.filter(function(i){return i.tid===t;})[0];if(f)return f;return TAL.filter(function(x){return x.id===t;})[0]||{name:'Unknown',plat:'',region:'',niche:'',mgr:'',email:'',phone:''};}
-function sub(t){var x=ix(t);return (x.plat||'')+(x.plat&&x.region?' · ':'')+(x.region||'');}
+function sub(t){var x=ix(t);return x.region||'';}
 var _n=new Date();function p2(n){return (n<10?'0':'')+n;}
 var TODAY=_n.getFullYear()+'-'+p2(_n.getMonth()+1)+'-'+p2(_n.getDate());
 var SYM={GBP:'£',USD:'$',AED:''};var FXD={GBP:1,USD:0.75,AED:0.2};var REASONS=['Dropped out','Client request','Budget','Contract issue','Availability','Other'];
@@ -212,6 +213,13 @@ function sel(field,val,opts,iid,attr){
 function selected(c){return c.infl.filter(function(i){return i.approved==='Yes'&&!i.archived;});}
 function fd(iso){if(!iso)return '–';var d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});}
 function dinfo(d){
+  if(d.noPost){var fs=d.recv;
+    if(d.stage==='Live'||(fs&&fs<TODAY))return {k:'ok',t:'Filmed',done:true,key:fs||'9',w:'Filming',date:fs};
+    if(!fs)return {k:'neu',t:'No date',key:'9',w:'Filming',date:''};
+    var fd0=Math.round((new Date(fs)-new Date(TODAY))/864e5);
+    if(fd0===0)return {k:'warn',t:'Today',key:fs,w:'Filming',date:fs,diff:0};
+    if(fd0<=3)return {k:'warn',t:'In '+fd0+(fd0===1?' day':' days'),key:fs,w:'Filming',date:fs,diff:fd0};
+    return {k:'neu',t:'In '+fd0+' days',key:fs,w:'Filming',date:fs,diff:fd0};}
   var done=d.stage==='Live';
   if(d.stage==='Approved'&&d.live){var df=Math.round((new Date(d.live)-new Date(TODAY))/864e5);return {k:df<0?'bad':'warn',t:df<0?(-df)+(df===-1?' day':' days')+' late to post':'Approved · not posted',key:d.live,w:'Go live',date:d.live,diff:df};}
   if(done)return {k:'ok',t:'Done',done:true,key:d.live||d.recv||'9',w:'Went live',date:d.live};
@@ -225,6 +233,10 @@ function dinfo(d){
 }
 function gap(due,act){if(!due||!act)return '';var n=Math.round((new Date(act)-new Date(due))/864e5);return n===0?'on time':n<0?(-n)+(n===-1?' day early':' days early'):n+(n===1?' day late':' days late');}
 function mst(d,kind){
+  if(d.noPost){if(kind==='live')return {k:'neu',big:'No posting',sub:'Filming or attendance only',state:'N/A',na:true};
+    var fi=dinfo(d);if(fi.done)return {k:'ok',big:'Filmed '+fd(d.recv),sub:'Filming day',state:'Complete'};
+    if(!d.recv)return {k:'neu',big:'No date',sub:'Add the filming date',state:'Not set'};
+    return {k:fi.k,big:'Filming '+fd(d.recv),sub:fi.t,state:fi.k==='warn'?'Due soon':'Upcoming'};}
   var isR=kind==='recv',dl=isR?d.recv:d.live,done=isR?DSTAGES.indexOf(d.stage)>=2:d.stage==='Live',at=isR?(d.recvAt||d.recv):(d.liveAt||d.live);
   if(done)return {k:'ok',big:(isR?'Received ':'Posted ')+(at?fd(at):''),sub:dl?'Deadline '+fd(dl)+' · '+gap(dl,at):'No deadline set',state:'Complete'};
   if(!isR&&d.stage==='Approved'&&dl){var dd=Math.round((new Date(dl)-new Date(TODAY))/864e5);return {k:dd<0?'bad':'warn',big:'Due '+fd(dl),sub:dd<0?(-dd)+(dd===-1?' day':' days')+' overdue. Approved, not posted':'Approved, not posted',state:dd<0?'Overdue':'Needs posting'};}
@@ -260,12 +272,12 @@ function dsum(i){var t=i.deliv.length;if(!t)return '<span class="small">None yet
   return '<div style="display:grid;gap:5px;min-width:130px"><div style="font-size:13px"><b style="font-weight:500">'+live+' of '+t+'</b> posted</div><div class="mini">'+i.deliv.map(function(d){var k=dinfo(d).k;return '<b class="'+(d.stage==='Live'?'d':k==='bad'?'x':k==='warn'?'w':'')+'"></b>';}).join('')+'</div>'+(od?'<div style="font-size:12px;color:var(--bad-fg)">'+od+' overdue</div>':np?'<div style="font-size:12px;color:var(--warn-fg)">'+np+' to post</div>':'')+'</div>';}
 function progress(c){
   var s=selected(c),n=s.length,dels=[];s.forEach(function(i){i.deliv.forEach(function(d){dels.push(d);});});
-  var live=dels.filter(function(d){return d.stage==='Live';}).length;
+  var live=dels.filter(function(d){return dinfo(d).done;}).length;
   var signed=s.filter(function(i){return i.contract==='Signed';}).length;
-  var appr=dels.filter(function(d){return d.stage==='Approved'||d.stage==='Live';}).length;
+  var posts=dels.filter(function(d){return !d.noPost;}),appr=posts.filter(function(d){return d.stage==='Approved'||d.stage==='Live';}).length;
   var inv=s.filter(function(i){return i.invoice!=='Not invoiced';}).length;
   var paid=s.filter(function(i){return i.invoice==='Paid';}).length;
-  return [['Deliverables complete',live,dels.length],['Contracts signed',signed,n],['Content approved',appr,dels.length],['Invoiced',inv,n],['Paid',paid,n]];
+  return [['Deliverables complete',live,dels.length],['Contracts signed',signed,n],['Content approved',appr,posts.length],['Invoiced',inv,n],['Paid',paid,n]];
 }
 function prog(c){
   return '<div class="prog">'+progress(c).map(function(p){var v=pct(p[1],p[2]);return '<div class="pcell"><div class="lbl">'+p[0]+'</div><div class="v">'+v+'%<small>'+p[1]+' of '+p[2]+'</small></div><div class="bar"><i class="'+(v===100?'full':'')+'" style="width:'+v+'%"></i></div></div>';}).join('')+'</div>';
@@ -299,16 +311,10 @@ function viewCampaigns(){
   return h+'</tbody></table></div>';
 }
 function deadlines(c){
-  var items=[],dn=0,tot=0;
-  selected(c).forEach(function(i){i.deliv.forEach(function(d){tot++;if(d.stage==='Live')dn++;
-    ['recv','live'].forEach(function(kd){var m=mst(d,kd);if(m.k==='ok'||m.state==='Not set')return;items.push({i:i,d:d,m:m,kd:kd,key:(kd==='recv'?d.recv:d.live)});});});});
+  var tot=0,cnt={bad:0,warn:0,neu:0,ok:0};
+  selected(c).forEach(function(i){i.deliv.forEach(function(d){tot++;cnt[dinfo(d).k]++;});});
   if(!tot)return '';
-  items.sort(function(a,b){return a.key<b.key?-1:a.key>b.key?1:0;});
-  var od=items.filter(function(r){return r.m.k==='bad';}).length,sn=items.filter(function(r){return r.m.k==='warn';}).length,up=items.filter(function(r){return r.m.k==='neu';}).length;
-  var h='<div class="card" style="padding:16px 20px;margin-bottom:20px"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">To do · deadlines</h2><div class="row" style="gap:6px">'+(od?'<span class="pill bad">'+od+' overdue</span>':'')+(sn?'<span class="pill warn">'+sn+' due soon</span>':'')+(up?'<span class="pill neu">'+up+' upcoming</span>':'')+'<span class="pill ok">✓ '+dn+' of '+tot+' posted</span></div></div>';
-  if(!items.length)return h+'<div class="small">Nothing outstanding. Everything is received and posted.</div></div>';
-  h+='<div class="dlrow">'+items.map(function(r){var m=r.m;return '<button class="dlc k-'+m.k+'" data-dd="'+r.i.id+'|'+r.d.id+'"><div class="small" style="font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase">'+(r.kd==='recv'?'Content':'Post')+'</div><div class="nm">'+esc(ix(r.i.tid).name)+'</div><div class="small">'+esc(r.d.name)+'</div><div class="when">'+m.big+'</div><div class="st">'+m.sub+'</div></button>';}).join('')+'</div></div>';
-  return h;
+  return '<div class="card" style="padding:14px 20px;margin-bottom:20px"><div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><h2 class="sh" style="margin:0">To do · deadlines</h2>'+(cnt.bad?'<span class="pill bad">'+cnt.bad+' overdue</span>':'')+(cnt.warn?'<span class="pill warn">'+cnt.warn+' due soon</span>':'')+(cnt.neu?'<span class="pill neu">'+cnt.neu+' upcoming</span>':'')+'<span class="pill ok">✓ '+cnt.ok+' of '+tot+' done</span></div><button class="btn sm" data-tab="Deliverables">View deliverables →</button></div></div>';
 }
 function viewCampaign(){
   if(!camp())return '<div class="ld">Loading campaign…</div>';
@@ -327,7 +333,7 @@ function viewCampaign(){
   if(S.tab==='Influencers')h+=tabInfl(c);else if(S.tab==='Archive')h+=tabArchive(c);else if(S.tab==='Decks & links')h+=tabDecks(c);else if(S.tab==='Deliverables')h+=tabDeliv(c);else h+=tabSetup(c);
   return h;
 }
-function nameCell(i){var x=ix(i.tid);return '<div class="who2"><div class="ini">'+initials(x.name)+'</div><div><button class="name" data-pick="'+i.id+'">'+esc(x.name)+'</button><div class="small" style="white-space:nowrap">'+esc(sub(i.tid))+'<span class="idx" title="Linked to the Talent Index">● Index</span></div></div></div>';}
+function nameCell(i){var x=ix(i.tid);return '<div class="who2"><div class="ini">'+initials(x.name)+'</div><div><button class="name" data-pick="'+i.id+'">'+esc(x.name)+'</button><div class="small" style="white-space:nowrap">'+'<span class="idx" title="Linked to the Talent Index">● Index</span></div></div></div>';}
 function tabInfl(c){
   var w=won(c),h='';
   if(w)h+='<div class="banner"><b>Closed Won.</b> This view now shows the selected creators only. Everyone else we put forward is in the Archive tab.</div>';
@@ -371,19 +377,26 @@ function tabDecks(c){
   if(q.length)h+='<div class="card" style="padding:20px 24px;margin-top:16px"><h2 class="sh">What the client said</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">'+q.map(function(i){return '<div class="quote"><b>'+esc(i.name)+'</b> <span class="pill '+cls(i.approved)+'">'+esc(i.approved)+'</span><div style="margin-top:6px">“'+esc(i.feedback)+'”</div></div>';}).join('')+'</div></div>';
   return h;
 }
+function dcell(d,kind){
+  var m=mst(d,kind);
+  if(m.na)return '<span class="small">No posting required</span>';
+  if(m.k==='ok')return '<span class="pill ok">✓ '+esc(m.big)+'</span>';
+  var dl=d.noPost?d.recv:(kind==='recv'?d.recv:d.live);
+  if(!dl)return '<span class="small">No date</span>';
+  return '<span class="dtx'+(m.k==='bad'?' late':'')+'">'+fd(dl)+'</span> <span class="pill '+m.k+'">'+esc(m.sub)+'</span>';
+}
 function tabDeliv(c){
   if(!won(c))return '<div class="card" style="padding:24px">Deliverables open up once the campaign is Closed Won in monday. Change the monday stage above to 7 - Won to preview.</div>';
   var rows=[];selected(c).forEach(function(i){i.deliv.forEach(function(d){rows.push([i,d]);});});
-  rows.sort(function(a,b){return (a[1].recv||a[1].live||'9')<(b[1].recv||b[1].live||'9')?-1:1;});
+  rows.sort(function(a,b){var ka=dinfo(a[1]),kb=dinfo(b[1]);if(ka.done!==kb.done)return ka.done?1:-1;return (ka.key||'9')<(kb.key||'9')?-1:1;});
   var KM={bad:'Overdue',warn:'Due soon',neu:'Upcoming',ok:'Completed'},cnt={All:rows.length,Overdue:0,'Due soon':0,Upcoming:0,Completed:0};
   rows.forEach(function(r){cnt[KM[dinfo(r[1]).k]]++;});
   var all=rows.length;
   rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg);});
   var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div>';
-
-  var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content received</th><th>Posted</th><th></th><th></th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Open an influencer to add them.')+'</td></tr>';
-  rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td><b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td><span class="pill '+cls(d.stage)+'">'+esc(d.stage)+'</span></td><td>'+rcell(d)+'</td><td>'+lcell(d)+'</td><td>'+dchip(d)+'</td><td class="small">'+(d.links.length?d.links.length+' links ':'')+(d.comments.length?d.comments.length+' notes':'')+'</td></tr>';});
+  var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Content due</th><th>To be posted by</th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="4" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Open an influencer to add them.')+'</td></tr>';
+  rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td></tr>';});
   return h+'</tbody></table></div>';
 }
 function fcf(label,key,c,type,ph){return '<label><span class="lbl">'+label+'</span><input class="fld" data-cf="'+key+'" type="'+(type||'text')+'" value="'+esc(c[key])+'" placeholder="'+(ph||'')+'"></label>';}
@@ -425,7 +438,7 @@ function drawer(){
     if(live){
       var dl2=i.deliv.slice().sort(function(a,b){return (a.recv||a.live||'9')<(b.recv||b.live||'9')?-1:1;});
       h+='<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Deadlines</h2><button class="btn sm" data-act="adddel">'+(S.addDel?'Cancel':'+ Add deliverable')+'</button></div>';
-      if(S.addDel)h+='<form id="dnew-form" style="margin-bottom:12px;display:grid;gap:8px;padding:14px;background:var(--soft);border-radius:12px"><input class="fld" id="d-name" placeholder="e.g. 1 × Reel" required><select class="sel plain" id="d-plat"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Other</option></select><div class="g2"><label><span class="lbl">Receive by</span><input class="fld" id="d-recv" type="date"></label><label><span class="lbl">Go live</span><input class="fld" id="d-live" type="date"></label></div><div><button class="btn pri" type="submit">Add</button></div></form>';
+      if(S.addDel)h+='<form id="dnew-form" style="margin-bottom:12px;display:grid;gap:8px;padding:14px;background:var(--soft);border-radius:12px"><input class="fld" id="d-name" placeholder="e.g. 1 × Reel" required><select class="sel plain" id="d-plat"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>Other</option></select><label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" id="d-nopost"><span><b style="font-weight:500">No posting required</b><span class="small"> · filming or attendance day</span></span></label><div class="g2"><label><span class="lbl" id="d-recv-l">Receive by</span><input class="fld" id="d-recv" type="date"></label><label id="d-live-w"><span class="lbl">Go live</span><input class="fld" id="d-live" type="date"></label></div><div><button class="btn pri" type="submit">Add</button></div></form>';
       if(!dl2.length&&!S.addDel)h+='<div class="small">No deliverables yet.</div>';
       dl2.forEach(function(d){var n=dinfo(d);h+='<button class="dcard k-'+n.k+'" data-dd="'+i.id+'|'+d.id+'"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;gap:8px"><div><div style="font-weight:500">'+esc(d.name)+'</div><div class="small">'+esc(d.plat)+(d.links.length?' · '+d.links.length+' links':'')+'</div></div><span class="pill '+cls(d.stage)+'">'+esc(d.stage)+'</span></div>'+mini(d)+'<div class="row" style="gap:8px;margin-top:2px">'+mchip(d,'recv')+mchip(d,'live')+'</div></button>';});
       h+='</div>';
@@ -451,8 +464,13 @@ function ddrawer(c){
   var x=ix(i.tid),cur=DSTAGES.indexOf(d.stage);
   var h='<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-label="'+esc(d.name)+'">';
   h+='<div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div><button class="crumb" data-act="ddback">← '+esc(x.name)+'</button><div style="font:500 24px var(--display);letter-spacing:.02em;text-transform:uppercase;margin-top:6px">'+esc(d.name)+'</div><div class="small">'+esc(d.plat)+' · '+esc(c.name)+'</div></div><button class="btn sm" data-act="close" aria-label="Close">✕</button></div>';
+  h+='<label class="row" style="gap:10px;flex-wrap:nowrap;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)"><input type="checkbox" data-dnp="1"'+(d.noPost?' checked':'')+'><span><b style="font-weight:500">No posting required</b><div class="small">Filming or attendance day only, e.g. a TV advert. One date, nothing to post.</div></span></label>';
+  if(d.noPost){var fi2=dinfo(d);
+    h+='<div><h2 class="sh">Filming day</h2><div class="ms k-'+fi2.k+'"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="lbl">Date</div><span class="pill '+fi2.k+'">'+(fi2.done?'✓ Filmed':fi2.t)+'</span></div><div class="big">'+(d.recv?fd(d.recv):'No date')+'</div><div class="dfs"><label><span class="lbl">Filming date</span><input class="dt" type="date" data-dk="recv" value="'+esc(d.recv||'')+'"></label></div></div></div>';
+  }else{
   h+='<div><h2 class="sh">Progress</h2><div class="trk">'+DSTAGES.map(function(s2,k){var sub=k===2&&cur>=2?fd(d.recvAt||d.recv):k===5&&cur===5?fd(d.liveAt||d.live):'';return '<button class="tn'+(k<cur?' d':k===cur?' c':'')+'" data-dst="'+d.id+'" data-s="'+s2+'" data-i="'+i.id+'"><span class="dot">'+(k<cur||(k===cur&&k===5)?'✓':k+1)+'</span><span class="tl">'+s2+'</span><span class="ts">'+sub+'</span></button>'+(k<5?'<span class="tc'+(k<cur?' d':'')+'"></span>':'');}).join('')+'</div></div>';
   h+='<div><h2 class="sh">Dates</h2><div class="msg">'+['recv','live'].map(function(kd){var m=mst(d,kd),isR=kd==='recv',dl=isR?d.recv:d.live,ac=isR?d.recvAt:d.liveAt,done=m.k==='ok';return '<div class="ms k-'+m.k+'"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="lbl">'+(isR?'Content':'Post')+'</div><span class="pill '+m.k+'">'+(done?'✓ ':'')+m.state+'</span></div><div class="big">'+m.big+'</div><div class="sb">'+m.sub+'</div><div class="dfs"><label><span class="lbl">Deadline</span><input class="dt" type="date" data-dk="'+(isR?'recv':'live')+'" value="'+esc(dl||'')+'"></label><label><span class="lbl">'+(isR?'Received':'Posted')+'</span><input class="dt" type="date" data-dk="'+(isR?'recvAt':'liveAt')+'" value="'+esc(ac||'')+'"></label></div>'+(done?'':'<button class="btn sm pri" data-mark="'+kd+'" style="margin-top:10px;width:100%">Mark '+(isR?'received':'posted')+' today</button>')+'</div>';}).join('')+'</div></div>';
+  }
   h+='<div><h2 class="sh">Links</h2><div class="thread" style="gap:8px">'+(d.links.length?d.links.map(function(l,k){return '<div class="lk"><a href="'+esc(l.u)+'" target="_blank" rel="noopener">'+esc(l.l)+' ↗</a><button class="x" data-rml="d|'+k+'" aria-label="Remove link">✕</button></div>';}).join(''):'<div class="small">No links yet. Add the live post, drafts or proof.</div>')+'</div><form class="row" data-lk="d" style="margin-top:10px;flex-wrap:nowrap"><input class="fld" name="l" placeholder="Label" style="flex:1" required><input class="fld" name="u" type="url" placeholder="https://" style="flex:2" required><button class="btn" type="submit">Add</button></form></div>';
   var M=[['Views','views'],['Reach','reach'],['Impressions','impr'],['Likes','likes'],['Comments','comments'],['Shares','shares'],['Saves','saves']];
   h+='<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Insights</h2><button class="btn sm'+(S.editI?' pri':'')+'" data-act="insedit">'+(S.editI?'Done':'Edit figures')+'</button></div>';
@@ -510,7 +528,12 @@ function attach(f){
   b64(f).then(function(d){return post(P('/contract'),'POST',{name:f.name,type:f.type||'application/octet-stream',data:d},{msg:'Agreement saved'});});
 }
 function openFile(){
-  fetch('/api/campaigns/'+FULL.id+'/contract',{headers:{authorization:'Bearer '+TOKEN}}).then(function(r){if(!r.ok)throw new Error('No file');return r.blob();}).then(function(b){window.open(URL.createObjectURL(b),'_blank');}).catch(function(){toast('Could not open the file');});
+  var w=null;try{w=window.open('','_blank');}catch(e){}
+  fetch('/api/campaigns/'+FULL.id+'/contract',{headers:{authorization:'Bearer '+TOKEN}}).then(function(r){if(!r.ok)throw new Error('No file');return r.blob();}).then(function(b){
+    var u=URL.createObjectURL(b);
+    if(w&&!w.closed){w.location.href=u;return;}
+    var a=document.createElement('a');a.href=u;a.download='contract.pdf';document.body.appendChild(a);a.click();a.remove();toast('Popups are blocked, so the contract was downloaded instead');
+  }).catch(function(){if(w)w.close();toast('Could not open the file');});
 }
 document.addEventListener('dragover',function(e){var z=e.target.closest&&e.target.closest('.dz');if(z){e.preventDefault();z.classList.add('over');}});
 document.addEventListener('dragleave',function(e){var z=e.target.closest&&e.target.closest('.dz');if(z)z.classList.remove('over');});
@@ -531,6 +554,8 @@ function apply(el){
 var RERENDER={name:1,client:1,fx:1,cStatus:1,cSigned:1,start:1,end:1,target:1,budget:1,cValue:1};
 document.addEventListener('change',function(e){
   var t=e.target,d=t.dataset||{};
+  if(t.id==='d-nopost'){document.getElementById('d-live-w').style.display=t.checked?'none':'';document.getElementById('d-recv-l').textContent=t.checked?'Filming date':'Receive by';return;}
+  if(d.dnp){var zp=cdel();zp.noPost=t.checked;if(t.checked){zp.live='';zp.liveAt='';}render();patchDel(zp,{noPost:t.checked});return;}
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
   if(t.id==='lshare'){if(t.value)post(P('/links'),'POST',{code:t.value},{msg:'Link added to this campaign'});return;}
@@ -566,7 +591,7 @@ document.addEventListener('submit',function(e){
   }
   else if(t==='quote-form'){var amt=document.getElementById('q-amt').value.trim();S.addQ=false;post(P('/talents/'+S.sel+'/quotes'),'POST',{amount:amt});}
   else if(t==='tc-form'){var g=document.getElementById('tc-g'),lk=document.getElementById('tc-l').value.trim();post(P('/talents/'+S.sel+'/comments'),'POST',{body:document.getElementById('tc-t').value.trim(),tag:g?g.value:'',link:lk});}
-  else if(t==='dnew-form'){S.addDel=false;post(P('/talents/'+S.sel+'/deliverables'),'POST',{name:document.getElementById('d-name').value.trim(),platform:document.getElementById('d-plat').value,recv:document.getElementById('d-recv').value,live:document.getElementById('d-live').value});}
+  else if(t==='dnew-form'){S.addDel=false;post(P('/talents/'+S.sel+'/deliverables'),'POST',{name:document.getElementById('d-name').value.trim(),platform:document.getElementById('d-plat').value,recv:document.getElementById('d-recv').value,live:document.getElementById('d-live').value,noPost:document.getElementById('d-nopost').checked});}
   else if(t==='arch-form'){var ai=find(S.sel),nm=ai.name;var rs=document.getElementById('ar-reason').value,nt=document.getElementById('ar-note').value.trim();S.archiving=false;var sid=S.sel;S.sel=null;S.dd=null;post(P('/talents/'+sid),'PATCH',{archived:{reason:rs,note:nt}},{msg:nm+' archived. Moved to the Archive tab.'});}
   else if(e.target.dataset&&e.target.dataset.lk){var dd=cdel(),f=e.target;var item={l:f.elements.l.value.trim(),u:f.elements.u.value.trim()};if(!/^https?:\/\//i.test(item.u)){toast('The link has to start with https://');return;}dd.links=dd.links.concat([item]);render();patchDel(dd,{links:dd.links});}
   else if(t==='newt-form'){

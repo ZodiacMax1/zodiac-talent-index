@@ -102,7 +102,7 @@ async function loadFull(id) {
   const ids = cts.map((x) => x.id);
   const dels = ids.length ? await query(
     `SELECT id, ct_id, name, platform, stage, to_char(recv_by,'YYYY-MM-DD') AS recv_by, to_char(recv_at,'YYYY-MM-DD') AS recv_at,
-            to_char(live_by,'YYYY-MM-DD') AS live_by, to_char(live_at,'YYYY-MM-DD') AS live_at, links, insights
+            to_char(live_by,'YYYY-MM-DD') AS live_by, to_char(live_at,'YYYY-MM-DD') AS live_at, links, insights, no_post
        FROM campaign_deliverables WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const coms = ids.length ? await query(`SELECT id, ct_id, author, body, link, tag, created_at FROM campaign_comments WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const quotes = ids.length ? await query(`SELECT id, ct_id, amount, note, author, created_at FROM campaign_quotes WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
@@ -118,7 +118,7 @@ async function loadFull(id) {
     contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
       id: d.id, name: d.name, plat: d.platform || '', stage: d.stage, recv: d.recv_by || '', recvAt: d.recv_at || '', live: d.live_by || '', liveAt: d.live_at || '',
-      links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
+      noPost: !!d.no_post, links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
     })),
     comments: coms.filter((m) => m.ct_id === x.id).map((m) => ({ id: Number(m.id), by: m.author, at: m.created_at, t: m.body, link: m.link || '', tag: m.tag || '' })),
     quotes: quotes.filter((q) => q.ct_id === x.id).map((q) => ({ id: Number(q.id), a: q.amount, n: q.note || '', by: q.author || '', d: q.created_at })),
@@ -452,7 +452,7 @@ export async function handleCampaigns(ctx) {
         const b = await body();
         const name = text(b.name, 200);
         if (!name) return bad('Name the deliverable');
-        await query('INSERT INTO campaign_deliverables (id, ct_id, name, platform, recv_by, live_by) VALUES ($1,$2,$3,$4,$5,$6)', [newId('d'), ctId, name, text(b.platform, 60), dateOrNull(b.recv), dateOrNull(b.live)]);
+        await query('INSERT INTO campaign_deliverables (id, ct_id, name, platform, recv_by, live_by, no_post) VALUES ($1,$2,$3,$4,$5,$6,$7)', [newId('d'), ctId, name, text(b.platform, 60), dateOrNull(b.recv), b.noPost ? null : dateOrNull(b.live), !!b.noPost]);
         await touch();
         return json({ campaign: await loadFull(id) }, 201);
       }
@@ -469,6 +469,7 @@ export async function handleCampaigns(ctx) {
         if ('name' in b) { const n = text(b.name, 200); if (!n) return bad('Name the deliverable'); upd.name = n; }
         if ('stage' in b) { if (!D_STAGES.includes(b.stage)) return bad('Invalid stage'); upd.stage = b.stage; }
         for (const [k, col] of [['recv', 'recv_by'], ['recvAt', 'recv_at'], ['live', 'live_by'], ['liveAt', 'live_at']]) if (k in b) upd[col] = dateOrNull(b[k]);
+        if ('noPost' in b) { upd.no_post = !!b.noPost; if (b.noPost) { upd.live_by = null; upd.live_at = null; } }
         if ('links' in b) {
           if (!Array.isArray(b.links)) return bad('Invalid links');
           upd.links = JSON.stringify(b.links.slice(0, 30).map((l) => ({ l: text(l.l, 120) || 'Link', u: text(l.u, 800) || '' })).filter((l) => /^https?:\/\//i.test(l.u)));

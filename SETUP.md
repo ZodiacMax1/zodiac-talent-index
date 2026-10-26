@@ -49,3 +49,10 @@ A new Campaign Management section sits in the left-hand menu beside Talent Index
 - Signed client agreements: PDF or image, up to 4MB.
 - Viewers (view password) can look but not edit.
 - "Import from monday" lists Agency Sales Pipeline deals at 3 - Proposal Sent (where the creator list is built), with budget, currency, target margin, owner and start date. Already-imported deals are ticked and locked. Needs MONDAY_TOKEN, which the sync already uses. After import the stage is changed here by hand; it isn't written back to monday yet.
+
+## Update 20: filming days and deliverables table
+- Migration 12 (`no_post` column) runs automatically on deploy.
+- Deliverables can be ticked "No posting required" (filming or attendance day): one date, no posting stage.
+- The Deliverables tab is now a table: Influencer | Deliverable | Content due | To be posted by.
+- The deadlines strip at the top of a campaign is a single compact row.
+- Follower counts removed from influencer rows. Deliverables added on influencer lines now show in the tab.
