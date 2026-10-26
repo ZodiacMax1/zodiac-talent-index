@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Zodiac Global — Talent Shortlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--cream:#F0EEEA;--card:#fff;--burgundy:#4D0011;--ink:#1A1A1A;--grey:#6B6B6B;--grey-light:#9C9890;--line:#DDD9D0;--line-strong:#C7C2B8;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--cream);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .bar{position:sticky;top:0;z-index:5;background:var(--cream);border-bottom:1px solid var(--line-strong);padding:12px 24px;display:flex;justify-content:flex-end;}
+  .btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;background:var(--burgundy);color:#fff;border:1px solid var(--burgundy);border-radius:6px;padding:9px 18px;cursor:pointer;}
+  .inner{max-width:900px;margin:0 auto;padding:44px 24px 90px;}
+  .hdr{text-align:center;margin-bottom:40px;}
+  .logos{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:18px;}
+  .badge{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--card);border:1px solid var(--line-strong);}
+  .badge.ph{display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:600;font-size:20px;color:var(--grey);}
+  .x{font-family:'Oswald',sans-serif;font-size:20px;color:var(--grey-light);}
+  .title{font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;text-transform:uppercase;letter-spacing:-0.01em;}
+  .title .b{color:var(--burgundy);}
+  .sub{color:var(--grey);font-size:13.5px;margin-top:8px;}
+  .stat{border:1px solid var(--line-strong);border-radius:8px;background:var(--card);max-width:220px;margin:28px auto 0;padding:16px 12px;}
+  .stat .num{font-weight:700;font-size:20px;}
+  .stat .lbl{font-size:11px;color:var(--grey);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+  .card{display:flex;border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;margin-bottom:28px;page-break-inside:avoid;}
+  .card>a{flex:0 0 auto;text-decoration:none;color:inherit;}
+  .photo{width:280px;flex:0 0 auto;object-fit:cover;background:var(--cream);min-height:320px;display:block;}
+  .photo.ph{display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-size:40px;color:var(--line-strong);}
+  .body{padding:26px 30px;flex:1;}
+  .body h3{font-family:'Oswald',sans-serif;font-size:24px;margin:0 0 10px;}
+  .body h3 a{color:inherit;text-decoration:none;}
+  .plats{display:flex;gap:10px 22px;margin-bottom:16px;flex-wrap:wrap;}
+  .plat{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--ink);text-decoration:none;}
+  a.plat:hover{color:var(--burgundy);}
+  .plat svg{width:20px;height:20px;color:var(--burgundy);}
+  .bio{font-size:13.5px;line-height:1.6;}
+  .bio.missing{color:var(--grey-light);font-style:italic;}
+  .msg{text-align:center;color:var(--grey);padding:120px 20px;}
+  .foot{text-align:center;color:var(--grey-light);font-size:11.5px;margin-top:20px;}
+  .vp{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;margin-right:12px;}
+  .vp button{border:none;background:var(--card);padding:8px 14px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--grey);}
+  .vp button.on{background:var(--burgundy);color:#fff;}
+  .bar{align-items:center;}
+  .card.nophoto .body{padding:22px 30px;}
+  .list{border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;}
+  .row{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);page-break-inside:avoid;}
+  .row:last-child{border-bottom:none;}
+  .row .av{width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--cream);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;color:var(--grey);}
+  .row .nm{flex:1;font-family:'Oswald',sans-serif;font-size:18px;min-width:0;}
+  .row .nm a{color:inherit;text-decoration:none;}
+  .row .plats{margin:0;justify-content:flex-end;}
+  @media (max-width:760px){.row{flex-wrap:wrap;}.row .plats{justify-content:flex-start;width:100%;}}
+  @media (max-width:760px){.card{flex-direction:column;}.photo{width:100%;height:240px;min-height:0;}.title{font-size:26px;}}
+  @media print{.bar{display:none;}.vp{display:none;}body{background:#fff;}}
+</style>
+</head>
+<body>
+<div class="bar"><div class="vp"><button data-v="cards">Cards</button><button data-v="list">List</button></div><button class="btn" onclick="window.print()">Print / Save as PDF</button></div>
+<div class="inner" id="root"><div class="msg">Loading…</div></div>
+<script>
+const ICON = {
+  ig:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>',
+  tt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 3c.3 2.3 1.8 3.9 4 4.1v3.1a7.3 7.3 0 0 1-4-1.3v6.2a6 6 0 1 1-6-6c.3 0 .6 0 .9.1v3.2a2.9 2.9 0 1 0 2 2.7V3h3.1z"/></svg>',
+  yt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg>'
+};
+const NAME = {ig:'Instagram', tt:'TikTok', yt:'YouTube'};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? esc(u) : '';
+function fmt(n){ if(n >= 1e6) return (n/1e6).toFixed(n % 1e6 === 0 ? 0 : 1) + 'M'; if(n >= 1e3) return Math.round(n/1e3) + 'K'; return String(n); }
+function guessDomain(b){ const c = (b||'').toLowerCase().replace(/[^a-z0-9]/g,''); return c ? c + '.com' : ''; }
+
+(async function(){
+  const root = document.getElementById('root');
+  const code = location.pathname.split('/').filter(Boolean).pop() || '';
+  let d;
+  try{
+    const r = await fetch('/api/public/deck/' + encodeURIComponent(code));
+    if(!r.ok) throw new Error();
+    d = await r.json();
+  }catch(e){
+    root.innerHTML = '<div class="msg"><h2 style="font-family:Oswald,sans-serif;">This link is no longer available</h2><p>Please ask your Zodiac Global contact for a new one.</p></div>';
+    return;
+  }
+  const brand = d.brand || '', domain = d.domain || guessDomain(brand);
+  document.title = 'Zodiac Global' + (brand ? ' × ' + brand : '') + ' — Talent Shortlist';
+  const plats = (d.platforms || ['ig','tt','yt']);
+  let view = d.view === 'list' ? 'list' : 'cards';
+  const total = d.talents.reduce((t, x) => t + plats.reduce((s, k) => s + ((x[k] && x[k].n) || 0), 0), 0);
+  const brandLogo = brand ? `<span class="x">×</span><img class="badge" src="https://www.google.com/s2/favicons?sz=128&domain=${esc(domain)}" alt="${esc(brand)}" onerror="this.outerHTML='<div class=&quot;badge ph&quot;>${esc(brand.charAt(0).toUpperCase())}</div>'">` : '';
+  const head = `<div class="hdr">
+    <div class="logos"><img class="badge" src="https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg" alt="Zodiac Global" onerror="this.outerHTML='<div class=&quot;badge ph&quot;>Z</div>'">${brandLogo}</div>
+    <div class="title">Zodiac Global${brand ? ' <span class="b">× ' + esc(brand) + '</span>' : ''}</div>
+    <div class="sub">Talent Shortlist</div>
+    <div class="stat"><div class="num">${esc(fmt(total) || 0)}</div><div class="lbl">Total Audience</div></div>
+  </div>`;
+  const foot = '<div class="foot">Zodiac Global · Prepared ' + new Date(d.createdAt).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + '</div>';
+  const nameOf = t => { const ig = safeUrl(t.ig && t.ig.url); return ig ? `<a href="${ig}" target="_blank" rel="noopener">${esc(t.name)} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>` : esc(t.name); };
+  const platsOf = t => plats.map(k => {
+    const p = t[k]; if(!p || (!p.n && !p.url)) return '';
+    const u = safeUrl(p.url);
+    const inner = ICON[k] + '<span>' + (p.n ? esc(fmt(p.n)) : esc(NAME[k])) + '</span>';
+    return u ? `<a class="plat" href="${u}" target="_blank" rel="noopener" title="${NAME[k]}">${inner}</a>` : `<span class="plat" title="${NAME[k]}">${inner}</span>`;
+  }).join('');
+  function draw(){
+    document.querySelectorAll('.vp button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+    let items;
+    if(view === 'list'){
+      items = '<div class="list">' + d.talents.map(t => {
+        const av = t.photo ? `<img class="av" src="${esc(t.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;av&quot;>${esc(t.name.charAt(0))}</div>'">` : `<div class="av">${esc(t.name.charAt(0))}</div>`;
+        return `<div class="row">${av}<div class="nm">${nameOf(t)}</div><div class="plats">${platsOf(t)}</div></div>`;
+      }).join('') + '</div>';
+    } else {
+      items = d.talents.map(t => {
+        const ig = safeUrl(t.ig && t.ig.url);
+        const ph = t.photo ? `<img class="photo" src="${esc(t.photo)}" alt="${esc(t.name)}" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;photo ph&quot;>${esc(t.name.charAt(0))}</div>'">` : '';
+        const photo = ph && ig ? `<a href="${ig}" target="_blank" rel="noopener">${ph}</a>` : ph;
+        const bio = t.bio ? `<div class="bio">${esc(t.bio)}</div>` : '';
+        return `<div class="card${t.photo ? '' : ' nophoto'}">${photo}<div class="body"><h3>${nameOf(t)}</h3><div class="plats"${bio ? '' : ' style="margin-bottom:0"'}>${platsOf(t)}</div>${bio}</div></div>`;
+      }).join('');
+    }
+    root.innerHTML = head + items + foot;
+  }
+  document.querySelectorAll('.vp button').forEach(b => b.addEventListener('click', () => { view = b.dataset.v; draw(); }));
+  draw();
+})();
+</script>
+</body>
+</html>

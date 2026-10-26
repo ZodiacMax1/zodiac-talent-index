@@ -263,6 +263,18 @@
   a.deck-plat:hover{color:var(--burgundy);}
   .deck-plat svg{width:20px;height:20px;flex:0 0 auto;color:var(--burgundy);}
   .deck-plat .pn{font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.04em;text-transform:uppercase;}
+  .deck-list{border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;}
+  .deck-row{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);page-break-inside:avoid;}
+  .deck-row:last-child{border-bottom:none;}
+  .deck-row .av{width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--cream);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;color:var(--grey);}
+  .deck-row .nm{flex:1;font-family:'Oswald',sans-serif;font-size:18px;min-width:0;}
+  .deck-row .nm a{color:inherit;text-decoration:none;}
+  .deck-row .deck-platform-row{margin:0;justify-content:flex-end;gap:8px 22px;}
+  .deck-card.nophoto .deck-card-body{padding:22px 30px;}
+  .deck-view-pick{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;}
+  .deck-view-pick button{border:none;background:var(--card);padding:7px 13px;font:inherit;font-size:12px;cursor:pointer;color:var(--grey);}
+  .deck-view-pick button.on{background:var(--burgundy);color:#fff;}
+  @media (max-width:760px){.deck-row{flex-wrap:wrap;}.deck-row .deck-platform-row{justify-content:flex-start;width:100%;}}
   .deck-plat-pick{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--grey);}
   .deck-plat-pick label{display:inline-flex;align-items:center;gap:4px;cursor:pointer;color:var(--ink);}
   .chip-pick .chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px;}
@@ -282,7 +294,7 @@
     .deck-overlay{position:absolute;inset:0;overflow:visible;}
     .deck-topbar{display:none;}
     .deck-card{page-break-inside:avoid;}
-    .deck-plat-pick{display:none;}
+    .deck-plat-pick, .deck-view-pick{display:none;}
     a.deck-plat{color:var(--ink);}
     .shortlist-fab, .shortlist-panel{display:none !important;}
   }
@@ -329,7 +341,7 @@
   .btn.danger{color:#9b1c1c;border-color:#d9b3b3;}
   .btn.danger:hover{background:#fbeaea;}
   .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#2e8b57;margin-right:6px;vertical-align:middle;}
-  .modal-back{position:fixed;inset:0;background:rgba(30,0,6,.45);display:none;align-items:flex-start;justify-content:center;z-index:300;overflow:auto;padding:40px 16px;}
+  .modal-back{position:fixed;inset:0;background:rgba(30,0,6,.45);display:none;align-items:flex-start;justify-content:center;z-index:600;overflow:auto;padding:40px 16px;}
   .modal-back.open{display:flex;}
   .modal-card{background:#fff;border-radius:6px;max-width:640px;width:100%;padding:26px 28px;box-shadow:0 20px 60px rgba(0,0,0,.25);}
   .modal-card h3{font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--burgundy);margin:0 0 16px;font-size:18px;}
@@ -405,14 +417,6 @@
           <option value="exclusive">Exclusive</option>
           <option value="nonexclusive">Non-Exclusive</option>
           <option value="all" selected>All</option>
-        </select>
-      </div>
-      <div class="filter-field">
-        <label>Region</label>
-        <select id="region-select-bottom">
-          <option value="">Any region</option>
-          <option value="UK">UK</option>
-          <option value="UAE">UAE</option>
         </select>
       </div>
       <div class="filter-field">
@@ -530,6 +534,7 @@
         <input type="text" id="brand-domain-input" placeholder="pepsi.com" autocomplete="off" style="width:130px;">
       </div>
     </div>
+    <div class="deck-view-pick" id="deck-view-pick"><button data-dv="cards" class="on">Cards</button><button data-dv="list">List</button></div>
     <div class="deck-plat-pick" id="deck-plat-pick">Show:
       <label><input type="checkbox" data-dp="ig" checked> Instagram</label>
       <label><input type="checkbox" data-dp="tt" checked> TikTok</label>
@@ -545,6 +550,7 @@
 <div class="shortlist-panel" id="saved-decks-panel">
   <div class="shortlist-head">
     <h3>Saved Decks</h3>
+    <button class="btn ghost" id="shared-links-btn" style="padding:6px 12px;font-size:11.5px;margin-left:auto;margin-right:10px;">Shared links</button>
     <button class="shortlist-close" id="saved-decks-close">&times;</button>
   </div>
   <div class="shortlist-body" id="saved-decks-body"></div>
@@ -668,8 +674,8 @@ function renderStatCards(rows){
     {label:'Total On File', num:totalCount, sub:'Roster + prospects', action:'reset'},
     {label:'Total Followers', num:fmtFollowers(totalFollowersSum), sub:'Everyone shown', action:null},
     {label:'Top Niche', num:topNicheEntry?topNicheEntry[0]:'—', sub: topNicheEntry ? topNicheEntry[1] + ' talent' : '', action: topNicheEntry ? 'niche:'+topNicheEntry[0] : null},
-    {label:'UK Talent', num:ukCount, sub:'On file', action:'region:UK'},
-    {label:'UAE Talent', num:uaeCount, sub:'On file', action:'region:UAE'},
+    {label:'UK Talent', num:ukCount, sub:'On file', action:'location:UK'},
+    {label:'UAE Talent', num:uaeCount, sub:'On file', action:'location:UAE'},
     {label:'1M+ Followers', num:megaCount, sub:'Across roster & prospects', action:'mega'},
   ];
   document.getElementById('card-grid').innerHTML = cards.map(c => `
@@ -1209,13 +1215,12 @@ function setSource(val){
   document.getElementById('exclusivity-select').value = val;
   render();
 }
-function setRegion(val){
-  state.region = val;
-  document.getElementById('region-select-bottom').value = val;
+function setLocation(val){
+  state.location = val;
+  document.getElementById('location-select').value = val;
   render();
 }
 document.getElementById('exclusivity-select').addEventListener('change', e => setSource(e.target.value));
-document.getElementById('region-select-bottom').addEventListener('change', e => setRegion(e.target.value));
 document.getElementById('location-select').addEventListener('change', e => { state.location = e.target.value; render(); });
 document.getElementById('gender-select').addEventListener('change', e => { state.gender = e.target.value; render(); });
 
@@ -1248,7 +1253,6 @@ function resetFilters(){
   state = { source:'all', region:'', location:'', q:'', minFollowers:0, sort:'desc', platforms:['all'], niches:[], gender:'' };
   document.getElementById('search').value = '';
   document.getElementById('exclusivity-select').value = 'all';
-  document.getElementById('region-select-bottom').value = '';
   document.getElementById('location-select').value = '';
   document.getElementById('gender-select').value = '';
   updateNicheButtonLabel();
@@ -1269,7 +1273,7 @@ document.getElementById('card-grid').addEventListener('click', (e) => {
   else if(action === 'mega'){ resetFilters(); state.minFollowers = 1000000; document.getElementById('min-followers').value = '1000000'; render(); }
   else if(action === 'exclusive'){ resetFilters(); setSource('exclusive'); }
   else if(action === 'nonexclusive'){ resetFilters(); setSource('nonexclusive'); }
-  else if(action.startsWith('region:')){ resetFilters(); setRegion(action.split(':')[1]); }
+  else if(action.startsWith('location:')){ resetFilters(); setLocation(action.split(':')[1]); }
   else if(action.startsWith('niche:')){ resetFilters(); state.niches = [action.split(':').slice(1).join(':')]; updateNicheButtonLabel(); renderNichePanel(); render(); }
   document.getElementById('results-line').scrollIntoView({behavior:'smooth', block:'center'});
 });
@@ -1359,7 +1363,7 @@ function renderSavedDecksList(){
       const d = deckStore[btn.dataset.openDeck];
       document.getElementById('saved-decks-panel').classList.remove('open');
       document.getElementById('deck-overlay').classList.add('open');
-      renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms});
+      renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms, view: d.view});
     });
   });
   body.querySelectorAll('[data-delete-deck]').forEach(btn => {
@@ -1406,11 +1410,16 @@ document.querySelectorAll('[data-dp]').forEach(cb => cb.addEventListener('change
   renderDeck(deckOverride);
 }));
 let deckOverride = null;
+let deckView = 'cards';
+function syncDeckViewButtons(){ document.querySelectorAll('[data-dv]').forEach(b => b.classList.toggle('on', b.dataset.dv === deckView)); }
+document.querySelectorAll('[data-dv]').forEach(b => b.addEventListener('click', () => { deckView = b.dataset.dv; renderDeck(deckOverride); }));
 
 function renderDeck(override){
   deckOverride = override || null;
   if(override && override.platforms) deckPlats = override.platforms.slice();
+  if(override && override.view) deckView = override.view;
   syncDeckPlatChecks();
+  syncDeckViewButtons();
   let records, brand, domain, listLabel;
   if(override){
     records = override.ids.map(id => DATA.find(r => r.id === id)).filter(Boolean);
@@ -1451,37 +1460,44 @@ function renderDeck(override){
     return;
   }
 
-  const cards = records.map(r => {
-    const photoInner = r.photo
-      ? `<img class="deck-card-photo" src="${escapeAttr(r.photo)}" alt="${escapeAttr(r.name)}" onerror="this.outerHTML='<div class=&quot;deck-card-photo placeholder&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
-      : `<div class="deck-card-photo placeholder">${escapeHtml(r.name.charAt(0))}</div>`;
-    const photo = r.instagram
-      ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" title="Open ${escapeAttr(r.name)}'s Instagram">${photoInner}</a>`
-      : photoInner;
-    const nameInner = escapeHtml(r.name);
-    const nameHtml = r.instagram
-      ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${nameInner} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>`
-      : nameInner;
-    const platRow = deckPlats.map(k => {
-      const n = r[PLATFORM_FIELD[k]], url = r[PLAT_URL[k]];
-      if(!n && !url) return '';
-      const inner = `${PLAT_ICON[k]}<span>${n ? escapeHtml(fmtFollowers(n)) : '<span class="pn">' + PLAT_NAME[k] + '</span>'}</span>`;
-      return url
-        ? `<a class="deck-plat" href="${escapeAttr(url)}" target="_blank" rel="noopener" title="${escapeAttr(PLAT_NAME[k])}">${inner}</a>`
-        : `<span class="deck-plat" title="${escapeAttr(PLAT_NAME[k])}">${inner}</span>`;
-    }).join('');
-    const bio = r.public_bio
-      ? `<div class="deck-bio">${escapeHtml(r.public_bio)}</div>`
-      : `<div class="deck-bio missing">Bio not on file.</div>`;
-    return `<div class="deck-card">
-      ${photo}
-      <div class="deck-card-body">
-        <h3>${nameHtml}</h3>
-        <div class="deck-platform-row">${platRow}</div>
-        ${bio}
-      </div>
-    </div>`;
+  const nameLink = r => r.instagram
+    ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">${escapeHtml(r.name)} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>`
+    : escapeHtml(r.name);
+  const platRowOf = r => deckPlats.map(k => {
+    const n = r[PLATFORM_FIELD[k]], url = r[PLAT_URL[k]];
+    if(!n && !url) return '';
+    const inner = `${PLAT_ICON[k]}<span>${n ? escapeHtml(fmtFollowers(n)) : '<span class="pn">' + PLAT_NAME[k] + '</span>'}</span>`;
+    return url
+      ? `<a class="deck-plat" href="${escapeAttr(url)}" target="_blank" rel="noopener" title="${escapeAttr(PLAT_NAME[k])}">${inner}</a>`
+      : `<span class="deck-plat" title="${escapeAttr(PLAT_NAME[k])}">${inner}</span>`;
   }).join('');
+  let cards;
+  if(deckView === 'list'){
+    cards = '<div class="deck-list">' + records.map(r => {
+      const av = r.photo
+        ? `<img class="av" src="${escapeAttr(r.photo)}" alt="" onerror="this.outerHTML='<div class=&quot;av&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
+        : `<div class="av">${escapeHtml(r.name.charAt(0))}</div>`;
+      return `<div class="deck-row">${av}<div class="nm">${nameLink(r)}</div><div class="deck-platform-row">${platRowOf(r)}</div></div>`;
+    }).join('') + '</div>';
+  } else {
+    cards = records.map(r => {
+      const photoInner = r.photo
+        ? `<img class="deck-card-photo" src="${escapeAttr(r.photo)}" alt="${escapeAttr(r.name)}" onerror="this.outerHTML='<div class=&quot;deck-card-photo placeholder&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
+        : '';
+      const photo = r.photo && r.instagram
+        ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" title="Open ${escapeAttr(r.name)}'s Instagram">${photoInner}</a>`
+        : photoInner;
+      const bio = r.public_bio ? `<div class="deck-bio">${escapeHtml(r.public_bio)}</div>` : '';
+      return `<div class="deck-card${r.photo ? '' : ' nophoto'}">
+        ${photo}
+        <div class="deck-card-body">
+          <h3>${nameLink(r)}</h3>
+          <div class="deck-platform-row" ${bio ? '' : 'style="margin-bottom:0;"'}>${platRowOf(r)}</div>
+          ${bio}
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   document.getElementById('deck-inner').innerHTML = header + cards;
 }
@@ -1508,7 +1524,7 @@ document.getElementById('deck-save-btn').addEventListener('click', () => {
   const trimmed = name.trim();
   if(!trimmed) return;
   const id = 'deck_' + Date.now();
-  deckStore[id] = { id, name: trimmed, brand, domain, listName: store.active, ids: records.map(r => r.id), platforms: deckPlats.slice(), savedAt: Date.now() };
+  deckStore[id] = { id, name: trimmed, brand, domain, listName: store.active, ids: records.map(r => r.id), platforms: deckPlats.slice(), view: deckView, savedAt: Date.now() };
   saveDeckStoreToDisk();
   renderSavedDecksList();
   showToast('Deck saved — find it under "Saved Decks" on the main page');
@@ -1530,16 +1546,62 @@ function shareableDeckLink(){
   params.set('pf', deckPlats.join(','));
   return location.origin + location.pathname + '#deck?' + params.toString();
 }
+function currentDeckIds(){
+  return deckOverride ? deckOverride.ids : activeIds();
+}
 document.getElementById('deck-share-btn').addEventListener('click', () => {
-  const link = shareableDeckLink();
-  if(!link){ showToast('This list is empty'); return; }
-  copyText(link);
-  if(location.protocol === 'file:'){
-    showToast('Link copied — but it only works once this file is hosted online, not opened locally');
-  } else {
-    showToast('Shareable link copied');
-  }
+  const ids = currentDeckIds().filter(id => DATA.some(r => r.id === id));
+  if(!ids.length){ showToast('This deck is empty'); return; }
+  const brand = document.getElementById('brand-name-input').value.trim();
+  openModal(`<h3>Share this deck</h3>
+    <p style="font-size:13px;line-height:1.55;color:var(--grey);margin:0 0 14px;">Creates a private link to a frozen copy of this deck (${ids.length} talent: photo, bio, followers and platform links only). The brand can see that one page and nothing else. Later edits to the Index won't change it.</p>
+    <div class="form-grid"><div class="full"><label>Link expires</label><select id="share-exp">
+      <option value="30">After 30 days</option><option value="7">After 7 days</option><option value="90">After 90 days</option><option value="0">Never</option></select></div></div>
+    <div class="form-error" id="form-error"></div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Cancel</button><button type="button" class="btn" id="share-create">Create link</button></div>`);
+  document.getElementById('form-cancel').onclick = closeModal;
+  document.getElementById('share-create').onclick = async (e) => {
+    e.target.disabled = true;
+    try{
+      const domain = document.getElementById('brand-domain-input').value.trim() || guessDomain(brand);
+      const j = await api('/shares', {method:'POST', body:{ids, brand, domain, listName: deckOverride ? deckOverride.listName : store.active, platforms: deckPlats, view: deckView, name: brand ? 'Zodiac × ' + brand : store.active, expiresInDays: Number(document.getElementById('share-exp').value)}});
+      copyText(j.url);
+      openModal(`<h3>Link ready</h3>
+        <p style="font-size:13px;color:var(--grey);margin:0 0 10px;">Copied to your clipboard. Anyone with this link can view this deck, so send it only to the brand.</p>
+        <input id="share-url" readonly value="${escapeAttr(j.url)}" style="width:100%;font:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--line-strong);border-radius:6px;">
+        <div class="form-actions"><button type="button" class="btn ghost" id="share-manage">Manage shared links</button><button type="button" class="btn" id="share-copy">Copy again</button></div>`);
+      document.getElementById('share-url').select();
+      document.getElementById('share-copy').onclick = () => { copyText(j.url); showToast('Copied'); };
+      document.getElementById('share-manage').onclick = openSharedLinks;
+    }catch(ex){ document.getElementById('form-error').textContent = ex.message; e.target.disabled = false; }
+  };
 });
+async function openSharedLinks(){
+  openModal('<h3>Shared deck links</h3><div id="shares-body" style="font-size:13px;color:var(--grey);">Loading…</div>');
+  const load = async () => {
+    let shares = [];
+    try{ shares = (await api('/shares')).shares; }catch(e){ document.getElementById('shares-body').textContent = 'Could not load'; return; }
+    const d = x => x ? new Date(x).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '';
+    const body = document.getElementById('shares-body'); if(!body) return;
+    body.innerHTML = shares.length ? `<div style="max-height:55vh;overflow:auto;">` + shares.map(x => {
+      const expired = x.expires_at && new Date(x.expires_at) < new Date();
+      const status = x.revoked ? 'Revoked' : expired ? 'Expired' : 'Live';
+      return `<div class="note-item" style="white-space:normal;${status!=='Live'?'opacity:.55;':''}">
+        <strong>${escapeHtml(x.name || 'Deck')}</strong> · ${x.talent_count} talent · <strong>${status}</strong>
+        <div class="note-meta"><span>Created ${d(x.created_at)} · ${x.expires_at ? 'expires ' + d(x.expires_at) : 'no expiry'} · opened ${x.views}×${x.last_viewed_at ? ', last ' + d(x.last_viewed_at) : ''}</span>
+        <span>${status==='Live' ? `<button data-copy-share="${x.code}">Copy link</button> · <button data-revoke="${x.code}">Revoke</button>` : ''}</span></div></div>`;
+    }).join('') + '</div>' : 'No links shared yet.';
+    body.querySelectorAll('[data-copy-share]').forEach(b => b.onclick = () => { copyText(location.origin + '/d/' + b.dataset.copyShare); showToast('Link copied'); });
+    body.querySelectorAll('[data-revoke]').forEach(b => b.onclick = async () => {
+      if(!confirm('Revoke this link? The brand will no longer be able to open it.')) return;
+      try{ await api('/shares/' + encodeURIComponent(b.dataset.revoke), {method:'DELETE'}); showToast('Link revoked'); load(); }catch(ex){ showToast(ex.message); }
+    });
+  };
+  await load();
+  document.getElementById('shares-body').insertAdjacentHTML('afterend', '<div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>');
+  document.getElementById('form-cancel').onclick = closeModal;
+}
+document.getElementById('shared-links-btn').addEventListener('click', openSharedLinks);
 
 function parseDeckHash(){
   if(!location.hash.startsWith('#deck')) return null;
@@ -1926,7 +1988,8 @@ async function openSyncModal(){
     document.getElementById('sync-body').innerHTML =
       '<div style="color:var(--grey);margin-bottom:8px;">Talent is pulled from the Talent Index, Talent Roster and Talent Outreach boards every 5 minutes. Exclusive status follows the Roster groups.</div>' +
       line('Talent', log.talent, s => `${s.created || 0} added, ${s.updated || 0} updated`) +
-      line('Previous deals', log.deals, s => `${s.deals || 0} deals`) + pend;
+      line('Previous deals', log.deals, s => `${s.deals || 0} deals`) +
+      line('Website photos & bios', log.website, s => `${s.matched || 0} matched, ${s.photosSaved || 0} photos saved, ${s.biosFilled || 0} bios filled` + ((s.notInIndex || []).length ? ` · on the website but not in the Index: ${s.notInIndex.join(', ')}` : '')) + pend;
   };
   try{ await draw(); }catch(ex){ document.getElementById('sync-body').textContent = ex.message; }
   document.getElementById('sync-now').onclick = async () => {
@@ -1934,6 +1997,7 @@ async function openSyncModal(){
     try{
       const r = await api('/sync/run', {method:'POST'});
       b.textContent = 'Syncing deals…';
+      try{ await api('/sync/website', {method:'POST'}); }catch(ex){}
       let d = null, dealErr = '';
       try{ d = await api('/sync/deals', {method:'POST'}); }catch(ex){ dealErr = ' Deals failed: ' + ex.message; }
       if(r.skipped) showToast('A sync is already running');
