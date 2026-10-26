@@ -1,4 +1,4 @@
-import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
+import { roleForPassword, issueToken, identityFromRequest, hashPassword, verifyPassword, tempPassword } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
 import { syncTalent } from '../lib/sync.mjs';
 import { normLocation } from '../lib/places.mjs';
@@ -84,17 +84,35 @@ export default async (req, context) => {
   try {
     // ---- Login (no token needed)
     if (route === 'login' && method === 'POST') {
-      const { password } = await req.json().catch(() => ({}));
+      const body = await req.json().catch(() => ({}));
+      const { password } = body;
+      const email = String(body.email || '').trim().toLowerCase();
       const ipH = hash(clientIp || 'unknown');
       const [{ n }] = await query(`SELECT count(*)::int AS n FROM login_attempts WHERE ip_hash = $1 AND at > now() - interval '15 minutes'`, [ipH]);
       if (n >= 15) return json({ error: 'Too many attempts. Please wait 15 minutes and try again.' }, 429);
-      const role = roleForPassword(password);
-      if (!role) {
+      const fail = async () => {
         await query('INSERT INTO login_attempts (ip_hash) VALUES ($1)', [ipH]);
         await query(`DELETE FROM login_attempts WHERE at < now() - interval '1 day'`);
-        return json({ error: 'Incorrect password' }, 401);
+        return json({ error: 'Incorrect email or password' }, 401);
+      };
+      if (email) {
+        const [u] = await query('SELECT * FROM users WHERE email = $1', [email]);
+        if (!u || !u.active || !verifyPassword(password, u.password_hash)) return fail();
+        await query('UPDATE users SET last_login_at = now() WHERE id = $1', [u.id]);
+        const r = u.role === 'viewer' ? 'view' : 'edit';
+        return json({ token: issueToken(r, { uid: Number(u.id), name: u.name }), role: r, me: { name: u.name, admin: u.role === 'admin', mustChange: u.must_change } });
       }
-      return json({ token: issueToken(role), role });
+      const [st] = await query(`SELECT value FROM app_settings WHERE key = 'legacy_passwords'`);
+      if (st && st.value === 'off') return json({ error: 'Shared passwords are switched off. Sign in with your email and password.' }, 401);
+      const role = roleForPassword(password);
+      if (!role) return fail();
+      return json({ token: issueToken(role), role, me: null });
+    }
+
+    // ---- PUBLIC: which sign-in options to show
+    if (route === 'public' && parts[1] === 'auth-config' && method === 'GET') {
+      const [st] = await query(`SELECT value FROM app_settings WHERE key = 'legacy_passwords'`);
+      return json({ shared: !(st && st.value === 'off') });
     }
 
     // ---- PUBLIC: a stored talent photo (these are the same photos shown on the public website)
@@ -127,10 +145,25 @@ export default async (req, context) => {
       });
     }
 
-    const role = roleFromRequest(req);
-    if (!role) return json({ error: 'Unauthorised' }, 401);
+    const ident = identityFromRequest(req);
+    if (!ident) return json({ error: 'Unauthorised' }, 401);
+    let role = ident.role;
+    let me = { name: null, admin: false, uid: null, mustChange: false };
+    if (ident.uid) {
+      const [u] = await query('SELECT id, name, role, active, must_change FROM users WHERE id = $1', [ident.uid]);
+      if (!u || !u.active) return json({ error: 'Unauthorised' }, 401);
+      role = u.role === 'viewer' ? 'view' : 'edit';
+      me = { name: u.name, admin: u.role === 'admin', uid: Number(u.id), mustChange: u.must_change };
+    } else {
+      const [st] = await query(`SELECT value FROM app_settings WHERE key = 'legacy_passwords'`);
+      if (st && st.value === 'off') return json({ error: 'Unauthorised' }, 401);
+    }
     const canEdit = role === 'edit';
-    const needEdit = () => (canEdit ? null : json({ error: 'Edit password required' }, 403));
+    const actor = me.name || (role === 'edit' ? 'Shared edit password' : 'Shared view password');
+    const needEdit = () => (canEdit ? null : json({ error: 'You have view-only access' }, 403));
+    const needAdmin = () => (me.admin ? null : json({ error: 'Admin access required' }, 403));
+    const logAct = (action, entityId, entityName, detail) =>
+      query('INSERT INTO activity_log (actor, action, entity_id, entity_name, detail) VALUES ($1,$2,$3,$4,$5::jsonb)', [actor, action, entityId || null, entityName || null, detail ? JSON.stringify(detail) : null]);
 
     // ---- Lightweight poll
     if (route === 'version' && method === 'GET') {
@@ -144,12 +177,13 @@ export default async (req, context) => {
           (SELECT count(*) FROM monday_deals d JOIN monday_links l ON l.item_id = d.roster_item_id AND l.board_id = '5092522353' WHERE l.talent_id = t.id) AS deal_count,
           EXISTS (SELECT 1 FROM monday_links l WHERE l.talent_id = t.id) AS monday_linked,
           (SELECT count(*) FROM talent_notes n WHERE n.talent_id = t.id) AS note_count
-        FROM talents t ORDER BY lower(t.name)`),
+        FROM talents t WHERE t.deleted_at IS NULL ORDER BY lower(t.name)`),
         query('SELECT id, name, data, updated_at FROM lists ORDER BY updated_at DESC'),
         query('SELECT id, name, data, updated_at FROM decks ORDER BY updated_at DESC'),
         currentVersion(),
       ]);
-      return json({ version, role, talents: talents.map(shapeTalent), lists, decks });
+      const [uc] = await query('SELECT count(*)::int AS n FROM users');
+      return json({ version, role, me: ident.uid ? me : null, usersExist: uc.n > 0, talents: talents.map(shapeTalent), lists, decks });
     }
 
     // ---- Previous deals for a talent (any signed-in user)
@@ -179,7 +213,7 @@ export default async (req, context) => {
         const b = await req.json().catch(() => ({}));
         const body = String(b.body || '').trim().slice(0, 4000);
         if (!body) return json({ error: 'Note is required' }, 400);
-        const author = String(b.author || '').trim().slice(0, 60) || null;
+        const author = me.name || String(b.author || '').trim().slice(0, 60) || null;
         const ex = await query('SELECT 1 FROM talents WHERE id = $1', [tid]);
         if (!ex.length) return json({ error: 'Talent not found' }, 404);
         const rows = await query('INSERT INTO talent_notes (talent_id, body, author) VALUES ($1,$2,$3) RETURNING id, body, author, created_at', [tid, body, author]);
@@ -231,7 +265,7 @@ export default async (req, context) => {
         const days = Number(b.expiresInDays);
         const expires = Number.isFinite(days) && days > 0 ? new Date(Date.now() + Math.min(days, 730) * 864e5) : null;
         const view = b.view === 'list' ? 'list' : 'cards';
-        const createdBy = String(b.createdBy || '').trim().slice(0, 60) || null;
+        const createdBy = me.name || String(b.createdBy || '').trim().slice(0, 60) || null;
         const note = String(b.note || '').trim().slice(0, 300) || null;
         const recips = (Array.isArray(b.recipients) ? b.recipients : []).map((x) => String(x).trim().slice(0, 80)).filter(Boolean).slice(0, 25);
         const targets = recips.length ? recips : [null];
@@ -326,6 +360,116 @@ export default async (req, context) => {
       }
     }
 
+    // ---- Account: change own password
+    if (route === 'me' && parts[1] === 'password' && method === 'POST') {
+      if (!me.uid) return json({ error: 'Shared logins have no personal password' }, 400);
+      const b = await req.json().catch(() => ({}));
+      const np = String(b.newPassword || '');
+      if (np.length < 8) return json({ error: 'Password must be at least 8 characters' }, 400);
+      const [u] = await query('SELECT password_hash FROM users WHERE id = $1', [me.uid]);
+      if (!verifyPassword(b.currentPassword, u.password_hash)) return json({ error: 'Current password is incorrect' }, 400);
+      await query('UPDATE users SET password_hash = $2, must_change = false WHERE id = $1', [me.uid, hashPassword(np)]);
+      await logAct('user.password', String(me.uid), me.name);
+      return json({ ok: true });
+    }
+
+    // ---- Team management (admin only), plus first-admin bootstrap
+    if (route === 'users') {
+      const userOut = (u) => ({ id: Number(u.id), name: u.name, email: u.email, role: u.role, active: u.active, mustChange: u.must_change, lastLoginAt: u.last_login_at, createdAt: u.created_at });
+      if (method === 'POST' && parts[1] === 'bootstrap') {
+        const [{ n }] = await query('SELECT count(*)::int AS n FROM users');
+        if (n > 0) return json({ error: 'Accounts already exist' }, 400);
+        if (ident.uid || role !== 'edit') return json({ error: 'Sign in with the shared edit password to create the first admin' }, 403);
+        const b = await req.json().catch(() => ({}));
+        const name = String(b.name || '').trim().slice(0, 80);
+        const email = String(b.email || '').trim().toLowerCase();
+        const pw = String(b.password || '');
+        if (!name || !/^\S+@\S+\.\S+$/.test(email)) return json({ error: 'Name and a valid email are required' }, 400);
+        if (pw.length < 8) return json({ error: 'Password must be at least 8 characters' }, 400);
+        const [u] = await query(`INSERT INTO users (name, email, role, password_hash, must_change) VALUES ($1,$2,'admin',$3,false) RETURNING *`, [name, email, hashPassword(pw)]);
+        await logAct('user.add', String(u.id), name, { role: 'admin' });
+        return json({ user: userOut(u), token: issueToken('edit', { uid: Number(u.id), name }), me: { name, admin: true, mustChange: false } }, 201);
+      }
+      const denied = needAdmin();
+      if (denied) return denied;
+      if (method === 'GET') {
+        const rows = await query('SELECT * FROM users ORDER BY lower(name)');
+        const [st] = await query(`SELECT value FROM app_settings WHERE key = 'legacy_passwords'`);
+        return json({ users: rows.map(userOut), sharedPasswords: !(st && st.value === 'off') });
+      }
+      if (method === 'POST' && !parts[1]) {
+        const b = await req.json().catch(() => ({}));
+        const name = String(b.name || '').trim().slice(0, 80);
+        const email = String(b.email || '').trim().toLowerCase();
+        const r = ['admin', 'editor', 'viewer'].includes(b.role) ? b.role : null;
+        if (!name || !/^\S+@\S+\.\S+$/.test(email) || !r) return json({ error: 'Name, valid email and role are required' }, 400);
+        const [dup] = await query('SELECT 1 AS x FROM users WHERE email = $1', [email]);
+        if (dup) return json({ error: 'That email already has an account' }, 400);
+        const temp = tempPassword();
+        const [u] = await query(`INSERT INTO users (name, email, role, password_hash, must_change) VALUES ($1,$2,$3,$4,true) RETURNING *`, [name, email, r, hashPassword(temp)]);
+        await logAct('user.add', String(u.id), name, { role: r });
+        return json({ user: userOut(u), tempPassword: temp }, 201);
+      }
+      if (method === 'POST' && parts[1] === 'settings') {
+        const b = await req.json().catch(() => ({}));
+        const [{ n }] = await query(`SELECT count(*)::int AS n FROM users WHERE active AND role = 'admin'`);
+        if (!n) return json({ error: 'Create an admin first' }, 400);
+        await query(`INSERT INTO app_settings (key, value) VALUES ('legacy_passwords', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [b.sharedPasswords ? 'on' : 'off']);
+        await logAct('settings.shared', null, b.sharedPasswords ? 'Shared passwords switched on' : 'Shared passwords switched off');
+        return json({ ok: true, sharedPasswords: !!b.sharedPasswords });
+      }
+      const uid = parts[1];
+      if (uid && method === 'POST' && parts[2] === 'reset') {
+        const temp = tempPassword();
+        const rows = await query('UPDATE users SET password_hash = $2, must_change = true WHERE id = $1 RETURNING name', [uid, hashPassword(temp)]);
+        if (!rows.length) return json({ error: 'User not found' }, 404);
+        await logAct('user.reset', uid, rows[0].name);
+        return json({ tempPassword: temp });
+      }
+      if (uid && method === 'PATCH') {
+        const b = await req.json().catch(() => ({}));
+        const [cur] = await query('SELECT * FROM users WHERE id = $1', [uid]);
+        if (!cur) return json({ error: 'User not found' }, 404);
+        const nextRole = b.role !== undefined ? b.role : cur.role;
+        const nextActive = b.active !== undefined ? !!b.active : cur.active;
+        if (!['admin', 'editor', 'viewer'].includes(nextRole)) return json({ error: 'Invalid role' }, 400);
+        if (cur.role === 'admin' && cur.active && (nextRole !== 'admin' || !nextActive)) {
+          const [{ n }] = await query(`SELECT count(*)::int AS n FROM users WHERE active AND role = 'admin' AND id <> $1`, [uid]);
+          if (!n) return json({ error: 'There must always be at least one active admin' }, 400);
+        }
+        const name = b.name !== undefined ? String(b.name).trim().slice(0, 80) || cur.name : cur.name;
+        const [u] = await query('UPDATE users SET name = $2, role = $3, active = $4 WHERE id = $1 RETURNING *', [uid, name, nextRole, nextActive]);
+        await logAct('user.edit', uid, u.name, { role: nextRole, active: nextActive });
+        return json({ user: userOut(u) });
+      }
+    }
+
+    // ---- Activity log + undo (edit role and above)
+    if (route === 'activity') {
+      const denied = needEdit();
+      if (denied) return denied;
+      if (method === 'GET') {
+        const rows = await query('SELECT id, at, actor, action, entity_id, entity_name, detail, undone_at FROM activity_log ORDER BY id DESC LIMIT 300');
+        return json({ activity: rows.map((r) => ({ ...r, id: Number(r.id), undoable: !r.undone_at && (r.action === 'talent.delete' || r.action === 'talent.edit') })) });
+      }
+      if (method === 'POST' && parts[2] === 'undo') {
+        const [a] = await query('SELECT * FROM activity_log WHERE id = $1', [parts[1]]);
+        if (!a || a.undone_at) return json({ error: 'Nothing to undo' }, 400);
+        if (a.action === 'talent.delete') {
+          const r = await query('UPDATE talents SET deleted_at = NULL, updated_at = now() WHERE id = $1 RETURNING id', [a.entity_id]);
+          if (!r.length) return json({ error: 'Talent no longer exists' }, 404);
+        } else if (a.action === 'talent.edit') {
+          const before = (a.detail && a.detail.before) || {};
+          const cols = Object.keys(before).filter((c) => TALENT_FIELDS.includes(c));
+          if (!cols.length) return json({ error: 'Nothing to undo' }, 400);
+          await query(`UPDATE talents SET ${cols.map((c, i) => `${c} = $${i + 2}`).join(', ')}, updated_at = now() WHERE id = $1 AND deleted_at IS NULL`, [a.entity_id, ...cols.map((c) => before[c])]);
+        } else return json({ error: 'This action cannot be undone' }, 400);
+        await query('UPDATE activity_log SET undone_at = now() WHERE id = $1', [a.id]);
+        await logAct('undo', a.entity_id, a.entity_name, { of: a.action });
+        return json({ ok: true, version: await bump() });
+      }
+    }
+
     // ---- Talents
     if (route === 'talents') {
       const denied = needEdit();
@@ -353,6 +497,7 @@ export default async (req, context) => {
           }
           const version = await bump(client);
           await client.query('COMMIT');
+          await logAct('talent.import', null, `${ids.length} talent`, { count: ids.length });
           return json({ added: ids.length, version });
         } catch (e) {
           await client.query('ROLLBACK');
@@ -373,6 +518,7 @@ export default async (req, context) => {
         );
         const version = await bump();
         const [row] = await query('SELECT * FROM talents WHERE id = $1', [id]);
+        await logAct('talent.add', id, t.name);
         return json({ talent: shapeTalent(row), version }, 201);
       }
 
@@ -383,18 +529,27 @@ export default async (req, context) => {
         const t = clean(await req.json());
         const cols = Object.keys(t);
         if (!cols.length) return json({ error: 'Nothing to update' }, 400);
+        const [old] = await query('SELECT * FROM talents WHERE id = $1 AND deleted_at IS NULL', [id]);
+        if (!old) return json({ error: 'Talent not found' }, 404);
         const rows = await query(
           `UPDATE talents SET ${cols.map((c, i) => `${c} = $${i + 2}`).join(', ')}, updated_at = now() WHERE id = $1 RETURNING *`,
           [id, ...cols.map((c) => t[c])]
         );
-        if (!rows.length) return json({ error: 'Talent not found' }, 404);
+        const changed = cols.filter((c) => String(old[c] ?? '') !== String(t[c] ?? ''));
+        if (changed.length) {
+          await logAct('talent.edit', id, rows[0].name, {
+            before: Object.fromEntries(changed.map((c) => [c, old[c] ?? null])),
+            after: Object.fromEntries(changed.map((c) => [c, t[c] ?? null])),
+          });
+        }
         const version = await bump();
         return json({ talent: shapeTalent(rows[0]), version });
       }
 
       if (method === 'DELETE') {
-        const rows = await query('DELETE FROM talents WHERE id = $1 RETURNING id', [id]);
+        const rows = await query('UPDATE talents SET deleted_at = now() WHERE id = $1 AND deleted_at IS NULL RETURNING id, name', [id]);
         if (!rows.length) return json({ error: 'Talent not found' }, 404);
+        await logAct('talent.delete', id, rows[0].name);
         return json({ ok: true, version: await bump() });
       }
     }
