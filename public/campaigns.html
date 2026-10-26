@@ -482,6 +482,7 @@ function render(){
   document.getElementById('layer').innerHTML=S.view==='campaign'&&camp()?(S.pick?picker():drawer()):'';
   var pq=document.getElementById('pq');if(pq&&S.pqFocus){pq.focus();pq.setSelectionRange(pq.value.length,pq.value.length);}
 }
+function find(iid){return FULL?FULL.infl.filter(function(i){return i.id===iid;})[0]||null:null;}
 function cdel(){var i=find(S.dd.iid);return i.deliv.filter(function(z){return z.id===S.dd.did;})[0];}
 function num(v){var n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:NaN;}
 function loadList(){return api('/campaigns').then(function(j){CAMPS=j.campaigns;LISTERR='';READY=true;}).catch(function(e){LISTERR=e.message;READY=true;});}
