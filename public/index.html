@@ -34,7 +34,14 @@
   .mono{font-family:'DM Mono',monospace;}
 
   /* header */
-  header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;margin-bottom:36px;padding-bottom:22px;border-bottom:1px solid var(--line-strong);}
+  header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px;}
+  .hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line-strong);border-radius:12px;padding:10px 12px;margin-bottom:22px;box-shadow:0 1px 3px rgba(26,26,26,0.04), 0 8px 24px rgba(26,26,26,0.03);}
+  .toolbar .btn{padding:9px 16px;font-size:13px;border-radius:8px;white-space:nowrap;}
+  .toolbar .tb-main{background:var(--burgundy);color:#fff;border:1px solid var(--burgundy);}
+  .toolbar .tb-main:hover{background:var(--burgundy-2);}
+  .tb-spacer{flex:1;min-width:8px;}
+  @media(max-width:640px){.toolbar{padding:8px;}.toolbar .btn{padding:8px 12px;font-size:12.5px;}.tb-spacer{display:none;}}
   .brand-block{display:flex;align-items:center;gap:16px;}
   .brand-mark{width:48px;height:44px;flex:0 0 auto;display:block;}
   .eyebrow{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:.14em;color:var(--burgundy);text-transform:uppercase;margin-bottom:6px;}
@@ -220,6 +227,23 @@
   }
   .shortlist-fab .count{background:#fff;color:var(--burgundy);border-radius:999px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;}
 
+  .list-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--line-strong);border-radius:10px;background:#fff;margin-bottom:10px;cursor:pointer;transition:border-color .12s, box-shadow .12s, transform .12s;}
+  .list-card:hover{border-color:var(--burgundy);box-shadow:0 4px 14px rgba(77,0,17,.1);transform:translateY(-1px);}
+  .list-card .lc-name{font-weight:700;font-size:15px;}
+  .list-card .lc-sub{font-size:12px;color:var(--grey);margin-top:2px;}
+  .list-card .lc-av{display:flex;margin-left:auto;padding-left:8px;}
+  .list-card .lc-av span{width:28px;height:28px;border-radius:50%;border:2px solid #fff;margin-left:-8px;background:var(--cream) center/cover;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--burgundy);}
+  .list-card .lc-go{color:var(--grey-light);font-size:18px;}
+  .list-bar-name{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.04em;font-size:15px;color:var(--burgundy);flex:1;min-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #star-pop{position:fixed;z-index:700;background:#fff;border:1px solid var(--line-strong);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.22);width:260px;max-height:340px;display:none;flex-direction:column;overflow:hidden;}
+  #star-pop.open{display:flex;}
+  #star-pop .sp-h{padding:11px 14px;font:600 11.5px 'Oswald',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--burgundy);border-bottom:1px solid var(--line);}
+  #star-pop .sp-l{overflow:auto;padding:4px 0;}
+  #star-pop label{display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:13.5px;cursor:pointer;}
+  #star-pop label:hover{background:var(--burgundy-tint);}
+  #star-pop label span.n{margin-left:auto;font:11.5px 'DM Mono',monospace;color:var(--grey);}
+  #star-pop .sp-n{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line);background:var(--cream);}
+  #star-pop .sp-n input{flex:1;min-width:0;padding:7px 9px;border:1px solid var(--line-strong);border-radius:6px;font:inherit;font-size:13px;}
   .shortlist-panel{
     position:fixed;bottom:0;right:0;top:0;width:400px;max-width:92vw;background:var(--card);border-left:1px solid var(--line-strong);
     box-shadow:-12px 0 40px rgba(0,0,0,0.15);z-index:100;display:none;flex-direction:column;
@@ -442,17 +466,21 @@
         <h1>Talent Index</h1>
       </div>
     </div>
-    <div class="toggle-stack">
-      <button class="btn ghost" id="brief-btn">Brief Matcher</button>
-      <button class="btn ghost" id="saved-decks-btn">Decks &amp; Links <span class="count-pill" id="saved-decks-count">0</span></button>
-      <button class="btn ghost" id="sync-btn" style="display:none;">monday Sync</button>
-      <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
-      <button class="btn ghost" id="add-talent-btn" style="display:none;">+ Add Talent</button>
-      <button class="btn ghost" id="unlock-edit-btn" style="display:none;">Unlock Editing</button>
+    <div class="hdr-right">
       <button class="btn ghost" id="user-btn" style="display:none;"></button>
       <div class="header-total" id="header-total"></div>
     </div>
   </header>
+
+  <nav class="toolbar" id="toolbar">
+    <button class="btn tb-main" id="brief-btn">Brief Matcher</button>
+    <button class="btn ghost" id="saved-decks-btn">Decks &amp; Links <span class="count-pill" id="saved-decks-count">0</span></button>
+    <span class="tb-spacer"></span>
+    <button class="btn ghost" id="add-talent-btn" style="display:none;">+ Add Talent</button>
+    <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
+    <button class="btn ghost" id="sync-btn" style="display:none;">monday Sync</button>
+    <button class="btn ghost" id="unlock-edit-btn" style="display:none;">Unlock Editing</button>
+  </nav>
 
   <div class="card-grid" id="card-grid"></div>
 
@@ -562,21 +590,16 @@
 
 </div>
 
-<button class="shortlist-fab" id="shortlist-fab"><span id="fab-label">My List</span><span class="count" id="shortlist-count">0</span></button>
+<button class="shortlist-fab" id="shortlist-fab"><span id="fab-label">Lists</span><span class="count" id="shortlist-count">0</span></button>
 
 <div class="shortlist-panel" id="shortlist-panel">
   <div class="shortlist-head">
     <h3>Brand Lists</h3>
     <button class="shortlist-close" id="shortlist-close">&times;</button>
   </div>
-  <div class="list-switcher">
-    <select id="list-select"></select>
-    <button class="btn ghost" id="new-list-btn" title="New list">+ New</button>
-    <button class="btn ghost" id="rename-list-btn" title="Rename list">Rename</button>
-    <button class="btn ghost" id="delete-list-btn" title="Delete list">Delete</button>
-  </div>
+  <div class="list-switcher" id="list-bar"></div>
   <div class="shortlist-body" id="shortlist-body"></div>
-  <div class="shortlist-footer">
+  <div class="shortlist-footer" id="list-footer">
     <button class="btn" id="build-deck-btn">Build Deck →</button>
     <button class="btn ghost" id="copy-pitch-btn">Copy for Pitch Email</button>
     <button class="btn ghost" id="export-shortlist-btn">Export List (Excel)</button>
@@ -869,7 +892,7 @@ function platformValue(r){
 
 /* ---------- named brand lists (shared live via the database) ---------- */
 const ACTIVE_KEY = 'zodiacActiveList_v2';
-let store = { lists: { 'My List': [] }, active: 'My List' };
+let store = { lists: {}, active: null };
 let listsSynced = {};
 let listTimer = null;
 function listId(name){
@@ -902,7 +925,6 @@ function applyLists(serverLists){
   if(listTimer) return; // local changes still waiting to save
   const lists = {};
   serverLists.forEach(l => { lists[l.name] = (l.data && l.data.ids) || []; });
-  if(!Object.keys(lists).length) lists['My List'] = [];
   listsSynced = {};
   serverLists.forEach(l => { listsSynced[l.name] = JSON.stringify(lists[l.name]); });
   let active = store.active;
@@ -911,9 +933,10 @@ function applyLists(serverLists){
   store.active = lists[active] ? active : Object.keys(lists)[0];
 }
 function activeIds(){ return store.lists[store.active] || []; }
-function isStarred(id){ return activeIds().includes(id); }
+function isStarred(id){ return Object.values(store.lists).some(l => l.includes(id)); }
 function toggleStar(id){
-  const ids = store.lists[store.active] || (store.lists[store.active] = []);
+  if(!store.active || !store.lists[store.active]) return;
+  const ids = store.lists[store.active];
   const idx = ids.indexOf(id);
   if(idx === -1) ids.push(id); else ids.splice(idx,1);
   saveStore();
@@ -1013,7 +1036,7 @@ function render(){
     const totalVal = platformValue(r);
     const totalCell = totalVal ? escapeHtml(fmtFollowers(totalVal)) : '<span class="dash">—</span>';
     return `<tr data-id="${r.id}" class="${isExpanded?'expanded':''}">
-      <td><button class="star ${starred?'active':''}" data-star="${r.id}" title="Add to '${escapeAttr(store.active)}'">★</button></td>
+      <td><button class="star ${starred?'active':''}" data-star="${r.id}" title="Add to a list">★</button></td>
       <td class="name-cell">
         ${avatar}
         <div><span class="name">${escapeHtml(r.name)}</span><span class="status-label">${meta.label}</span></div>
@@ -1038,9 +1061,7 @@ function render(){
   tbody.querySelectorAll('[data-star]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleStar(btn.dataset.star);
-      render();
-      renderShortlist();
+      showStarPop(btn.dataset.star, btn);
     });
   });
   if(expandedId) loadNotes(expandedId);
@@ -1179,21 +1200,32 @@ async function loadNotes(id){
 }
 
 /* ---------- brand lists panel ---------- */
+let panelView = 'overview';   // 'overview' = all lists, 'list' = one list opened
 function renderShortlist(){
+  const names = Object.keys(store.lists);
+  document.getElementById('shortlist-count').textContent = names.length;
+  document.getElementById('fab-label').textContent = names.length === 1 ? 'List' : 'Lists';
+  if(panelView === 'list' && !store.lists[store.active]) panelView = 'overview';
+  const bar = document.getElementById('list-bar'), body = document.getElementById('shortlist-body'), foot = document.getElementById('list-footer');
+  document.querySelector('#shortlist-panel .shortlist-head h3').textContent = panelView === 'list' ? 'Brand List' : 'Brand Lists';
+
+  if(panelView === 'overview'){
+    bar.innerHTML = '<button class="btn" id="new-list-btn">+ New list</button><span style="font-size:12.5px;color:var(--grey);align-self:center;">Click a list to open it</span>';
+    foot.style.display = 'none';
+    body.innerHTML = names.length ? names.map(n => {
+      const recs = store.lists[n].map(id => DATA.find(r => r.id === id)).filter(Boolean);
+      const av = recs.slice(0, 4).map(r => `<span style="${r.photo ? `background-image:url('${escapeAttr(r.photo)}')` : ''}">${r.photo ? '' : escapeHtml((r.name||'?').charAt(0))}</span>`).join('');
+      return `<div class="list-card" data-open-list="${escapeAttr(n)}"><div><div class="lc-name">${escapeHtml(n)}</div><div class="lc-sub">${recs.length} talent</div></div><div class="lc-av">${av}</div><div class="lc-go">›</div></div>`;
+    }).join('') : '<div class="shortlist-empty">No lists yet. Create one, or star talent in the table.</div>';
+    return;
+  }
+
   const ids = activeIds();
   const records = ids.map(id => DATA.find(r => r.id === id)).filter(Boolean);
-
-  document.getElementById('shortlist-count').textContent = records.length;
-  document.getElementById('fab-label').textContent = store.active;
-
-  const sel = document.getElementById('list-select');
-  sel.innerHTML = Object.keys(store.lists).map(name =>
-    `<option value="${escapeAttr(name)}" ${name===store.active?'selected':''}>${escapeHtml(name)} (${store.lists[name].length})</option>`
-  ).join('');
-
-  const body = document.getElementById('shortlist-body');
+  bar.innerHTML = `<button class="btn ghost" id="back-lists">← All lists</button><div class="list-bar-name" title="${escapeAttr(store.active)}">${escapeHtml(store.active)}</div><button class="btn ghost" id="rename-list-btn">Rename</button><button class="btn ghost" id="delete-list-btn">Delete</button>`;
+  foot.style.display = '';
   if(records.length === 0){
-    body.innerHTML = '<div class="shortlist-empty">Star talent from the table to add them to this list.</div>';
+    body.innerHTML = '<div class="shortlist-empty">This list is empty. Click the ★ next to any talent and tick this list.</div>';
     return;
   }
   body.innerHTML = records.map(r => {
@@ -1214,6 +1246,55 @@ function renderShortlist(){
     });
   });
 }
+function openList(name){ store.active = name; panelView = 'list'; saveStore(); renderShortlist(); }
+function showAllLists(){ panelView = 'overview'; renderShortlist(); }
+function refreshStars(){
+  document.querySelectorAll('[data-star]').forEach(b => b.classList.toggle('active', isStarred(b.dataset.star)));
+  renderShortlist();
+}
+
+/* star popover: add a talent to any list(s) */
+function ensureStarPop(){
+  let el = document.getElementById('star-pop');
+  if(!el){ el = document.createElement('div'); el.id = 'star-pop'; document.body.appendChild(el); }
+  return el;
+}
+function showStarPop(talentId, anchor){
+  const el = ensureStarPop();
+  const draw = () => {
+    const names = Object.keys(store.lists);
+    el.innerHTML = `<div class="sp-h">Add to list</div><div class="sp-l">${names.map(n => `<label><input type="checkbox" data-sl="${escapeAttr(n)}" ${store.lists[n].includes(talentId) ? 'checked' : ''}><span>${escapeHtml(n)}</span><span class="n">${store.lists[n].length}</span></label>`).join('')}</div>
+      <div class="sp-n"><input id="sp-new" placeholder="New list name…"><button class="btn" id="sp-add" style="padding:6px 12px;font-size:12.5px;">Add</button></div>`;
+    el.querySelectorAll('[data-sl]').forEach(cb => cb.addEventListener('change', () => {
+      const l = store.lists[cb.dataset.sl];
+      const i = l.indexOf(talentId);
+      if(cb.checked && i === -1) l.push(talentId); else if(!cb.checked && i !== -1) l.splice(i, 1);
+      saveStore(); refreshStars(); draw();
+    }));
+    const add = () => {
+      const n = document.getElementById('sp-new').value.trim();
+      if(!n) return;
+      if(!store.lists[n]) store.lists[n] = [];
+      if(!store.lists[n].includes(talentId)) store.lists[n].push(talentId);
+      saveStore(); refreshStars(); draw();
+    };
+    document.getElementById('sp-add').onclick = add;
+    document.getElementById('sp-new').addEventListener('keydown', e => { if(e.key === 'Enter') add(); });
+  };
+  draw();
+  popAt = Date.now();
+  const r = anchor.getBoundingClientRect();
+  el.classList.add('open');
+  const h = el.offsetHeight;
+  el.style.left = Math.max(8, Math.min(window.innerWidth - 268, r.left - 20)) + 'px';
+  el.style.top = (r.bottom + h + 12 > window.innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+}
+document.addEventListener('mousedown', e => {
+  const el = document.getElementById('star-pop');
+  if(el && el.classList.contains('open') && !el.contains(e.target) && !e.target.closest('.star')) el.classList.remove('open');
+});
+let popAt = 0;
+window.addEventListener('scroll', (e) => { const el = document.getElementById('star-pop'); if(el && el.classList.contains('open') && !el.contains(e.target) && Date.now() - popAt > 600) el.classList.remove('open'); }, true);
 
 function switchList(name){ store.active = name; saveStore(); renderShortlist(); render(); }
 
@@ -1223,7 +1304,7 @@ function newList(){
   const trimmed = name.trim();
   if(!trimmed) return;
   if(!store.lists[trimmed]) store.lists[trimmed] = [];
-  store.active = trimmed;
+  store.active = trimmed; panelView = 'list';
   saveStore(); renderShortlist(); render();
 }
 function renameList(){
@@ -1238,11 +1319,10 @@ function renameList(){
   saveStore(); renderShortlist(); render();
 }
 function deleteList(){
-  const names = Object.keys(store.lists);
-  if(names.length <= 1){ showToast("Can't delete your only list"); return; }
   if(!confirm(`Delete the list "${store.active}"? This can't be undone.`)) return;
   delete store.lists[store.active];
   store.active = Object.keys(store.lists)[0];
+  panelView = 'overview';
   saveStore(); renderShortlist(); render();
 }
 
@@ -1382,12 +1462,18 @@ document.getElementById('card-grid').addEventListener('click', (e) => {
   document.getElementById('results-line').scrollIntoView({behavior:'smooth', block:'center'});
 });
 
-document.getElementById('shortlist-fab').addEventListener('click', () => document.getElementById('shortlist-panel').classList.add('open'));
+document.getElementById('shortlist-fab').addEventListener('click', () => { panelView = 'overview'; renderShortlist(); document.getElementById('shortlist-panel').classList.add('open'); });
 document.getElementById('shortlist-close').addEventListener('click', () => document.getElementById('shortlist-panel').classList.remove('open'));
-document.getElementById('list-select').addEventListener('change', e => switchList(e.target.value));
-document.getElementById('new-list-btn').addEventListener('click', newList);
-document.getElementById('rename-list-btn').addEventListener('click', renameList);
-document.getElementById('delete-list-btn').addEventListener('click', deleteList);
+document.getElementById('list-bar').addEventListener('click', e => {
+  if(e.target.closest('#new-list-btn')) newList();
+  else if(e.target.closest('#back-lists')) showAllLists();
+  else if(e.target.closest('#rename-list-btn')) renameList();
+  else if(e.target.closest('#delete-list-btn')) deleteList();
+});
+document.getElementById('shortlist-body').addEventListener('click', e => {
+  const c = e.target.closest('[data-open-list]');
+  if(c) openList(c.dataset.openList);
+});
 
 document.getElementById('copy-pitch-btn').addEventListener('click', () => {
   const records = activeIds().map(id => DATA.find(r => r.id === id)).filter(Boolean);
@@ -1688,7 +1774,7 @@ function renderDeck(override){
     <div class="deck-header">
       <div class="deck-logos">${zodiacLogo}${brandLogo}</div>
       <div class="deck-title">Zodiac Global${brand ? ` <span class="brand-name">× ${escapeHtml(brand)}</span>` : ''}</div>
-      <div class="deck-subtitle">Talent Roster${listLabel && listLabel !== 'My List' ? ' — ' + escapeHtml(listLabel) : ''}</div>
+      <div class="deck-subtitle">Talent Roster${listLabel ? ' — ' + escapeHtml(listLabel) : ''}</div>
       <div class="deck-stats">
         <div class="deck-stat"><div class="num">${fmtFollowers(totalFollowers)||0}</div><div class="lbl">Total Audience</div></div>
       </div>
@@ -2479,7 +2565,7 @@ function showBriefResults(res){
     <div class="form-actions" style="flex-wrap:wrap;">
       <button class="btn ghost" id="bm-edit">Edit brief</button>
       <button class="btn ghost" id="form-cancel">Close</button>
-      ${rows.length ? `<button class="btn" id="bm-add">Add selected to “${escapeHtml(store.active)}”</button>` : ''}
+      ${rows.length ? `<select id="bm-list" style="max-width:190px;">${Object.keys(store.lists).map(n => `<option value="${escapeAttr(n)}" ${n === store.active ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}<option value="__new__">+ New list…</option></select><button class="btn" id="bm-add">Add selected</button>` : ''}
     </div>`;
   document.getElementById('form-cancel').onclick = closeBM;
   document.getElementById('bm-edit').onclick = openBriefMatcher;
@@ -2487,10 +2573,16 @@ function showBriefResults(res){
   if(add) add.onclick = () => {
     const picked = [...document.querySelectorAll('[data-bm]:checked')].map(x => x.dataset.bm);
     if(!picked.length){ showToast('Tick at least one talent'); return; }
-    const ids = store.lists[store.active] || (store.lists[store.active] = []);
+    let target = document.getElementById('bm-list').value;
+    if(target === '__new__'){
+      target = (prompt('Name the new list (e.g. the brand or campaign):') || '').trim();
+      if(!target) return;
+    }
+    const ids = store.lists[target] || (store.lists[target] = []);
     let added = 0; picked.forEach(id => { if(!ids.includes(id)){ ids.push(id); added++; } });
+    store.active = target;
     saveStore(); renderShortlist(); render();
-    closeBM(); showToast(added + ' added to “' + store.active + '”');
+    closeBM(); showToast(added + ' added to “' + target + '”');
   };
 }
 document.getElementById('brief-btn').addEventListener('click', openBriefMatcher);

@@ -40,3 +40,4 @@ Set one more environment variable in Netlify (mark it secret): MONDAY_TOKEN – 
 
 ## Brief Matcher (update 10)
 Add one environment variable in Netlify: ANTHROPIC_API_KEY (from console.anthropic.com). Optional: ANTHROPIC_MODEL to choose the model.
+Optional: ANTHROPIC_WORKSPACE_ID if your key is not scoped to a workspace.
