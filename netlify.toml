@@ -4,3 +4,22 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+
+# Public read-only deck pages for brands: /d/<code> shows deck.html (no login, never indexed)
+[[redirects]]
+  from = "/d/*"
+  to = "/deck.html"
+  status = 200
+
+[[headers]]
+  for = "/d/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/deck.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
