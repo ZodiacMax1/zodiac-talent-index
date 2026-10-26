@@ -161,6 +161,8 @@ export default async (req, context) => {
     const canEdit = role === 'edit';
     const actor = me.name || (role === 'edit' ? 'Shared edit password' : 'Shared view password');
     const needEdit = () => (canEdit ? null : json({ error: 'You have view-only access' }, 403));
+    // monday / website syncs: admins only (or the shared edit password until accounts exist)
+    const needSync = () => (me.admin || (!ident.uid && role === 'edit') ? null : json({ error: 'Only an admin can run syncs' }, 403));
     const needAdmin = () => (me.admin ? null : json({ error: 'Admin access required' }, 403));
     const logAct = (action, entityId, entityName, detail) =>
       query('INSERT INTO activity_log (actor, action, entity_id, entity_name, detail) VALUES ($1,$2,$3,$4,$5::jsonb)', [actor, action, entityId || null, entityName || null, detail ? JSON.stringify(detail) : null]);
@@ -229,6 +231,11 @@ export default async (req, context) => {
 
     // ---- Shared deck links (any signed-in user)
     if (route === 'shares') {
+      if (method !== 'GET') { const d = needEdit(); if (d) return d; }
+      // Editors can only change links they sent themselves; admins (and the shared edit login) can change any
+      const mine = (by) => me.admin || !ident.uid || (by && by === me.name);
+      const ownsCode = async (code) => { const [r] = await query('SELECT created_by FROM shared_decks WHERE code = $1', [code]); return !r || mine(r.created_by); };
+      const notYours = () => json({ error: 'Only the person who sent this link, or an admin, can change it' }, 403);
       const base = process.env.DECKS_HOST ? `https://${process.env.DECKS_HOST}` : url.origin;
       if (method === 'GET' && !parts[1]) {
         const rows = await query(`SELECT s.code, s.name, s.brand, s.recipient, s.created_by, s.view, s.group_id, s.deck_id, s.talent_count, s.created_at, s.expires_at, s.revoked, s.views, s.last_viewed_at,
@@ -286,10 +293,11 @@ export default async (req, context) => {
         const b = await req.json().catch(() => ({}));
         const name = String(b.name || '').trim().slice(0, 120);
         if (!name) return json({ error: 'Name is required' }, 400);
-        await query('UPDATE shared_decks SET name = $2 WHERE deck_id = $1', [parts[2], name]);
+        await query(me.admin || !ident.uid ? 'UPDATE shared_decks SET name = $2 WHERE deck_id = $1' : 'UPDATE shared_decks SET name = $2 WHERE deck_id = $1 AND created_by = $3', me.admin || !ident.uid ? [parts[2], name] : [parts[2], name, me.name]);
         return json({ ok: true });
       }
       if (method === 'PATCH' && parts[1]) {
+        if (!(await ownsCode(parts[1]))) return notYours();
         const b = await req.json().catch(() => ({}));
         if (typeof b.name === 'string' && b.name.trim()) await query('UPDATE shared_decks SET name = $2 WHERE code = $1', [parts[1], b.name.trim().slice(0, 120)]);
         if (b.revoked === false) await query('UPDATE shared_decks SET revoked = false WHERE code = $1', [parts[1]]);
@@ -301,19 +309,22 @@ export default async (req, context) => {
         return json({ ok: true });
       }
       if (method === 'POST' && parts[1] === 'purge') {
-        const gone = await query(`DELETE FROM shared_decks WHERE revoked RETURNING code`);
+        const all = me.admin || !ident.uid;
+        const gone = await query(`DELETE FROM shared_decks WHERE revoked ${all ? '' : 'AND created_by = $1'} RETURNING code`, all ? [] : [me.name]);
         if (gone.length) await query('DELETE FROM deck_views WHERE code = ANY($1::text[])', [gone.map((g) => g.code)]);
         return json({ deleted: gone.length });
       }
       if (method === 'DELETE' && parts[1] && url.searchParams.get('permanent') === '1') {
-        const [row] = await query('SELECT revoked, expires_at FROM shared_decks WHERE code = $1', [parts[1]]);
+        const [row] = await query('SELECT revoked, expires_at, created_by FROM shared_decks WHERE code = $1', [parts[1]]);
         if (!row) return json({ error: 'Not found' }, 404);
+        if (!mine(row.created_by)) return notYours();
         if (!row.revoked && !(row.expires_at && new Date(row.expires_at) < new Date())) return json({ error: 'Revoke the link first, then you can delete it' }, 400);
         await query('DELETE FROM deck_views WHERE code = $1', [parts[1]]);
         await query('DELETE FROM shared_decks WHERE code = $1', [parts[1]]);
         return json({ ok: true });
       }
       if (method === 'DELETE' && parts[1]) {
+        if (!(await ownsCode(parts[1]))) return notYours();
         await query('UPDATE shared_decks SET revoked = true WHERE code = $1', [parts[1]]);
         return json({ ok: true });
       }
@@ -328,7 +339,7 @@ export default async (req, context) => {
       return json({ log, pending });
     }
     if (route === 'sync' && parts[1] === 'run' && method === 'POST') {
-      const denied = needEdit();
+      const denied = needSync();
       if (denied) return denied;
       try {
         return json(await syncTalent());
@@ -338,7 +349,7 @@ export default async (req, context) => {
     }
 
     if (route === 'sync' && parts[1] === 'website' && method === 'POST') {
-      const denied = needEdit();
+      const denied = needSync();
       if (denied) return denied;
       try {
         const res = await fetch(`${url.origin}/.netlify/functions/sync-website-background`, { method: 'POST', headers: { 'x-sync-key': process.env.AUTH_SECRET || '' } });
@@ -347,7 +358,7 @@ export default async (req, context) => {
     }
 
     if (route === 'sync' && parts[1] === 'deals' && method === 'POST') {
-      const denied = needEdit();
+      const denied = needSync();
       if (denied) return denied;
       try {
         const res = await fetch(`${url.origin}/.netlify/functions/sync-deals-background`, {
@@ -558,10 +569,15 @@ export default async (req, context) => {
     if (route === 'lists' || route === 'decks') {
       const table = route;
       const id = parts[1];
+      if (table === 'decks' && method !== 'GET') { const d = needEdit(); if (d) return d; }
       if (method === 'PUT' && id) {
         const body = await req.json();
         const name = String(body.name || '').trim();
         if (!name) return json({ error: 'Name is required' }, 400);
+        if (table === 'decks') {
+          const [ex] = await query('SELECT data FROM decks WHERE id = $1', [id]);
+          body.data = { ...(body.data || {}), createdBy: (ex && ex.data && ex.data.createdBy) || actor };
+        }
         await pool().query(
           `INSERT INTO ${table} (id, name, data) VALUES ($1, $2, $3::jsonb)
            ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, data = EXCLUDED.data, updated_at = now()`,

@@ -1370,6 +1370,7 @@ document.getElementById('export-shortlist-btn').addEventListener('click', () => 
 /* ---------- saved decks (persistent, unlike the ephemeral deck view) ---------- */
 /* ---------- saved decks (shared live via the database) ---------- */
 let deckStore = {};
+let savedBy = '';
 let decksSynced = {};
 let deckTimer = null;
 function saveDeckStoreToDisk(){
@@ -1421,13 +1422,16 @@ function renderSavedDecksList(){
     body.innerHTML = '<div class="shortlist-empty">No saved decks yet. Build one from your shortlist, then hit "Save Deck" to keep it here.</div>';
     return;
   }
-  const sorted = ids.sort((a,b) => (deckStore[b].savedAt||0) - (deckStore[a].savedAt||0));
-  body.innerHTML = sorted.map(id => {
+  const makers = [...new Set(ids.map(i => deckStore[i].createdBy).filter(Boolean))].sort();
+  if(savedBy && !makers.includes(savedBy)) savedBy = '';
+  const sorted = ids.filter(i => !savedBy || deckStore[i].createdBy === savedBy).sort((a,b) => (deckStore[b].savedAt||0) - (deckStore[a].savedAt||0));
+  const filterBar = makers.length ? `<div style="margin-bottom:10px;font-size:13px;">Created by <select id="saved-by"><option value="">Anyone</option>${makers.map(m => `<option${m === savedBy ? ' selected' : ''}>${escapeHtml(m)}</option>`).join('')}</select></div>` : '';
+  body.innerHTML = filterBar + sorted.map(id => {
     const d = deckStore[id];
     const dateStr = d.savedAt ? new Date(d.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
     return `<div class="saved-card">
       <div><div class="nm">${escapeHtml(d.name)}</div>
-      <div class="mt">${d.ids.length} talent${d.brand ? ' · ' + escapeHtml(d.brand) : ''} · ${d.view === 'list' ? 'List' : 'Cards'} view · saved ${dateStr}${linkInfo(id)}</div></div>
+      <div class="mt">${d.ids.length} talent${d.brand ? ' · ' + escapeHtml(d.brand) : ''} · ${d.view === 'list' ? 'List' : 'Cards'} view · saved ${dateStr}${d.createdBy ? ' by ' + escapeHtml(d.createdBy) : ''}${linkInfo(id)}</div></div>
       <div class="acts">
         <button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-open-deck="${id}">Open</button>
         <button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-rename-deck="${id}">Rename</button>
@@ -1435,6 +1439,7 @@ function renderSavedDecksList(){
         <button class="btn ghost danger" style="padding:6px 12px;font-size:12px;" data-delete-deck="${id}">Delete</button>
       </div></div>`;
   }).join('');
+  const sb = document.getElementById('saved-by'); if(sb) sb.addEventListener('change', () => { savedBy = sb.value; renderSavedDecksList(); });
   body.querySelectorAll('[data-open-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.openDeck, false)));
   body.querySelectorAll('[data-send-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.sendDeck, true)));
   body.querySelectorAll('[data-rename-deck]').forEach(btn => btn.addEventListener('click', async () => {
@@ -1568,6 +1573,7 @@ async function openShareDetail(code){
     <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>`;
   document.getElementById('form-cancel').onclick = closeModal;
   document.getElementById('sd-copy').onclick = () => { copyText(j.url); showToast('Link copied'); };
+  if(ME && !ME.admin && x.created_by !== ME.name){ ['sd-ext','sd-never','sd-restore','sd-revoke','sd-delete'].forEach(i => { const el = document.getElementById(i); if(el) el.remove(); }); }
   const act = async (fn, msg) => { try{ await fn(); showToast(msg); closeModal(); loadHubShares(); }catch(ex){ showToast(ex.message); } };
   document.getElementById('sd-ext').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:30}}), 'Extended by 30 days');
   document.getElementById('sd-never').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:0}}), 'Link will not expire');
@@ -1820,7 +1826,9 @@ document.getElementById('modal-back').addEventListener('mousedown', e => { if(e.
 function applyRole(){
   document.getElementById('add-talent-btn').style.display = canEdit() ? '' : 'none';
   document.getElementById('import-btn').style.display = canEdit() ? '' : 'none';
-  document.getElementById('sync-btn').style.display = canEdit() ? '' : 'none';
+  document.getElementById('sync-btn').style.display = (canEdit() && (!ME || ME.admin)) ? '' : 'none';
+  document.getElementById('deck-share-btn').style.display = canEdit() ? '' : 'none';
+  document.getElementById('deck-save-btn').style.display = canEdit() ? '' : 'none';
   document.getElementById('unlock-edit-btn').style.display = (ROLE === 'view' && !ME) ? '' : 'none';
   const ub = document.getElementById('user-btn');
   ub.style.display = '';
