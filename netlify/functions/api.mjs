@@ -197,7 +197,7 @@ export default async (req, context) => {
     if (route === 'shares') {
       const base = process.env.DECKS_HOST ? `https://${process.env.DECKS_HOST}` : url.origin;
       if (method === 'GET' && !parts[1]) {
-        const rows = await query(`SELECT s.code, s.name, s.brand, s.recipient, s.created_by, s.view, s.group_id, s.talent_count, s.created_at, s.expires_at, s.revoked, s.views, s.last_viewed_at,
+        const rows = await query(`SELECT s.code, s.name, s.brand, s.recipient, s.created_by, s.view, s.group_id, s.deck_id, s.talent_count, s.created_at, s.expires_at, s.revoked, s.views, s.last_viewed_at,
             (SELECT count(DISTINCT v.visitor) FROM deck_views v WHERE v.code = s.code AND NOT v.is_bot)::int AS visitors,
             (SELECT min(v.viewed_at) FROM deck_views v WHERE v.code = s.code AND NOT v.is_bot) AS first_viewed_at
           FROM shared_decks s ORDER BY s.created_at DESC LIMIT 500`);
@@ -241,21 +241,42 @@ export default async (req, context) => {
           const code = randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 12);
           const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view, talents, createdAt: new Date().toISOString() };
           await query(
-            'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at, recipient, created_by, view, group_id, note) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10,$11)',
-            [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires, recipient, createdBy, view, groupId, note]
+            'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at, recipient, created_by, view, group_id, note, deck_id) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10,$11,$12)',
+            [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires, recipient, createdBy, view, groupId, note, b.deckId ? String(b.deckId).slice(0, 80) : null]
           );
           created.push({ code, recipient, url: `${base}/d/${code}` });
         }
         return json({ links: created, talent_count: talents.length, expires_at: expires }, 201);
       }
+      if (method === 'PATCH' && parts[1] === 'deck' && parts[2]) {
+        const b = await req.json().catch(() => ({}));
+        const name = String(b.name || '').trim().slice(0, 120);
+        if (!name) return json({ error: 'Name is required' }, 400);
+        await query('UPDATE shared_decks SET name = $2 WHERE deck_id = $1', [parts[2], name]);
+        return json({ ok: true });
+      }
       if (method === 'PATCH' && parts[1]) {
         const b = await req.json().catch(() => ({}));
+        if (typeof b.name === 'string' && b.name.trim()) await query('UPDATE shared_decks SET name = $2 WHERE code = $1', [parts[1], b.name.trim().slice(0, 120)]);
         if (b.revoked === false) await query('UPDATE shared_decks SET revoked = false WHERE code = $1', [parts[1]]);
         if (b.extendDays !== undefined) {
           const d = Math.min(Math.max(Number(b.extendDays) || 0, 0), 730);
           if (d === 0) await query('UPDATE shared_decks SET expires_at = NULL WHERE code = $1', [parts[1]]);
           else await query(`UPDATE shared_decks SET expires_at = greatest(coalesce(expires_at, now()), now()) + ($2 || ' days')::interval WHERE code = $1`, [parts[1], String(d)]);
         }
+        return json({ ok: true });
+      }
+      if (method === 'POST' && parts[1] === 'purge') {
+        const gone = await query(`DELETE FROM shared_decks WHERE revoked RETURNING code`);
+        if (gone.length) await query('DELETE FROM deck_views WHERE code = ANY($1::text[])', [gone.map((g) => g.code)]);
+        return json({ deleted: gone.length });
+      }
+      if (method === 'DELETE' && parts[1] && url.searchParams.get('permanent') === '1') {
+        const [row] = await query('SELECT revoked, expires_at FROM shared_decks WHERE code = $1', [parts[1]]);
+        if (!row) return json({ error: 'Not found' }, 404);
+        if (!row.revoked && !(row.expires_at && new Date(row.expires_at) < new Date())) return json({ error: 'Revoke the link first, then you can delete it' }, 400);
+        await query('DELETE FROM deck_views WHERE code = $1', [parts[1]]);
+        await query('DELETE FROM shared_decks WHERE code = $1', [parts[1]]);
         return json({ ok: true });
       }
       if (method === 'DELETE' && parts[1]) {

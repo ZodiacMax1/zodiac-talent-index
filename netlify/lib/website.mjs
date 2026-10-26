@@ -3,6 +3,12 @@ import { handleOf, normName } from './sync.mjs';
 
 const SITE = 'https://zodiacglobal.com';
 const UA = { 'user-agent': 'ZodiacTalentIndex/1.0 (+internal sync)' };
+// Image storage can reject unknown clients, so image requests look like an ordinary browser visiting zodiacglobal.com
+const IMG_HEADERS = {
+  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+  accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+  referer: 'https://zodiacglobal.com/',
+};
 
 const decode = (s) => String(s || '')
   .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
@@ -68,7 +74,7 @@ export async function syncWebsite() {
     const prev = new Map((await db.query('SELECT slug, bio, photo_src, talent_id FROM website_profiles')).rows.map((r) => [r.slug, r]));
     const have = new Map((await db.query('SELECT talent_id, source_url FROM talent_photos')).rows.map((r) => [r.talent_id, r.source_url]));
 
-    const stats = { onSite: ok.length, matched: 0, photosSaved: 0, biosFilled: 0, notInIndex: [], failed: profiles.length - ok.length };
+    const stats = { onSite: ok.length, matched: 0, photosSaved: 0, photosFailed: 0, photoErrors: [], biosFilled: 0, notInIndex: [], failed: profiles.length - ok.length };
     let changed = false;
 
     for (const p of ok) {
@@ -88,19 +94,24 @@ export async function syncWebsite() {
       // Photo: download our own copy (only when the website image is new to us)
       if (p.photo && have.get(t.id) !== p.photo && isWebsitePhoto(t.photo)) {
         try {
-          const r = await fetch(p.photo, { headers: UA });
+          const r = await fetch(p.photo, { headers: IMG_HEADERS });
           const type = (r.headers.get('content-type') || '').split(';')[0];
           const buf = Buffer.from(await r.arrayBuffer());
-          if (r.ok && /^image\//.test(type) && buf.length > 500 && buf.length < 8e6) {
-            await db.query(
-              `INSERT INTO talent_photos (talent_id, content_type, data, source_url, updated_at) VALUES ($1,$2,$3,$4,now())
-               ON CONFLICT (talent_id) DO UPDATE SET content_type=EXCLUDED.content_type, data=EXCLUDED.data, source_url=EXCLUDED.source_url, updated_at=now()`,
-              [t.id, type, buf, p.photo]
-            );
-            await db.query('UPDATE talents SET photo = $2, updated_at = now() WHERE id = $1', [t.id, `/api/img/${encodeURIComponent(t.id)}?v=${Date.now().toString(36)}`]);
-            stats.photosSaved++; changed = true;
-          }
-        } catch { /* keep going; try again next run */ }
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          if (!/^image\//.test(type)) throw new Error(`not an image (${type || 'no type'})`);
+          if (buf.length < 500 || buf.length >= 8e6) throw new Error(`unexpected size ${buf.length}`);
+          await db.query(
+            `INSERT INTO talent_photos (talent_id, content_type, data, source_url, updated_at) VALUES ($1,$2,$3,$4,now())
+             ON CONFLICT (talent_id) DO UPDATE SET content_type=EXCLUDED.content_type, data=EXCLUDED.data, source_url=EXCLUDED.source_url, updated_at=now()`,
+            [t.id, type, buf, p.photo]
+          );
+          await db.query('UPDATE talents SET photo = $2, updated_at = now() WHERE id = $1', [t.id, `/api/img/${encodeURIComponent(t.id)}?v=${Date.now().toString(36)}`]);
+          stats.photosSaved++; changed = true;
+        } catch (e) {
+          stats.photosFailed++;
+          const why = String(e.message || e).slice(0, 80);
+          if (stats.photoErrors.length < 3 && !stats.photoErrors.includes(why)) stats.photoErrors.push(why);
+        }
       }
 
       // Bio: fill when blank, or refresh when the Index still holds the old website text (never overwrite hand-written bios)

@@ -594,6 +594,7 @@
         <select id="hub-by"><option value="">Anyone</option></select>
         <select id="hub-sort"><option value="new">Newest first</option><option value="opened">Last opened</option><option value="most">Most opened</option></select>
       </div>
+      <div id="hub-purge" style="margin-bottom:10px;"></div>
       <div id="hub-sent-body">Loading…</div>
     </div>
     <div id="hub-saved" style="display:none;">
@@ -1386,8 +1387,14 @@ function openSavedDeck(id, thenShare){
   const d = deckStore[id]; if(!d) return;
   closeHub();
   document.getElementById('deck-overlay').classList.add('open');
-  renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms, view: d.view});
+  renderDeck({id, ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms, view: d.view});
   if(thenShare) document.getElementById('deck-share-btn').click();
+}
+function linkInfo(deckId){
+  const l = hubShares.filter(x => x.deck_id === deckId);
+  if(!l.length) return '';
+  const live = l.filter(x => shareStatus(x) === 'live').length, opened = l.filter(x => x.views).length;
+  return ` · ${l.length} link${l.length === 1 ? '' : 's'} sent (${live} live, ${opened} opened)`;
 }
 function renderSavedDecksList(){
   const ids = Object.keys(deckStore);
@@ -1403,15 +1410,27 @@ function renderSavedDecksList(){
     const dateStr = d.savedAt ? new Date(d.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
     return `<div class="saved-card">
       <div><div class="nm">${escapeHtml(d.name)}</div>
-      <div class="mt">${d.ids.length} talent${d.brand ? ' · ' + escapeHtml(d.brand) : ''} · ${d.view === 'list' ? 'List' : 'Cards'} view · saved ${dateStr}</div></div>
+      <div class="mt">${d.ids.length} talent${d.brand ? ' · ' + escapeHtml(d.brand) : ''} · ${d.view === 'list' ? 'List' : 'Cards'} view · saved ${dateStr}${linkInfo(id)}</div></div>
       <div class="acts">
         <button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-open-deck="${id}">Open</button>
+        <button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-rename-deck="${id}">Rename</button>
         <button class="btn" style="padding:6px 12px;font-size:12px;" data-send-deck="${id}">Send link</button>
         <button class="btn ghost danger" style="padding:6px 12px;font-size:12px;" data-delete-deck="${id}">Delete</button>
       </div></div>`;
   }).join('');
   body.querySelectorAll('[data-open-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.openDeck, false)));
   body.querySelectorAll('[data-send-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.sendDeck, true)));
+  body.querySelectorAll('[data-rename-deck]').forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.renameDeck, d = deckStore[id];
+    const name = (prompt('Rename this deck (sent links will update too):', d.name) || '').trim();
+    if(!name || name === d.name) return;
+    d.name = name;
+    saveDeckStoreToDisk();
+    try{ await api('/shares/deck/' + encodeURIComponent(id), {method:'PATCH', body:{name}}); }catch(e){}
+    showToast('Renamed');
+    await loadHubShares();
+    renderSavedDecksList();
+  }));
   body.querySelectorAll('[data-delete-deck]').forEach(btn => {
     btn.addEventListener('click', () => {
       if(!confirm('Delete this saved deck? Links you have already sent are not affected.')) return;
@@ -1433,7 +1452,7 @@ function setHubTab(tab){
   document.querySelectorAll('.hub-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
   document.getElementById('hub-sent').style.display = tab === 'sent' ? '' : 'none';
   document.getElementById('hub-saved').style.display = tab === 'saved' ? '' : 'none';
-  if(tab === 'saved') renderSavedDecksList(); else loadHubShares();
+  if(tab === 'saved'){ renderSavedDecksList(); loadHubShares().then(renderSavedDecksList); } else loadHubShares();
 }
 document.querySelectorAll('.hub-tabs button').forEach(b => b.addEventListener('click', () => setHubTab(b.dataset.tab)));
 document.getElementById('hub-back').addEventListener('click', closeHub);
@@ -1471,6 +1490,13 @@ function drawHubShares(){
   });
   if(sort === 'opened') rows.sort((a,b) => new Date(b.last_viewed_at||0) - new Date(a.last_viewed_at||0));
   else if(sort === 'most') rows.sort((a,b) => (b.views||0) - (a.views||0));
+  const nRev = hubShares.filter(x => x.revoked).length;
+  document.getElementById('hub-purge').innerHTML = nRev ? `<button class="btn ghost danger" id="hub-purge-btn" style="padding:6px 14px;font-size:12px;">Delete all ${nRev} revoked link${nRev === 1 ? '' : 's'}</button>` : '';
+  const pb = document.getElementById('hub-purge-btn');
+  if(pb) pb.onclick = async () => {
+    if(!confirm('Permanently delete ' + nRev + ' revoked link(s) and their open history? This cannot be undone.')) return;
+    try{ const r = await api('/shares/purge', {method:'POST'}); showToast(r.deleted + ' deleted'); loadHubShares(); }catch(ex){ showToast(ex.message); }
+  };
   const live = hubShares.filter(x => shareStatus(x) === 'live');
   document.getElementById('hub-stats').innerHTML =
     `<div class="hub-stat"><b>${hubShares.length}</b><span>Links sent</span></div>
@@ -1516,6 +1542,7 @@ async function openShareDetail(code){
       <button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-ext">Extend 30 days</button>
       <button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-never">Never expire</button>
       ${x.revoked ? '<button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-restore">Restore link</button>' : '<button class="btn ghost danger" style="padding:6px 14px;font-size:12px;" id="sd-revoke">Revoke</button>'}
+      ${(x.revoked || s === 'expired') ? '<button class="btn ghost danger" style="padding:6px 14px;font-size:12px;" id="sd-delete">Delete permanently</button>' : ''}
     </div>
     <div style="font-weight:700;margin-bottom:6px;">Opens: ${human.length}${human.length ? ' from ' + new Set(human.map(v => v.visitor)).size + ' device(s)' : ''}</div>
     ${human.length ? `<div style="max-height:220px;overflow:auto;border:1px solid var(--line-strong);border-radius:6px;"><table class="hub-table" style="border:none;"><thead><tr><th>When</th><th>Where</th><th>Device</th><th>Visitor</th></tr></thead><tbody>${human.map(v => `<tr><td>${dtFmt(v.viewed_at)}</td><td>${escapeHtml(where(v))}</td><td>${escapeHtml(v.device)} · ${escapeHtml(v.browser)}</td><td>${vid[v.visitor]}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--grey);">Not opened yet.</div>'}
@@ -1528,6 +1555,7 @@ async function openShareDetail(code){
   document.getElementById('sd-ext').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:30}}), 'Extended by 30 days');
   document.getElementById('sd-never').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:0}}), 'Link will not expire');
   const rv = document.getElementById('sd-revoke'); if(rv) rv.onclick = () => { if(confirm('Revoke this link? They will no longer be able to open it.')) act(() => api('/shares/' + encodeURIComponent(code), {method:'DELETE'}), 'Link revoked'); };
+  const dl = document.getElementById('sd-delete'); if(dl) dl.onclick = () => { if(confirm('Permanently delete this link and its open history? This cannot be undone.')) act(() => api('/shares/' + encodeURIComponent(code) + '?permanent=1', {method:'DELETE'}), 'Link deleted'); };
   const rs = document.getElementById('sd-restore'); if(rs) rs.onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{revoked:false}}), 'Link restored');
 }
 
@@ -1703,6 +1731,15 @@ document.getElementById('deck-share-btn').addEventListener('click', () => {
   const ids = currentDeckIds().filter(id => DATA.some(r => r.id === id));
   if(!ids.length){ showToast('This deck is empty'); return; }
   const brand = document.getElementById('brand-name-input').value.trim();
+  // Every sent deck lives in Saved decks, so links, names and history stay together
+  const keyOf = a => a.slice().sort().join(',');
+  let deckId = deckOverride && deckOverride.id && deckStore[deckOverride.id] ? deckOverride.id : null;
+  if(!deckId) deckId = Object.keys(deckStore).find(k => deckStore[k].brand === brand && keyOf(deckStore[k].ids) === keyOf(ids)) || null;
+  if(!deckId){
+    deckId = 'deck_' + Date.now();
+    deckStore[deckId] = { id: deckId, name: brand ? 'Zodiac × ' + brand : (store.active || 'Untitled Deck'), brand, domain: document.getElementById('brand-domain-input').value.trim() || guessDomain(brand), listName: deckOverride ? deckOverride.listName : store.active, ids: ids.slice(), platforms: deckPlats.slice(), view: deckView, savedAt: Date.now() };
+    saveDeckStoreToDisk(); renderSavedDecksList();
+  }
   const me = (() => { try{ return localStorage.getItem('zodiacNoteAuthor') || ''; }catch(e){ return ''; } })();
   openModal(`<h3>Send this deck</h3>
     <p style="font-size:13px;line-height:1.55;color:var(--grey);margin:0 0 12px;">Creates a private link to a frozen copy of this deck (${ids.length} talent), shown to the brand as <strong>${deckView === 'list' ? 'a list' : 'cards'}</strong>. They can see that one page and nothing else. Later edits to the Index won't change it.</p>
@@ -1723,7 +1760,7 @@ document.getElementById('deck-share-btn').addEventListener('click', () => {
       try{ localStorage.setItem('zodiacNoteAuthor', by); }catch(x){}
       const recipients = document.getElementById('share-recips').value.split('\n').map(x => x.trim()).filter(Boolean);
       const domain = document.getElementById('brand-domain-input').value.trim() || guessDomain(brand);
-      const j = await api('/shares', {method:'POST', body:{ids, brand, domain, listName: deckOverride ? deckOverride.listName : store.active, platforms: deckPlats, view: deckView, name: brand ? 'Zodiac × ' + brand : store.active, expiresInDays: Number(document.getElementById('share-exp').value), recipients, createdBy: by, note: document.getElementById('share-note').value.trim()}});
+      const j = await api('/shares', {method:'POST', body:{ids, brand, domain, listName: deckOverride ? deckOverride.listName : store.active, platforms: deckPlats, view: deckView, deckId, name: deckStore[deckId].name, expiresInDays: Number(document.getElementById('share-exp').value), recipients, createdBy: by, note: document.getElementById('share-note').value.trim()}});
       const all = j.links.map(l => (l.recipient ? l.recipient + ': ' : '') + l.url).join('\n');
       copyText(j.links.length === 1 ? j.links[0].url : all);
       openModal(`<h3>${j.links.length > 1 ? j.links.length + ' links ready' : 'Link ready'}</h3>
@@ -2123,7 +2160,7 @@ async function openSyncModal(){
       '<div style="color:var(--grey);margin-bottom:8px;">Talent is pulled from the Talent Index, Talent Roster and Talent Outreach boards every 5 minutes. Exclusive status follows the Roster groups.</div>' +
       line('Talent', log.talent, s => `${s.created || 0} added, ${s.updated || 0} updated`) +
       line('Previous deals', log.deals, s => `${s.deals || 0} deals`) +
-      line('Website photos & bios', log.website, s => `${s.matched || 0} matched, ${s.photosSaved || 0} photos saved, ${s.biosFilled || 0} bios filled` + ((s.notInIndex || []).length ? ` · on the website but not in the Index: ${s.notInIndex.join(', ')}` : '')) + pend;
+      line('Website photos & bios', log.website, s => `${s.matched || 0} matched, ${s.photosSaved || 0} photos saved, ${s.biosFilled || 0} bios filled` + (s.photosFailed ? ` · ${s.photosFailed} photos failed (${(s.photoErrors || []).join('; ')})` : '') + ((s.notInIndex || []).length ? ` · on the website but not in the Index: ${s.notInIndex.join(', ')}` : '')) + pend;
   };
   try{ await draw(); }catch(ex){ document.getElementById('sync-body').textContent = ex.message; }
   document.getElementById('sync-now').onclick = async () => {
