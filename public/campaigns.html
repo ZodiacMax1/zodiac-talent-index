@@ -60,6 +60,7 @@ h2.sh{font:500 13px var(--display);letter-spacing:.16em;text-transform:uppercase
 .cell{padding:18px 22px;border-right:1px solid var(--line);min-width:0}
 .cell:last-child{border-right:0}
 .cell .v{font:500 32px/1.1 var(--display);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.cell .v .bud{font:inherit;letter-spacing:inherit;width:100%;text-align:left;padding:0 6px;margin-left:-6px;border-radius:8px}
 .cell .s{font-size:13px;color:var(--muted);margin-top:2px}
 .gbp{font:500 13px var(--mono);color:var(--gold);margin-top:3px}.cell.hl{background:var(--accent-soft)}.cell.hl .v{color:var(--accent)}
 .prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:20px}
@@ -315,7 +316,7 @@ function viewCampaign(){
    +'<div class="row"><span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div><label class="small" for="mstage" style="margin-left:6px">monday</label><select id="mstage" class="sel '+(w?'ok':'warn')+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div></div>';
   var below=s.price&&s.pc<c.target;
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
-  h+='<div class="band">'+cellS('Budget',money(c.budget),money(Math.max(0,c.budget-s.price))+' left after client price',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',money(s.m),'client price '+money(s.price),false,ng?gbpIn(s.m,c):'')+cellS('Margin %',s.price?s.pc.toFixed(1)+'%':'–','target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below target</b>':''),true,'')+'</div>';
+  h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),money(Math.max(0,c.budget-s.price))+' left after client price',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',money(s.m),'client price '+money(s.price),false,ng?gbpIn(s.m,c):'')+cellS('Margin %',s.price?s.pc.toFixed(1)+'%':'–','target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below target</b>':''),true,'')+'</div>';
   if(ng)h+='<div class="small" style="margin:-10px 0 18px">Shown in '+c.cur+'. £ equivalent at £'+c.fx+' per '+c.cur+'.</div>';
   if(w){h+=prog(c)+deadlines(c);}
   var tabs=['Influencers'].concat(w?['Archive']:[]).concat(['Decks & links','Deliverables','Brief & setup']);
@@ -546,7 +547,7 @@ document.addEventListener('change',function(e){
   if(d.ps){if(t.checked)S.pickSel[d.ps]=1;else delete S.pickSel[d.ps];render();return;}
   if(d.ix){var body={};body[d.k]=t.value;FULL.infl.forEach(function(i){if(i.tid===d.ix)i[d.k]=t.value;});
     api('/campaigns/talent-contact/'+d.ix,{method:'PATCH',body:body}).then(function(){toast('Saved to the Talent Index profile');}).catch(function(er){toast(er.message);});return;}
-  if(d.cf){var c=camp(),k=d.cf,v=t.value;if(['budget','cValue','target','fx'].indexOf(k)>-1){v=Number(v);if(!isFinite(v)||v<0){render();return;}}
+  if(d.cf){var c=camp(),k=d.cf,v=t.value;if(['budget','cValue','target','fx'].indexOf(k)>-1){v=num(v);if(!isFinite(v)||v<0){render();return;}}
     var body2={};body2[k]=v;c[k]=v;post(P(''),'PATCH',body2,{quiet:!RERENDER[k]});return;}
   if(d.dk){var ii=find(S.dd.iid);ii.deliv.forEach(function(z){if(z.id===S.dd.did){z[d.dk]=t.value;syncStage(z,d.dk);render();patchDel(z).then(function(){render();});}});return;}
   if(d.dm){var z3=cdel();var o={};Object.keys(z3.ins).forEach(function(k){o[k]=z3.ins[k];});var n3=parseFloat(String(t.value).replace(/,/g,''));o[d.dm]=isFinite(n3)?n3:'';z3.ins=o;patchDel(z3,{ins:o});return;}
