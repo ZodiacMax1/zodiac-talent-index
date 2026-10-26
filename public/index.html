@@ -263,6 +263,35 @@
   a.deck-plat:hover{color:var(--burgundy);}
   .deck-plat svg{width:20px;height:20px;flex:0 0 auto;color:var(--burgundy);}
   .deck-plat .pn{font-weight:400;font-size:11px;color:var(--grey);letter-spacing:.04em;text-transform:uppercase;}
+  .hub-overlay{position:fixed;inset:0;background:var(--cream);z-index:520;overflow-y:auto;display:none;}
+  .hub-overlay.open{display:block;}
+  .hub-top{position:sticky;top:0;z-index:5;background:var(--cream);border-bottom:1px solid var(--line-strong);padding:14px 28px;display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+  .hub-title{font-family:'Oswald',sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:.02em;}
+  .hub-tabs{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;margin-left:auto;}
+  .hub-tabs button{border:none;background:var(--card);padding:8px 16px;font:inherit;font-size:13px;cursor:pointer;color:var(--grey);}
+  .hub-tabs button.on{background:var(--burgundy);color:#fff;}
+  .hub-inner{max-width:1180px;margin:0 auto;padding:26px 28px 80px;}
+  .hub-hint{color:var(--grey);font-size:13px;margin:0 0 14px;}
+  .hub-stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .hub-stat{background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px 18px;min-width:120px;}
+  .hub-stat b{display:block;font-size:22px;font-family:'DM Sans',sans-serif;}
+  .hub-stat span{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);}
+  .hub-filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .hub-filters input,.hub-filters select{font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;background:var(--card);}
+  .hub-filters input{flex:1;min-width:240px;}
+  .hub-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;font-size:13px;}
+  .hub-table th{text-align:left;font-family:'Oswald',sans-serif;font-weight:500;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--grey);padding:10px 12px;background:var(--cream);}
+  .hub-table td{padding:11px 12px;border-top:1px solid var(--line);vertical-align:top;}
+  .hub-table tr.hrow{cursor:pointer;}
+  .hub-table tr.hrow:hover td{background:var(--burgundy-tint);}
+  .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--grey);background:var(--cream);}
+  .pill.live{background:#e6f3ea;border-color:#b9dcc5;color:#256a41;}
+  .pill.bad{background:#f7e4e4;border-color:#e3b8b8;color:#8a2020;}
+  .saved-card{background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .saved-card .nm{font-weight:700;font-size:15px;}
+  .saved-card .mt{color:var(--grey);font-size:12.5px;margin-top:2px;}
+  .saved-card .acts{margin-left:auto;display:flex;gap:6px;}
+  @media (max-width:900px){.hub-table .hide-s{display:none;}}
   .deck-list{border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;}
   .deck-row{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);page-break-inside:avoid;}
   .deck-row:last-child{border-bottom:none;}
@@ -270,7 +299,9 @@
   .deck-row .nm{flex:1;font-family:'Oswald',sans-serif;font-size:18px;min-width:0;}
   .deck-row .nm a{color:inherit;text-decoration:none;}
   .deck-row .deck-platform-row{margin:0;justify-content:flex-end;gap:8px 22px;}
-  .deck-card.nophoto .deck-card-body{padding:22px 30px;}
+  .logo{display:flex;align-items:center;justify-content:center;background:var(--cream);}
+  .logo img{width:46%;max-width:120px;border-radius:50%;opacity:.9;}
+  .av.logo img{width:70%;}
   .deck-view-pick{display:inline-flex;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;}
   .deck-view-pick button{border:none;background:var(--card);padding:7px 13px;font:inherit;font-size:12px;cursor:pointer;color:var(--grey);}
   .deck-view-pick button.on{background:var(--burgundy);color:#fff;}
@@ -378,7 +409,7 @@
       </div>
     </div>
     <div class="toggle-stack">
-      <button class="btn ghost" id="saved-decks-btn">Saved Decks <span class="count-pill" id="saved-decks-count">0</span></button>
+      <button class="btn ghost" id="saved-decks-btn">Decks &amp; Links <span class="count-pill" id="saved-decks-count">0</span></button>
       <button class="btn ghost" id="sync-btn" style="display:none;">monday Sync</button>
       <button class="btn ghost" id="import-btn" style="display:none;">Import Spreadsheet</button>
       <button class="btn ghost" id="add-talent-btn" style="display:none;">+ Add Talent</button>
@@ -547,13 +578,29 @@
   <div class="deck-inner" id="deck-inner"></div>
 </div>
 
-<div class="shortlist-panel" id="saved-decks-panel">
-  <div class="shortlist-head">
-    <h3>Saved Decks</h3>
-    <button class="btn ghost" id="shared-links-btn" style="padding:6px 12px;font-size:11.5px;margin-left:auto;margin-right:10px;">Shared links</button>
-    <button class="shortlist-close" id="saved-decks-close">&times;</button>
+<div class="hub-overlay" id="decks-hub">
+  <div class="hub-top">
+    <button class="deck-back" id="hub-back">← Back to Index</button>
+    <div class="hub-title">Decks &amp; Links</div>
+    <div class="hub-tabs"><button data-tab="sent" class="on">Sent links</button><button data-tab="saved">Saved decks</button></div>
   </div>
-  <div class="shortlist-body" id="saved-decks-body"></div>
+  <div class="hub-inner">
+    <div id="hub-sent">
+      <div class="hub-stats" id="hub-stats"></div>
+      <div class="hub-filters">
+        <input type="text" id="hub-q" placeholder="Search brand, deck, recipient or who sent it…">
+        <select id="hub-status"><option value="">Any status</option><option value="live">Live</option><option value="opened">Opened</option><option value="unopened">Not opened yet</option><option value="expired">Expired</option><option value="revoked">Revoked</option></select>
+        <select id="hub-brand"><option value="">Any brand</option></select>
+        <select id="hub-by"><option value="">Anyone</option></select>
+        <select id="hub-sort"><option value="new">Newest first</option><option value="opened">Last opened</option><option value="most">Most opened</option></select>
+      </div>
+      <div id="hub-sent-body">Loading…</div>
+    </div>
+    <div id="hub-saved" style="display:none;">
+      <p class="hub-hint">Decks you've saved from the deck builder. Open one to edit or print it, or send a link straight from here.</p>
+      <div id="saved-decks-body"></div>
+    </div>
+  </div>
 </div>
 
 
@@ -1335,52 +1382,154 @@ function applyDecks(serverDecks){
   serverDecks.forEach(x => { d[x.id] = x.data; decksSynced[x.id] = JSON.stringify(x.data); });
   deckStore = d;
 }
+function openSavedDeck(id, thenShare){
+  const d = deckStore[id]; if(!d) return;
+  closeHub();
+  document.getElementById('deck-overlay').classList.add('open');
+  renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms, view: d.view});
+  if(thenShare) document.getElementById('deck-share-btn').click();
+}
 function renderSavedDecksList(){
   const ids = Object.keys(deckStore);
   document.getElementById('saved-decks-count').textContent = ids.length;
   const body = document.getElementById('saved-decks-body');
   if(ids.length === 0){
-    body.innerHTML = '<div class="shortlist-empty">No saved decks yet. Build one below, then hit "Save Deck" to keep it here.</div>';
+    body.innerHTML = '<div class="shortlist-empty">No saved decks yet. Build one from your shortlist, then hit "Save Deck" to keep it here.</div>';
     return;
   }
   const sorted = ids.sort((a,b) => (deckStore[b].savedAt||0) - (deckStore[a].savedAt||0));
   body.innerHTML = sorted.map(id => {
     const d = deckStore[id];
     const dateStr = d.savedAt ? new Date(d.savedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-    return `<div class="shortlist-item">
-      <div>
-        <div class="name">${escapeHtml(d.name)}</div>
-        <div class="meta">${d.ids.length} talent${d.brand ? ' · '+escapeHtml(d.brand) : ''} · ${dateStr}</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <button class="btn ghost" style="padding:6px 12px;font-size:11.5px;" data-open-deck="${id}">Open</button>
-        <button class="shortlist-remove" data-delete-deck="${id}" title="Delete">&times;</button>
-      </div>
-    </div>`;
+    return `<div class="saved-card">
+      <div><div class="nm">${escapeHtml(d.name)}</div>
+      <div class="mt">${d.ids.length} talent${d.brand ? ' · ' + escapeHtml(d.brand) : ''} · ${d.view === 'list' ? 'List' : 'Cards'} view · saved ${dateStr}</div></div>
+      <div class="acts">
+        <button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-open-deck="${id}">Open</button>
+        <button class="btn" style="padding:6px 12px;font-size:12px;" data-send-deck="${id}">Send link</button>
+        <button class="btn ghost danger" style="padding:6px 12px;font-size:12px;" data-delete-deck="${id}">Delete</button>
+      </div></div>`;
   }).join('');
-  body.querySelectorAll('[data-open-deck]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const d = deckStore[btn.dataset.openDeck];
-      document.getElementById('saved-decks-panel').classList.remove('open');
-      document.getElementById('deck-overlay').classList.add('open');
-      renderDeck({ids: d.ids, brand: d.brand, domain: d.domain, listName: d.listName, platforms: d.platforms, view: d.view});
-    });
-  });
+  body.querySelectorAll('[data-open-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.openDeck, false)));
+  body.querySelectorAll('[data-send-deck]').forEach(btn => btn.addEventListener('click', () => openSavedDeck(btn.dataset.sendDeck, true)));
   body.querySelectorAll('[data-delete-deck]').forEach(btn => {
     btn.addEventListener('click', () => {
+      if(!confirm('Delete this saved deck? Links you have already sent are not affected.')) return;
       delete deckStore[btn.dataset.deleteDeck];
       saveDeckStoreToDisk();
       renderSavedDecksList();
     });
   });
 }
-document.getElementById('saved-decks-btn').addEventListener('click', () => {
-  document.getElementById('saved-decks-panel').classList.add('open');
-  renderSavedDecksList();
-});
-document.getElementById('saved-decks-close').addEventListener('click', () => {
-  document.getElementById('saved-decks-panel').classList.remove('open');
-});
+
+/* ---------- Decks & Links hub ---------- */
+let hubShares = [];
+function closeHub(){ document.getElementById('decks-hub').classList.remove('open'); }
+function openHub(tab){
+  document.getElementById('decks-hub').classList.add('open');
+  setHubTab(tab || 'sent');
+}
+function setHubTab(tab){
+  document.querySelectorAll('.hub-tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  document.getElementById('hub-sent').style.display = tab === 'sent' ? '' : 'none';
+  document.getElementById('hub-saved').style.display = tab === 'saved' ? '' : 'none';
+  if(tab === 'saved') renderSavedDecksList(); else loadHubShares();
+}
+document.querySelectorAll('.hub-tabs button').forEach(b => b.addEventListener('click', () => setHubTab(b.dataset.tab)));
+document.getElementById('hub-back').addEventListener('click', closeHub);
+document.getElementById('saved-decks-btn').addEventListener('click', () => openHub('sent'));
+
+const dFmt = x => x ? new Date(x).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '—';
+const dtFmt = x => x ? new Date(x).toLocaleString('en-GB', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : '—';
+function shareStatus(x){
+  if(x.revoked) return 'revoked';
+  if(x.expires_at && new Date(x.expires_at) < new Date()) return 'expired';
+  return 'live';
+}
+async function loadHubShares(){
+  const body = document.getElementById('hub-sent-body');
+  try{ hubShares = (await api('/shares')).shares; }
+  catch(e){ body.textContent = 'Could not load: ' + e.message; return; }
+  const uniq = k => [...new Set(hubShares.map(x => x[k]).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+  const fill = (id, label, vals) => { const el = document.getElementById(id), cur = el.value; el.innerHTML = `<option value="">${label}</option>` + vals.map(v => `<option>${escapeHtml(v)}</option>`).join(''); el.value = vals.includes(cur) ? cur : ''; };
+  fill('hub-brand', 'Any brand', uniq('brand'));
+  fill('hub-by', 'Anyone', uniq('created_by'));
+  drawHubShares();
+}
+function drawHubShares(){
+  const q = document.getElementById('hub-q').value.trim().toLowerCase();
+  const st = document.getElementById('hub-status').value, br = document.getElementById('hub-brand').value, by = document.getElementById('hub-by').value, sort = document.getElementById('hub-sort').value;
+  let rows = hubShares.filter(x => {
+    const s = shareStatus(x);
+    if(q && ![x.name, x.brand, x.recipient, x.created_by].filter(Boolean).join(' ').toLowerCase().includes(q)) return false;
+    if(st === 'opened' && !x.views) return false;
+    if(st === 'unopened' && x.views) return false;
+    if(['live','expired','revoked'].includes(st) && s !== st) return false;
+    if(br && x.brand !== br) return false;
+    if(by && x.created_by !== by) return false;
+    return true;
+  });
+  if(sort === 'opened') rows.sort((a,b) => new Date(b.last_viewed_at||0) - new Date(a.last_viewed_at||0));
+  else if(sort === 'most') rows.sort((a,b) => (b.views||0) - (a.views||0));
+  const live = hubShares.filter(x => shareStatus(x) === 'live');
+  document.getElementById('hub-stats').innerHTML =
+    `<div class="hub-stat"><b>${hubShares.length}</b><span>Links sent</span></div>
+     <div class="hub-stat"><b>${live.length}</b><span>Live now</span></div>
+     <div class="hub-stat"><b>${hubShares.filter(x => x.views).length}</b><span>Opened</span></div>
+     <div class="hub-stat"><b>${live.filter(x => !x.views).length}</b><span>Live, not opened yet</span></div>`;
+  const body = document.getElementById('hub-sent-body');
+  if(!rows.length){ body.innerHTML = '<div class="shortlist-empty">' + (hubShares.length ? 'No links match those filters.' : 'No links sent yet. Build a deck and press Copy Shareable Link.') + '</div>'; return; }
+  body.innerHTML = `<table class="hub-table"><thead><tr><th>Deck</th><th>Sent to</th><th class="hide-s">View</th><th class="hide-s">Talent</th><th>Sent</th><th class="hide-s">Expires</th><th>Opened</th><th>Status</th></tr></thead><tbody>` + rows.map(x => {
+    const s = shareStatus(x);
+    return `<tr class="hrow" data-code="${x.code}">
+      <td><strong>${escapeHtml(x.name || 'Deck')}</strong>${x.brand ? `<div style="color:var(--grey);font-size:12px;">${escapeHtml(x.brand)}</div>` : ''}</td>
+      <td>${x.recipient ? escapeHtml(x.recipient) : '<span class="dash">General link</span>'}</td>
+      <td class="hide-s">${x.view === 'list' ? 'List' : 'Cards'}</td>
+      <td class="hide-s">${x.talent_count}</td>
+      <td>${dFmt(x.created_at)}${x.created_by ? `<div style="color:var(--grey);font-size:12px;">by ${escapeHtml(x.created_by)}</div>` : ''}</td>
+      <td class="hide-s">${x.expires_at ? dFmt(x.expires_at) : 'Never'}</td>
+      <td>${x.views ? `<strong>${x.views}×</strong> · ${x.visitors} ${x.visitors === 1 ? 'device' : 'devices'}<div style="color:var(--grey);font-size:12px;">last ${dtFmt(x.last_viewed_at)}</div>` : '<span class="dash">Not yet</span>'}</td>
+      <td><span class="pill ${s === 'live' ? 'live' : 'bad'}">${s[0].toUpperCase() + s.slice(1)}</span></td></tr>`;
+  }).join('') + '</tbody></table>';
+  body.querySelectorAll('tr.hrow').forEach(tr => tr.addEventListener('click', () => openShareDetail(tr.dataset.code)));
+}
+['hub-q','hub-status','hub-brand','hub-by','hub-sort'].forEach(id => document.getElementById(id).addEventListener(id === 'hub-q' ? 'input' : 'change', drawHubShares));
+
+async function openShareDetail(code){
+  openModal('<h3>Link details</h3><div id="sd-body" style="font-size:13px;color:var(--grey);">Loading…</div>');
+  let j;
+  try{ j = await api('/shares/' + encodeURIComponent(code)); }catch(e){ document.getElementById('sd-body').textContent = e.message; return; }
+  const x = j.share, s = shareStatus(x);
+  const human = j.views.filter(v => !v.is_bot), bots = j.views.length - human.length;
+  const vid = {}; let n = 0;
+  j.views.forEach(v => { if(!(v.visitor in vid)) vid[v.visitor] = String.fromCharCode(65 + (n++ % 26)); });
+  const where = v => [v.city, v.country].filter(Boolean).join(', ') || 'Location unknown';
+  document.getElementById('sd-body').style.color = 'var(--ink)';
+  document.getElementById('sd-body').innerHTML = `
+    <div style="margin-bottom:10px;"><strong style="font-size:15px;">${escapeHtml(x.name || 'Deck')}</strong> <span class="pill ${s === 'live' ? 'live' : 'bad'}">${s[0].toUpperCase() + s.slice(1)}</span>
+      <div style="color:var(--grey);margin-top:3px;">${x.recipient ? 'Sent to <strong>' + escapeHtml(x.recipient) + '</strong> · ' : ''}${x.brand ? escapeHtml(x.brand) + ' · ' : ''}${x.talent_count} talent · ${x.view === 'list' ? 'List' : 'Cards'} view<br>Created ${dFmt(x.created_at)}${x.created_by ? ' by ' + escapeHtml(x.created_by) : ''} · ${x.expires_at ? 'expires ' + dFmt(x.expires_at) : 'never expires'}</div>
+      ${x.note ? `<div style="margin-top:6px;font-style:italic;color:var(--grey);">Note: ${escapeHtml(x.note)}</div>` : ''}</div>
+    <input readonly value="${escapeAttr(j.url)}" style="width:100%;font:inherit;font-size:12.5px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;margin-bottom:10px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="btn" style="padding:6px 14px;font-size:12px;" id="sd-copy">Copy link</button>
+      <a class="btn ghost" style="padding:6px 14px;font-size:12px;text-decoration:none;" href="${escapeAttr(j.url)}" target="_blank" rel="noopener">Preview as brand</a>
+      <button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-ext">Extend 30 days</button>
+      <button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-never">Never expire</button>
+      ${x.revoked ? '<button class="btn ghost" style="padding:6px 14px;font-size:12px;" id="sd-restore">Restore link</button>' : '<button class="btn ghost danger" style="padding:6px 14px;font-size:12px;" id="sd-revoke">Revoke</button>'}
+    </div>
+    <div style="font-weight:700;margin-bottom:6px;">Opens: ${human.length}${human.length ? ' from ' + new Set(human.map(v => v.visitor)).size + ' device(s)' : ''}</div>
+    ${human.length ? `<div style="max-height:220px;overflow:auto;border:1px solid var(--line-strong);border-radius:6px;"><table class="hub-table" style="border:none;"><thead><tr><th>When</th><th>Where</th><th>Device</th><th>Visitor</th></tr></thead><tbody>${human.map(v => `<tr><td>${dtFmt(v.viewed_at)}</td><td>${escapeHtml(where(v))}</td><td>${escapeHtml(v.device)} · ${escapeHtml(v.browser)}</td><td>${vid[v.visitor]}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--grey);">Not opened yet.</div>'}
+    <div style="color:var(--grey);font-size:11.5px;margin-top:6px;">Location is approximate (from the visitor's internet connection). "Visitor" letters tell different devices apart. ${bots ? bots + ' automatic preview(s) from messaging or email apps were ignored.' : ''}</div>
+    <div style="margin-top:12px;"><div style="font-weight:700;margin-bottom:4px;">Talent in this deck</div><div style="color:var(--grey);">${j.names.map(escapeHtml).join(' · ')}</div></div>
+    <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>`;
+  document.getElementById('form-cancel').onclick = closeModal;
+  document.getElementById('sd-copy').onclick = () => { copyText(j.url); showToast('Link copied'); };
+  const act = async (fn, msg) => { try{ await fn(); showToast(msg); closeModal(); loadHubShares(); }catch(ex){ showToast(ex.message); } };
+  document.getElementById('sd-ext').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:30}}), 'Extended by 30 days');
+  document.getElementById('sd-never').onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{extendDays:0}}), 'Link will not expire');
+  const rv = document.getElementById('sd-revoke'); if(rv) rv.onclick = () => { if(confirm('Revoke this link? They will no longer be able to open it.')) act(() => api('/shares/' + encodeURIComponent(code), {method:'DELETE'}), 'Link revoked'); };
+  const rs = document.getElementById('sd-restore'); if(rs) rs.onclick = () => act(() => api('/shares/' + encodeURIComponent(code), {method:'PATCH', body:{revoked:false}}), 'Link restored');
+}
 
 function guessDomain(brand){
   const clean = brand.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -1471,24 +1620,25 @@ function renderDeck(override){
       ? `<a class="deck-plat" href="${escapeAttr(url)}" target="_blank" rel="noopener" title="${escapeAttr(PLAT_NAME[k])}">${inner}</a>`
       : `<span class="deck-plat" title="${escapeAttr(PLAT_NAME[k])}">${inner}</span>`;
   }).join('');
+  const logoPh = cls => `<div class="${cls} logo"><img src="https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg" alt="Zodiac Global"></div>`;
   let cards;
   if(deckView === 'list'){
     cards = '<div class="deck-list">' + records.map(r => {
       const av = r.photo
-        ? `<img class="av" src="${escapeAttr(r.photo)}" alt="" onerror="this.outerHTML='<div class=&quot;av&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
-        : `<div class="av">${escapeHtml(r.name.charAt(0))}</div>`;
+        ? `<img class="av" src="${escapeAttr(r.photo)}" alt="" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeAttr(logoPh('av'))}">`
+        : logoPh('av');
       return `<div class="deck-row">${av}<div class="nm">${nameLink(r)}</div><div class="deck-platform-row">${platRowOf(r)}</div></div>`;
     }).join('') + '</div>';
   } else {
     cards = records.map(r => {
       const photoInner = r.photo
-        ? `<img class="deck-card-photo" src="${escapeAttr(r.photo)}" alt="${escapeAttr(r.name)}" onerror="this.outerHTML='<div class=&quot;deck-card-photo placeholder&quot;>${escapeHtml(r.name.charAt(0))}</div>'">`
-        : '';
-      const photo = r.photo && r.instagram
+        ? `<img class="deck-card-photo" src="${escapeAttr(r.photo)}" alt="${escapeAttr(r.name)}" onerror="this.outerHTML=this.dataset.fb" data-fb="${escapeAttr(logoPh('deck-card-photo'))}">`
+        : logoPh('deck-card-photo');
+      const photo = r.instagram
         ? `<a href="${escapeAttr(r.instagram)}" target="_blank" rel="noopener" title="Open ${escapeAttr(r.name)}'s Instagram">${photoInner}</a>`
         : photoInner;
       const bio = r.public_bio ? `<div class="deck-bio">${escapeHtml(r.public_bio)}</div>` : '';
-      return `<div class="deck-card${r.photo ? '' : ' nophoto'}">
+      return `<div class="deck-card">
         ${photo}
         <div class="deck-card-body">
           <h3>${nameLink(r)}</h3>
@@ -1553,55 +1703,39 @@ document.getElementById('deck-share-btn').addEventListener('click', () => {
   const ids = currentDeckIds().filter(id => DATA.some(r => r.id === id));
   if(!ids.length){ showToast('This deck is empty'); return; }
   const brand = document.getElementById('brand-name-input').value.trim();
-  openModal(`<h3>Share this deck</h3>
-    <p style="font-size:13px;line-height:1.55;color:var(--grey);margin:0 0 14px;">Creates a private link to a frozen copy of this deck (${ids.length} talent: photo, bio, followers and platform links only). The brand can see that one page and nothing else. Later edits to the Index won't change it.</p>
-    <div class="form-grid"><div class="full"><label>Link expires</label><select id="share-exp">
-      <option value="30">After 30 days</option><option value="7">After 7 days</option><option value="90">After 90 days</option><option value="0">Never</option></select></div></div>
+  const me = (() => { try{ return localStorage.getItem('zodiacNoteAuthor') || ''; }catch(e){ return ''; } })();
+  openModal(`<h3>Send this deck</h3>
+    <p style="font-size:13px;line-height:1.55;color:var(--grey);margin:0 0 12px;">Creates a private link to a frozen copy of this deck (${ids.length} talent), shown to the brand as <strong>${deckView === 'list' ? 'a list' : 'cards'}</strong>. They can see that one page and nothing else. Later edits to the Index won't change it.</p>
+    <div class="form-grid">
+      <div class="full"><label>Who are you sending it to? (optional, one per line — each gets their own link so you can see who opened it)</label>
+        <textarea id="share-recips" rows="3" placeholder="Sarah, Pepsi&#10;James, Pepsi" style="width:100%;font:inherit;font-size:13px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;box-sizing:border-box;"></textarea></div>
+      <div><label>Link expires</label><select id="share-exp"><option value="30">After 30 days</option><option value="7">After 7 days</option><option value="90">After 90 days</option><option value="0">Never</option></select></div>
+      <div><label>Your name</label><input id="share-by" value="${escapeAttr(me)}" placeholder="So the team can see who sent it"></div>
+      <div class="full"><label>Internal note (optional, only you see this)</label><input id="share-note" placeholder="e.g. Summer campaign shortlist, v2"></div>
+    </div>
     <div class="form-error" id="form-error"></div>
     <div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Cancel</button><button type="button" class="btn" id="share-create">Create link</button></div>`);
   document.getElementById('form-cancel').onclick = closeModal;
   document.getElementById('share-create').onclick = async (e) => {
     e.target.disabled = true;
     try{
+      const by = document.getElementById('share-by').value.trim();
+      try{ localStorage.setItem('zodiacNoteAuthor', by); }catch(x){}
+      const recipients = document.getElementById('share-recips').value.split('\n').map(x => x.trim()).filter(Boolean);
       const domain = document.getElementById('brand-domain-input').value.trim() || guessDomain(brand);
-      const j = await api('/shares', {method:'POST', body:{ids, brand, domain, listName: deckOverride ? deckOverride.listName : store.active, platforms: deckPlats, view: deckView, name: brand ? 'Zodiac × ' + brand : store.active, expiresInDays: Number(document.getElementById('share-exp').value)}});
-      copyText(j.url);
-      openModal(`<h3>Link ready</h3>
-        <p style="font-size:13px;color:var(--grey);margin:0 0 10px;">Copied to your clipboard. Anyone with this link can view this deck, so send it only to the brand.</p>
-        <input id="share-url" readonly value="${escapeAttr(j.url)}" style="width:100%;font:inherit;font-size:13px;padding:9px 10px;border:1px solid var(--line-strong);border-radius:6px;">
-        <div class="form-actions"><button type="button" class="btn ghost" id="share-manage">Manage shared links</button><button type="button" class="btn" id="share-copy">Copy again</button></div>`);
-      document.getElementById('share-url').select();
-      document.getElementById('share-copy').onclick = () => { copyText(j.url); showToast('Copied'); };
-      document.getElementById('share-manage').onclick = openSharedLinks;
+      const j = await api('/shares', {method:'POST', body:{ids, brand, domain, listName: deckOverride ? deckOverride.listName : store.active, platforms: deckPlats, view: deckView, name: brand ? 'Zodiac × ' + brand : store.active, expiresInDays: Number(document.getElementById('share-exp').value), recipients, createdBy: by, note: document.getElementById('share-note').value.trim()}});
+      const all = j.links.map(l => (l.recipient ? l.recipient + ': ' : '') + l.url).join('\n');
+      copyText(j.links.length === 1 ? j.links[0].url : all);
+      openModal(`<h3>${j.links.length > 1 ? j.links.length + ' links ready' : 'Link ready'}</h3>
+        <p style="font-size:13px;color:var(--grey);margin:0 0 10px;">${j.links.length > 1 ? 'All copied to your clipboard, one per person.' : 'Copied to your clipboard.'} Anyone with a link can view the deck, so send each one only to the person it's for.</p>
+        ${j.links.map(l => `<div style="margin-bottom:8px;">${l.recipient ? `<div style="font-size:12px;color:var(--grey);margin-bottom:2px;">${escapeHtml(l.recipient)}</div>` : ''}<div style="display:flex;gap:6px;"><input readonly value="${escapeAttr(l.url)}" style="flex:1;font:inherit;font-size:12.5px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:6px;"><button class="btn ghost" style="padding:6px 12px;font-size:12px;" data-cp="${escapeAttr(l.url)}">Copy</button></div></div>`).join('')}
+        <div class="form-actions"><button type="button" class="btn ghost" id="share-manage">See all sent links</button><button type="button" class="btn" id="form-cancel">Done</button></div>`);
+      document.querySelectorAll('[data-cp]').forEach(b => b.onclick = () => { copyText(b.dataset.cp); showToast('Copied'); });
+      document.getElementById('form-cancel').onclick = closeModal;
+      document.getElementById('share-manage').onclick = () => { closeModal(); document.getElementById('deck-overlay').classList.remove('open'); openHub('sent'); };
     }catch(ex){ document.getElementById('form-error').textContent = ex.message; e.target.disabled = false; }
   };
 });
-async function openSharedLinks(){
-  openModal('<h3>Shared deck links</h3><div id="shares-body" style="font-size:13px;color:var(--grey);">Loading…</div>');
-  const load = async () => {
-    let shares = [];
-    try{ shares = (await api('/shares')).shares; }catch(e){ document.getElementById('shares-body').textContent = 'Could not load'; return; }
-    const d = x => x ? new Date(x).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'}) : '';
-    const body = document.getElementById('shares-body'); if(!body) return;
-    body.innerHTML = shares.length ? `<div style="max-height:55vh;overflow:auto;">` + shares.map(x => {
-      const expired = x.expires_at && new Date(x.expires_at) < new Date();
-      const status = x.revoked ? 'Revoked' : expired ? 'Expired' : 'Live';
-      return `<div class="note-item" style="white-space:normal;${status!=='Live'?'opacity:.55;':''}">
-        <strong>${escapeHtml(x.name || 'Deck')}</strong> · ${x.talent_count} talent · <strong>${status}</strong>
-        <div class="note-meta"><span>Created ${d(x.created_at)} · ${x.expires_at ? 'expires ' + d(x.expires_at) : 'no expiry'} · opened ${x.views}×${x.last_viewed_at ? ', last ' + d(x.last_viewed_at) : ''}</span>
-        <span>${status==='Live' ? `<button data-copy-share="${x.code}">Copy link</button> · <button data-revoke="${x.code}">Revoke</button>` : ''}</span></div></div>`;
-    }).join('') + '</div>' : 'No links shared yet.';
-    body.querySelectorAll('[data-copy-share]').forEach(b => b.onclick = () => { copyText(location.origin + '/d/' + b.dataset.copyShare); showToast('Link copied'); });
-    body.querySelectorAll('[data-revoke]').forEach(b => b.onclick = async () => {
-      if(!confirm('Revoke this link? The brand will no longer be able to open it.')) return;
-      try{ await api('/shares/' + encodeURIComponent(b.dataset.revoke), {method:'DELETE'}); showToast('Link revoked'); load(); }catch(ex){ showToast(ex.message); }
-    });
-  };
-  await load();
-  document.getElementById('shares-body').insertAdjacentHTML('afterend', '<div class="form-actions"><button type="button" class="btn ghost" id="form-cancel">Close</button></div>');
-  document.getElementById('form-cancel').onclick = closeModal;
-}
-document.getElementById('shared-links-btn').addEventListener('click', openSharedLinks);
 
 function parseDeckHash(){
   if(!location.hash.startsWith('#deck')) return null;

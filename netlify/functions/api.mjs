@@ -2,7 +2,7 @@ import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
 import { syncTalent } from '../lib/sync.mjs';
 import { normLocation } from '../lib/places.mjs';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 
 export const config = { path: '/api/*' };
 
@@ -61,18 +61,39 @@ function shapeTalent(r) {
   };
 }
 
-export default async (req) => {
+const BOT_RE = /bot|crawl|spider|preview|slack|whatsapp|facebookexternalhit|telegram|linkedin|skype|outlook|safelinks|google-safety|headless|curl|wget|python|node-fetch|axios|monitor|uptime/i;
+function describeUA(ua) {
+  ua = String(ua || '');
+  const device = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Macintosh|Mac OS X/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows PC' : /Linux/.test(ua) ? 'Linux' : 'Unknown device';
+  const browser = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\/|CriOS/.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Unknown browser';
+  return { device, browser, bot: !ua || BOT_RE.test(ua) };
+}
+const hash = (x) => createHash('sha256').update(`${process.env.AUTH_SECRET || ''}|${x}`).digest('hex').slice(0, 16);
+
+export default async (req, context) => {
   const url = new URL(req.url);
   const parts = url.pathname.replace(/^\/api\/?/, '').split('/').filter(Boolean);
   const method = req.method;
   const route = parts[0] || '';
+  const clientIp = (context && context.ip) || req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || '';
+
+  // The brand-facing domain (DECKS_HOST) only ever serves shared decks and their photos, never the Index or its API.
+  const decksHost = (process.env.DECKS_HOST || '').toLowerCase();
+  if (decksHost && url.host.toLowerCase() === decksHost && !(route === 'public' || route === 'img')) return json({ error: 'Not found' }, 404);
 
   try {
     // ---- Login (no token needed)
     if (route === 'login' && method === 'POST') {
       const { password } = await req.json().catch(() => ({}));
+      const ipH = hash(clientIp || 'unknown');
+      const [{ n }] = await query(`SELECT count(*)::int AS n FROM login_attempts WHERE ip_hash = $1 AND at > now() - interval '15 minutes'`, [ipH]);
+      if (n >= 15) return json({ error: 'Too many attempts. Please wait 15 minutes and try again.' }, 429);
       const role = roleForPassword(password);
-      if (!role) return json({ error: 'Incorrect password' }, 401);
+      if (!role) {
+        await query('INSERT INTO login_attempts (ip_hash) VALUES ($1)', [ipH]);
+        await query(`DELETE FROM login_attempts WHERE at < now() - interval '1 day'`);
+        return json({ error: 'Incorrect password' }, 401);
+      }
       return json({ token: issueToken(role), role });
     }
 
@@ -87,11 +108,19 @@ export default async (req) => {
     if (route === 'public' && parts[1] === 'deck' && method === 'GET') {
       const code = String(parts[2] || '');
       if (!/^[A-Za-z0-9]{10,40}$/.test(code)) return json({ error: 'Not found' }, 404);
+      const ua = describeUA(req.headers.get('user-agent'));
       const rows = await query(
-        `UPDATE shared_decks SET views = views + 1, last_viewed_at = now()
-          WHERE code = $1 AND NOT revoked AND (expires_at IS NULL OR expires_at > now()) RETURNING snapshot`,
+        `SELECT snapshot FROM shared_decks WHERE code = $1 AND NOT revoked AND (expires_at IS NULL OR expires_at > now())`,
         [code]
       );
+      if (rows.length) {
+        const geo = (context && context.geo) || {};
+        await query(
+          `INSERT INTO deck_views (code, country, city, device, browser, visitor, is_bot) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [code, (geo.country && (geo.country.name || geo.country.code)) || null, geo.city || null, ua.device, ua.browser, hash(clientIp + '|' + (req.headers.get('user-agent') || '')), ua.bot]
+        );
+        if (!ua.bot) await query('UPDATE shared_decks SET views = views + 1, last_viewed_at = now() WHERE code = $1', [code]);
+      }
       if (!rows.length) return json({ error: 'This link is no longer available' }, 404);
       return new Response(JSON.stringify(rows[0].snapshot), {
         headers: { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' },
@@ -166,9 +195,22 @@ export default async (req) => {
 
     // ---- Shared deck links (any signed-in user)
     if (route === 'shares') {
+      const base = process.env.DECKS_HOST ? `https://${process.env.DECKS_HOST}` : url.origin;
       if (method === 'GET' && !parts[1]) {
-        const rows = await query(`SELECT code, name, brand, talent_count, created_at, expires_at, revoked, views, last_viewed_at FROM shared_decks ORDER BY created_at DESC LIMIT 200`);
-        return json({ shares: rows });
+        const rows = await query(`SELECT s.code, s.name, s.brand, s.recipient, s.created_by, s.view, s.group_id, s.talent_count, s.created_at, s.expires_at, s.revoked, s.views, s.last_viewed_at,
+            (SELECT count(DISTINCT v.visitor) FROM deck_views v WHERE v.code = s.code AND NOT v.is_bot)::int AS visitors,
+            (SELECT min(v.viewed_at) FROM deck_views v WHERE v.code = s.code AND NOT v.is_bot) AS first_viewed_at
+          FROM shared_decks s ORDER BY s.created_at DESC LIMIT 500`);
+        return json({ shares: rows, base });
+      }
+      if (method === 'GET' && parts[1]) {
+        const [row] = await query(`SELECT code, name, brand, recipient, created_by, view, note, talent_count, created_at, expires_at, revoked, views, last_viewed_at,
+            snapshot->'talents' AS talents FROM shared_decks WHERE code = $1`, [parts[1]]);
+        if (!row) return json({ error: 'Not found' }, 404);
+        const log = await query(`SELECT viewed_at, country, city, device, browser, visitor, is_bot FROM deck_views WHERE code = $1 ORDER BY viewed_at DESC LIMIT 200`, [parts[1]]);
+        const names = (row.talents || []).map((t) => t.name);
+        delete row.talents;
+        return json({ share: row, names, views: log, url: `${base}/d/${row.code}` });
       }
       if (method === 'POST' && !parts[1]) {
         const b = await req.json().catch(() => ({}));
@@ -188,13 +230,33 @@ export default async (req) => {
         const domain = String(b.domain || '').trim().slice(0, 80) || null;
         const days = Number(b.expiresInDays);
         const expires = Number.isFinite(days) && days > 0 ? new Date(Date.now() + Math.min(days, 730) * 864e5) : null;
-        const code = randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 12);
-        const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view: b.view === 'list' ? 'list' : 'cards', talents, createdAt: new Date().toISOString() };
-        await query(
-          'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at) VALUES ($1,$2,$3,$4::jsonb,$5,$6)',
-          [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires]
-        );
-        return json({ code, url: `${url.origin}/d/${code}`, talent_count: talents.length, expires_at: expires }, 201);
+        const view = b.view === 'list' ? 'list' : 'cards';
+        const createdBy = String(b.createdBy || '').trim().slice(0, 60) || null;
+        const note = String(b.note || '').trim().slice(0, 300) || null;
+        const recips = (Array.isArray(b.recipients) ? b.recipients : []).map((x) => String(x).trim().slice(0, 80)).filter(Boolean).slice(0, 25);
+        const targets = recips.length ? recips : [null];
+        const groupId = randomBytes(5).toString('hex');
+        const created = [];
+        for (const recipient of targets) {
+          const code = randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 12);
+          const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view, talents, createdAt: new Date().toISOString() };
+          await query(
+            'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at, recipient, created_by, view, group_id, note) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10,$11)',
+            [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires, recipient, createdBy, view, groupId, note]
+          );
+          created.push({ code, recipient, url: `${base}/d/${code}` });
+        }
+        return json({ links: created, talent_count: talents.length, expires_at: expires }, 201);
+      }
+      if (method === 'PATCH' && parts[1]) {
+        const b = await req.json().catch(() => ({}));
+        if (b.revoked === false) await query('UPDATE shared_decks SET revoked = false WHERE code = $1', [parts[1]]);
+        if (b.extendDays !== undefined) {
+          const d = Math.min(Math.max(Number(b.extendDays) || 0, 0), 730);
+          if (d === 0) await query('UPDATE shared_decks SET expires_at = NULL WHERE code = $1', [parts[1]]);
+          else await query(`UPDATE shared_decks SET expires_at = greatest(coalesce(expires_at, now()), now()) + ($2 || ' days')::interval WHERE code = $1`, [parts[1], String(d)]);
+        }
+        return json({ ok: true });
       }
       if (method === 'DELETE' && parts[1]) {
         await query('UPDATE shared_decks SET revoked = true WHERE code = $1', [parts[1]]);

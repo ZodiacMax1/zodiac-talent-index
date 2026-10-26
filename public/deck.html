@@ -46,7 +46,9 @@
   .vp button{border:none;background:var(--card);padding:8px 14px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--grey);}
   .vp button.on{background:var(--burgundy);color:#fff;}
   .bar{align-items:center;}
-  .card.nophoto .body{padding:22px 30px;}
+  .logo{display:flex;align-items:center;justify-content:center;background:var(--cream);}
+  .logo img{width:46%;max-width:120px;border-radius:50%;opacity:.9;}
+  .av.logo img{width:70%;}
   .list{border:1px solid var(--line-strong);border-radius:10px;background:var(--card);overflow:hidden;}
   .row{display:flex;align-items:center;gap:16px;padding:12px 20px;border-bottom:1px solid var(--line);page-break-inside:avoid;}
   .row:last-child{border-bottom:none;}
@@ -60,7 +62,7 @@
 </style>
 </head>
 <body>
-<div class="bar"><div class="vp"><button data-v="cards">Cards</button><button data-v="list">List</button></div><button class="btn" onclick="window.print()">Print / Save as PDF</button></div>
+<div class="bar"><button class="btn" onclick="window.print()">Print / Save as PDF</button></div>
 <div class="inner" id="root"><div class="msg">Loading…</div></div>
 <script>
 const ICON = {
@@ -99,6 +101,8 @@ function guessDomain(b){ const c = (b||'').toLowerCase().replace(/[^a-z0-9]/g,''
     <div class="stat"><div class="num">${esc(fmt(total) || 0)}</div><div class="lbl">Total Audience</div></div>
   </div>`;
   const foot = '<div class="foot">Zodiac Global · Prepared ' + new Date(d.createdAt).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + '</div>';
+  const LOGO = 'https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg';
+  const logoPh = (cls) => `<div class="${cls} logo"><img src="${LOGO}" alt="Zodiac Global"></div>`;
   const nameOf = t => { const ig = safeUrl(t.ig && t.ig.url); return ig ? `<a href="${ig}" target="_blank" rel="noopener">${esc(t.name)} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>` : esc(t.name); };
   const platsOf = t => plats.map(k => {
     const p = t[k]; if(!p || (!p.n && !p.url)) return '';
@@ -107,25 +111,23 @@ function guessDomain(b){ const c = (b||'').toLowerCase().replace(/[^a-z0-9]/g,''
     return u ? `<a class="plat" href="${u}" target="_blank" rel="noopener" title="${NAME[k]}">${inner}</a>` : `<span class="plat" title="${NAME[k]}">${inner}</span>`;
   }).join('');
   function draw(){
-    document.querySelectorAll('.vp button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
     let items;
     if(view === 'list'){
       items = '<div class="list">' + d.talents.map(t => {
-        const av = t.photo ? `<img class="av" src="${esc(t.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;av&quot;>${esc(t.name.charAt(0))}</div>'">` : `<div class="av">${esc(t.name.charAt(0))}</div>`;
+        const av = t.photo ? `<img class="av" src="${esc(t.photo)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML=this.dataset.fb" data-fb="${esc(logoPh('av'))}">` : logoPh('av');
         return `<div class="row">${av}<div class="nm">${nameOf(t)}</div><div class="plats">${platsOf(t)}</div></div>`;
       }).join('') + '</div>';
     } else {
       items = d.talents.map(t => {
         const ig = safeUrl(t.ig && t.ig.url);
-        const ph = t.photo ? `<img class="photo" src="${esc(t.photo)}" alt="${esc(t.name)}" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=&quot;photo ph&quot;>${esc(t.name.charAt(0))}</div>'">` : '';
+        const ph = t.photo ? `<img class="photo" src="${esc(t.photo)}" alt="${esc(t.name)}" referrerpolicy="no-referrer" onerror="this.outerHTML=this.dataset.fb" data-fb="${esc(logoPh('photo'))}">` : logoPh('photo');
         const photo = ph && ig ? `<a href="${ig}" target="_blank" rel="noopener">${ph}</a>` : ph;
         const bio = t.bio ? `<div class="bio">${esc(t.bio)}</div>` : '';
-        return `<div class="card${t.photo ? '' : ' nophoto'}">${photo}<div class="body"><h3>${nameOf(t)}</h3><div class="plats"${bio ? '' : ' style="margin-bottom:0"'}>${platsOf(t)}</div>${bio}</div></div>`;
+        return `<div class="card">${photo}<div class="body"><h3>${nameOf(t)}</h3><div class="plats"${bio ? '' : ' style="margin-bottom:0"'}>${platsOf(t)}</div>${bio}</div></div>`;
       }).join('');
     }
     root.innerHTML = head + items + foot;
   }
-  document.querySelectorAll('.vp button').forEach(b => b.addEventListener('click', () => { view = b.dataset.v; draw(); }));
   draw();
 })();
 </script>
