@@ -277,10 +277,12 @@ export default async (req, context) => {
         const recips = (Array.isArray(b.recipients) ? b.recipients : []).map((x) => String(x).trim().slice(0, 80)).filter(Boolean).slice(0, 25);
         const targets = recips.length ? recips : [null];
         const groupId = randomBytes(5).toString('hex');
+        let senderEmail = null;
+        if (me.uid) { const [ue] = await query('SELECT email FROM users WHERE id = $1', [me.uid]); senderEmail = ue ? ue.email : null; }
         const created = [];
         for (const recipient of targets) {
           const code = randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 12);
-          const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view, talents, createdAt: new Date().toISOString() };
+          const snapshot = { brand, domain, listName: String(b.listName || '').slice(0, 80) || null, platforms: plats, view, talents, createdAt: new Date().toISOString(), sender: createdBy ? { name: createdBy, email: senderEmail } : null };
           await query(
             'INSERT INTO shared_decks (code, name, brand, snapshot, talent_count, expires_at, recipient, created_by, view, group_id, note, deck_id) VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10,$11,$12)',
             [code, String(b.name || brand || b.listName || 'Deck').slice(0, 120), brand, JSON.stringify(snapshot), talents.length, expires, recipient, createdBy, view, groupId, note, b.deckId ? String(b.deckId).slice(0, 80) : null]

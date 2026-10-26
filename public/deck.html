@@ -95,12 +95,14 @@ function guessDomain(b){ const c = (b||'').toLowerCase().replace(/[^a-z0-9]/g,''
   const total = d.talents.reduce((t, x) => t + plats.reduce((s, k) => s + ((x[k] && x[k].n) || 0), 0), 0);
   const brandLogo = brand ? `<span class="x">×</span><img class="badge" src="https://www.google.com/s2/favicons?sz=128&domain=${esc(domain)}" alt="${esc(brand)}" onerror="this.outerHTML='<div class=&quot;badge ph&quot;>${esc(brand.charAt(0).toUpperCase())}</div>'">` : '';
   const head = `<div class="hdr">
-    <div class="logos"><img class="badge" src="https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg" alt="Zodiac Global" onerror="this.outerHTML='<div class=&quot;badge ph&quot;>Z</div>'">${brandLogo}</div>
+    <div class="logos"><a href="https://zodiacglobal.com" target="_blank" rel="noopener" style="display:flex;" title="Visit zodiacglobal.com"><img class="badge" src="https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg" alt="Zodiac Global" onerror="this.outerHTML='<div class=&quot;badge ph&quot;>Z</div>'"></a>${brandLogo}</div>
     <div class="title">Zodiac Global${brand ? ' <span class="b">× ' + esc(brand) + '</span>' : ''}</div>
     <div class="sub">Talent Shortlist</div>
     <div class="stat"><div class="num">${esc(fmt(total) || 0)}</div><div class="lbl">Total Audience</div></div>
   </div>`;
-  const foot = '<div class="foot">Zodiac Global · Prepared ' + new Date(d.createdAt).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + '</div>';
+  const snd = d.sender && d.sender.name ? d.sender : null;
+  const sender = snd ? '<div class="foot" style="margin-top:6px;">Prepared by ' + esc(snd.name) + (snd.email ? ' · <a href="mailto:' + esc(snd.email) + '" style="color:inherit;">' + esc(snd.email) + '</a>' : '') + '</div>' : '';
+  const foot = '<div class="foot">Zodiac Global · Prepared ' + new Date(d.createdAt).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) + '</div>' + sender;
   const LOGO = 'https://www.zodiacglobal.com/logo/favicon-zodiac.jpeg';
   const logoPh = (cls) => `<div class="${cls} logo"><img src="${LOGO}" alt="Zodiac Global"></div>`;
   const nameOf = t => { const ig = safeUrl(t.ig && t.ig.url); return ig ? `<a href="${ig}" target="_blank" rel="noopener">${esc(t.name)} <span style="font-size:14px;color:var(--grey-light);">↗</span></a>` : esc(t.name); };
