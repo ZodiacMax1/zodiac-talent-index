@@ -1,5 +1,6 @@
 import { fetchItems, cv } from './monday.mjs';
 import { pool, bump } from './db.mjs';
+import { normLocation } from './places.mjs';
 
 const ROSTER = '5092522353';
 const OUTREACH = '5092522357';
@@ -26,11 +27,6 @@ const BOARDS = [
   },
 ];
 
-const REGION_MAP = {
-  'united kingdom': 'UK', uk: 'UK', 'great britain': 'UK', england: 'UK',
-  'united arab emirates': 'UAE', uae: 'UAE', dubai: 'UAE',
-  'united states of america': 'US', 'united states': 'US', usa: 'US', us: 'US', america: 'US',
-};
 const NICHE_MAP = { 'food & drink': 'F&B', 'food and drink': 'F&B', 'fashion & style': 'Fashion', 'n/aa': null, 'n/a': null };
 
 export function parseFollowers(v) {
@@ -73,8 +69,8 @@ export function readItem(board, item) {
   const get = (field) => cv(item, board.cols[field]);
   const text = (field) => { const c = get(field); const t = c && c.text ? String(c.text).trim() : ''; return t || undefined; };
 
-  const region = text('region');
-  if (region) f.region = REGION_MAP[region.toLowerCase()] || region;
+  const loc = normLocation(text('region'));
+  if (loc.location) { f.location = loc.location; f.region = loc.region; }
 
   const nicheRaw = text('niche');
   if (nicheRaw) {
@@ -116,14 +112,17 @@ export function readItem(board, item) {
 
 export function missingFields(f) {
   const miss = [];
-  if (!f.region) miss.push('region');
+  if (!f.location) miss.push('location');
   if (!f.niche) miss.push('niche');
   const platforms = [['instagram', 'ig_followers'], ['tiktok', 'tt_followers'], ['youtube', 'yt_followers']];
   if (!platforms.some(([l, n]) => f[l] && f[n])) miss.push('a platform link + following');
   return miss;
 }
 
-const FIELDS = ['name', 'exclusivity', 'region', 'niche', 'gender', 'ig_followers', 'tt_followers', 'yt_followers', 'rate', 'instagram', 'tiktok', 'youtube'];
+// For talent already in the Index, monday only updates these fields. Everything else is managed in the Index.
+// (New talent are still created from monday with all their fields.) Add field names here to let monday update more.
+const MONDAY_UPDATES_EXISTING = ['exclusivity'];
+const FIELDS = ['name', 'exclusivity', 'region', 'location', 'niche', 'gender', 'ig_followers', 'tt_followers', 'yt_followers', 'rate', 'instagram', 'tiktok', 'youtube'];
 
 async function withLock(key, fn) {
   const client = await pool().connect();
@@ -230,7 +229,7 @@ export async function syncTalent() {
           if (!cur) continue; // freshly created above already has these values
           const sets = [], vals = [];
           for (const [k, v] of Object.entries(f)) {
-            if (!FIELDS.includes(k)) continue;
+            if (!FIELDS.includes(k) || !MONDAY_UPDATES_EXISTING.includes(k)) continue;
             const old = cur[k] == null ? null : (typeof v === 'number' ? Number(cur[k]) : cur[k]);
             if (old !== v) { vals.push(v); sets.push(`${k} = $${vals.length + 1}`); }
           }

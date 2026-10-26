@@ -1,6 +1,7 @@
 import { roleForPassword, issueToken, roleFromRequest } from '../lib/auth.mjs';
 import { pool, query, bump, currentVersion } from '../lib/db.mjs';
 import { syncTalent } from '../lib/sync.mjs';
+import { normLocation } from '../lib/places.mjs';
 
 export const config = { path: '/api/*' };
 
@@ -11,7 +12,7 @@ const json = (data, status = 200) =>
   });
 
 const TALENT_FIELDS = [
-  'name', 'exclusivity', 'region', 'niche', 'gender',
+  'name', 'exclusivity', 'region', 'location', 'niche', 'gender',
   'ig_followers', 'tt_followers', 'yt_followers',
   'rate', 'instagram', 'tiktok', 'youtube', 'photo', 'public_bio',
 ];
@@ -35,6 +36,11 @@ function clean(input) {
     if (k === 'name' && !v) throw new Error('Name is required');
     out[k] = v;
   }
+  // Location is the master; region (UK / UAE only) is always derived from it
+  if ('location' in out || 'region' in out) {
+    const { location, region } = normLocation('location' in out ? out.location : out.region);
+    out.location = location; out.region = region;
+  }
   return out;
 }
 
@@ -45,12 +51,12 @@ function shapeTalent(r) {
   const tt = r.tt_followers == null ? null : Number(r.tt_followers);
   const yt = r.yt_followers == null ? null : Number(r.yt_followers);
   return {
-    id: r.id, name: r.name, exclusivity: r.exclusivity, region: r.region, niche: r.niche,
+    id: r.id, name: r.name, exclusivity: r.exclusivity, region: r.region, location: r.location, niche: r.niche,
     gender: r.gender, ig_followers: ig, tt_followers: tt, yt_followers: yt,
     total_followers: (ig || 0) + (tt || 0) + (yt || 0),
     rate: r.rate, instagram: r.instagram, tiktok: r.tiktok, youtube: r.youtube,
     photo: r.photo, public_bio: r.public_bio,
-    deal_count: Number(r.deal_count || 0), monday_linked: !!r.monday_linked,
+    deal_count: Number(r.deal_count || 0), monday_linked: !!r.monday_linked, note_count: Number(r.note_count || 0),
   };
 }
 
@@ -84,7 +90,8 @@ export default async (req) => {
       const [talents, lists, decks, version] = await Promise.all([
         query(`SELECT t.*,
           (SELECT count(*) FROM monday_deals d JOIN monday_links l ON l.item_id = d.roster_item_id AND l.board_id = '5092522353' WHERE l.talent_id = t.id) AS deal_count,
-          EXISTS (SELECT 1 FROM monday_links l WHERE l.talent_id = t.id) AS monday_linked
+          EXISTS (SELECT 1 FROM monday_links l WHERE l.talent_id = t.id) AS monday_linked,
+          (SELECT count(*) FROM talent_notes n WHERE n.talent_id = t.id) AS note_count
         FROM talents t ORDER BY lower(t.name)`),
         query('SELECT id, name, data, updated_at FROM lists ORDER BY updated_at DESC'),
         query('SELECT id, name, data, updated_at FROM decks ORDER BY updated_at DESC'),
@@ -107,6 +114,31 @@ export default async (req) => {
           value: r.value == null ? null : Number(r.value), currency: r.currency, value_gbp: r.value_gbp == null ? null : Number(r.value_gbp),
         })),
       });
+    }
+
+    // ---- Notes on a talent (any signed-in user can read and add; edit role can delete)
+    if (route === 'talents' && parts[2] === 'notes') {
+      const tid = parts[1];
+      if (method === 'GET') {
+        const rows = await query('SELECT id, body, author, created_at FROM talent_notes WHERE talent_id = $1 ORDER BY created_at DESC, id DESC', [tid]);
+        return json({ notes: rows });
+      }
+      if (method === 'POST') {
+        const b = await req.json().catch(() => ({}));
+        const body = String(b.body || '').trim().slice(0, 4000);
+        if (!body) return json({ error: 'Note is required' }, 400);
+        const author = String(b.author || '').trim().slice(0, 60) || null;
+        const ex = await query('SELECT 1 FROM talents WHERE id = $1', [tid]);
+        if (!ex.length) return json({ error: 'Talent not found' }, 404);
+        const rows = await query('INSERT INTO talent_notes (talent_id, body, author) VALUES ($1,$2,$3) RETURNING id, body, author, created_at', [tid, body, author]);
+        return json({ note: rows[0], version: await bump() }, 201);
+      }
+      if (method === 'DELETE' && parts[3]) {
+        const denied = needEdit();
+        if (denied) return denied;
+        await query('DELETE FROM talent_notes WHERE id = $1 AND talent_id = $2', [parts[3], tid]);
+        return json({ ok: true, version: await bump() });
+      }
     }
 
     // ---- monday sync status / run
