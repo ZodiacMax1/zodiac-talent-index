@@ -25,7 +25,7 @@ function mondayWho(it) {
 // Deals sitting at Proposal Sent (the point where the creator list is put together), newest start date first.
 async function mondayProposals() {
   const ITEM = MONDAY_ITEM;
-  const qp = { rules: [{ column_id: 'deal_stage', compare_value: [0], operator: 'any_of' }] };
+  const qp = { rules: [{ column_id: 'deal_stage', compare_value: [0, 4, 1], operator: 'any_of' }] };
   const out = [];
   let data = await gql(`query($id:[ID!], $cols:[String!], $qp:ItemsQuery){ boards(ids:$id){ items_page(limit:100, query_params:$qp){ cursor items{ ${ITEM} } } } }`, { id: [DEALS_BOARD], cols: DEAL_COLS, qp });
   let page = data.boards[0]?.items_page;
@@ -39,7 +39,7 @@ async function mondayProposals() {
     const t = (id) => (it.column_values.find((c) => c.id === id) || {}).text || '';
     const parts = it.name.split('//').map((x) => x.trim());
     return {
-      id: it.id, name: it.name, status: '3 - Proposal Sent',
+      id: it.id, name: it.name, status: MONDAY_STAGES.includes(t('deal_stage')) ? t('deal_stage') : '3 - Proposal Sent',
       ...(() => { const w = mondayWho(it); return { client: w.client, contact: w.contact }; })(),
       owner: t('deal_owner'), cur: t('color_mm1ybd67'), value: Number(t('deal_value').replace(/,/g, '')) || 0,
       target: Number(t('numeric_mm12q2jt')) || null, market: t('dropdown_mm2ns2za'), start: t('deal_expected_close_date'),
@@ -233,7 +233,7 @@ export async function handleCampaigns(ctx) {
       await query(
         `INSERT INTO campaigns (id, name, client, owner, cur, fx, budget, target_margin, markets, start_date, monday_item_id, monday_stage, created_by, contact_name, contact_role, contact_email, contact_phone)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, MONDAY_STAGES[0], actor, text(d.contact && d.contact.name, 200), text(d.contact && d.contact.role, 200), text(d.contact && d.contact.email, 200), text(d.contact && d.contact.phone, 60)]);
+        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, (MONDAY_STAGES.includes(d.status) ? d.status : MONDAY_STAGES[0]), actor, text(d.contact && d.contact.name, 200), text(d.contact && d.contact.role, 200), text(d.contact && d.contact.email, 200), text(d.contact && d.contact.phone, 60)]);
       await logAct('campaign.add', cid, d.name);
       made.push(cid);
     }

@@ -75,3 +75,13 @@ A new Campaign Management section sits in the left-hand menu beside Talent Index
 - Decks and links: Documents (drop files up to 4MB, or add a link for larger decks).
 - Archive campaign (with a group), Active/Archived tabs, filters (client, stage, owner, search) and group by client or stage.
 - monday import now pulls the client (Accounts) and first linked contact (Contacts board). "Refresh client and contact" updates campaigns already imported.
+
+## Update 26
+- "Quote covers" is now the Deliverables column on every campaign: one compact line per influencer, click it to open an editor with quantity steppers.
+- Company (monday Accounts) is shown instead of the contact in the campaign list and import panel. "Update company from monday" refreshes campaigns already imported.
+
+## Update 27
+- Import from monday now lists Proposal Sent, Verbal Agreement and Closed Won deals. Each comes in at its own monday stage.
+
+## Update 28
+- Campaign list is grouped by monday stage by default (collapsible, stage-coloured headings), with an Archived section at the bottom (collapsed, grouped by archive group). Group by client or no grouping are still available.
