@@ -1998,6 +1998,7 @@ const sharedDeck = parseDeckHash();
 /* ---------- live state ---------- */
 function modalOpen(){ return document.getElementById('modal-back').classList.contains('open'); }
 function closeModal(){
+  window.__afterNewTalent = null;
   document.getElementById('modal-card').classList.remove('wide'); document.getElementById('modal-back').classList.remove('open'); }
 function openModal(html){
   document.getElementById('modal-card').innerHTML = html;
@@ -2124,11 +2125,14 @@ function openTalentForm(r){
     const btn = document.getElementById('form-save');
     btn.disabled = true;
     try{
-      if(isNew) await api('/talents', {method:'POST', body});
+      const cbNew = window.__afterNewTalent;
+      let created = null;
+      if(isNew) created = (await api('/talents', {method:'POST', body})).talent;
       else await api('/talents/' + encodeURIComponent(r.id), {method:'PATCH', body});
       closeModal();
       await loadState();
       showToast(isNew ? 'Talent added' : 'Saved');
+      if(isNew && cbNew && created){ try{ cbNew(created); }catch(x){} }
     }catch(ex){
       document.getElementById('form-error').textContent = ex.message;
       btn.disabled = false;
@@ -2697,6 +2701,16 @@ renderShortlist();
   }
   document.querySelectorAll('.znav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
   window.addEventListener('message', e => { if(e.origin === location.origin && e.data === 'zodiac-locked'){ try{ lockGate(); }catch(x){} } });
+  // "Add Talent" form opened from Campaign Management; the new talent is handed back to be added to the campaign
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if(e.origin !== location.origin || !m || m.type !== 'zodiac-new-talent') return;
+    try{
+      openTalentForm();
+      window.__afterNewTalent = t => frame.contentWindow.postMessage({type:'zodiac-talent-created', id:t.id, name:t.name}, location.origin);
+      const nm = document.querySelector('#talent-form [name=name]'); if(nm && m.name){ nm.value = m.name; }
+    }catch(x){}
+  });
   // "Open in Talent Index" from Campaign Management
   window.addEventListener('message', e => {
     const m = e.data;

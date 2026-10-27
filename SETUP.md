@@ -85,3 +85,17 @@ A new Campaign Management section sits in the left-hand menu beside Talent Index
 
 ## Update 28
 - Campaign list is grouped by monday stage by default (collapsible, stage-coloured headings), with an Archived section at the bottom (collapsed, grouped by archive group). Group by client or no grouping are still available.
+
+## Update 29
+- Stages now match monday: 2 Discovery / Scoping, 3 Proposal Sent, 4 Negotiation, 5 Verbal Agreement, 6 Contract Sent, 7 Won, 8 Closed Lost. Import lists all seven, grouped like monday (Closed Lost collapsed, "Tick all" per group).
+- Deliverables on the summary: hover for the full list, "+" to add or edit.
+- Client name is bold and clickable: pop-up with every campaign for that client at any stage.
+- Remove button on every influencer row.
+- "New talent" in the picker opens the full Talent Index Add Talent form, then adds them to the campaign.
+
+## Update 30
+No new migration (still up to 14). Upload the contents as before.
+- Explanatory copy removed across the campaign screens.
+- Compact campaign header: slimmer stat band, thin progress row, deadlines moved onto the tab row.
+- Initial / Negotiated / Client rate / Margin kept, restyled (muted initial, bold negotiated, margin chip green/red vs target).
+- "Needs attention" card on the campaign list (overdue, margin below target, unsigned, not invoiced). List endpoint now returns overdue, unsigned, uninvoiced per campaign.

@@ -6,7 +6,8 @@ import { gql } from './monday.mjs';
 const CURS = ['GBP', 'USD', 'AED'];
 const FX_DEFAULT = { GBP: 1, USD: 0.75, AED: 0.2 };
 // Stages on the monday Agency Sales Pipeline board (5092522587)
-const MONDAY_STAGES = ['3 - Proposal Sent', '4 - Negotiation', '5 - Verbal Agreement', '6 - Contract Sent', '7 - Won'];
+const MONDAY_STAGES = ['2 - Discovery / Scoping', '3 - Proposal Sent', '4 - Negotiation', '5 - Verbal Agreement', '6 - Contract Sent', '7 - Won', '8 - Closed Lost'];
+const DEFAULT_STAGE = '3 - Proposal Sent';
 const DEALS_BOARD = '5092522587';
 const DEAL_COLS = ['deal_stage', 'deal_owner', 'color_mm1ybd67', 'deal_value', 'numeric_mm12q2jt', 'dropdown_mm2ns2za', 'deal_expected_close_date', 'board_relation_mm2179a3', 'board_relation_mm128ss1', 'board_relation_mm21kfwp'];
 
@@ -25,7 +26,7 @@ function mondayWho(it) {
 // Deals sitting at Proposal Sent (the point where the creator list is put together), newest start date first.
 async function mondayProposals() {
   const ITEM = MONDAY_ITEM;
-  const qp = { rules: [{ column_id: 'deal_stage', compare_value: [0, 4, 1], operator: 'any_of' }] };
+  const qp = { rules: [{ column_id: 'deal_stage', compare_value: [3, 0, 6, 4, 7, 1, 2], operator: 'any_of' }] };
   const out = [];
   let data = await gql(`query($id:[ID!], $cols:[String!], $qp:ItemsQuery){ boards(ids:$id){ items_page(limit:100, query_params:$qp){ cursor items{ ${ITEM} } } } }`, { id: [DEALS_BOARD], cols: DEAL_COLS, qp });
   let page = data.boards[0]?.items_page;
@@ -39,7 +40,7 @@ async function mondayProposals() {
     const t = (id) => (it.column_values.find((c) => c.id === id) || {}).text || '';
     const parts = it.name.split('//').map((x) => x.trim());
     return {
-      id: it.id, name: it.name, status: MONDAY_STAGES.includes(t('deal_stage')) ? t('deal_stage') : '3 - Proposal Sent',
+      id: it.id, name: it.name, status: MONDAY_STAGES.includes(t('deal_stage')) ? t('deal_stage') : DEFAULT_STAGE,
       ...(() => { const w = mondayWho(it); return { client: w.client, contact: w.contact }; })(),
       owner: t('deal_owner'), cur: t('color_mm1ybd67'), value: Number(t('deal_value').replace(/,/g, '')) || 0,
       target: Number(t('numeric_mm12q2jt')) || null, market: t('dropdown_mm2ns2za'), start: t('deal_expected_close_date'),
@@ -179,8 +180,8 @@ export async function handleCampaigns(ctx) {
   // ---- List
   if (!id && method === 'GET') {
     const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL ORDER BY updated_at DESC`);
-    const cts = await query(`SELECT campaign_id, approved, archived, initial, neg, client_rate, id FROM campaign_talents WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]);
-    const dels = await query(`SELECT ct.campaign_id, d.stage FROM campaign_deliverables d JOIN campaign_talents ct ON ct.id = d.ct_id WHERE ct.campaign_id = ANY($1::text[]) AND ct.approved = 'Yes' AND ct.archived IS NULL`, [rows.map((r) => r.id)]);
+    const cts = await query(`SELECT campaign_id, approved, archived, initial, neg, client_rate, id, contract, invoice FROM campaign_talents WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]);
+    const dels = await query(`SELECT ct.campaign_id, d.stage, (NOT d.no_post AND d.stage <> 'Live' AND ((d.recv_by < CURRENT_DATE AND d.recv_at IS NULL) OR d.live_by < CURRENT_DATE)) AS late FROM campaign_deliverables d JOIN campaign_talents ct ON ct.id = d.ct_id WHERE ct.campaign_id = ANY($1::text[]) AND ct.approved = 'Yes' AND ct.archived IS NULL`, [rows.map((r) => r.id)]);
     return json({
       campaigns: rows.map((c) => {
         const mine = cts.filter((x) => x.campaign_id === c.id);
@@ -188,7 +189,8 @@ export async function handleCampaigns(ctx) {
         const cost = sel.reduce((a, x) => a + Number(x.neg ?? x.initial), 0);
         const price = sel.reduce((a, x) => a + Number(x.client_rate), 0);
         const dd = dels.filter((d) => d.campaign_id === c.id);
-        return { ...shapeCampaign(c), total: mine.length, selected: sel.length, cost, price, margin: price - cost, deliverables: dd.length, live: dd.filter((d) => d.stage === 'Live').length };
+        return { ...shapeCampaign(c), total: mine.length, selected: sel.length, cost, price, margin: price - cost, deliverables: dd.length, live: dd.filter((d) => d.stage === 'Live').length,
+          overdue: dd.filter((d) => d.late).length, unsigned: c.monday_stage === '7 - Won' ? sel.filter((x) => x.contract !== 'Signed').length : 0, uninvoiced: c.monday_stage === '7 - Won' ? sel.filter((x) => x.invoice === 'Not invoiced').length : 0 };
       }),
     });
   }
@@ -205,7 +207,7 @@ export async function handleCampaigns(ctx) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
       [cid, name, text(b.client, 200), text(b.owner, 100), dateOrNull(b.start), dateOrNull(b.end), cur, await fxFor(cur),
         Math.max(0, num(b.budget) || 0), Number.isFinite(num(b.target)) ? num(b.target) : 30, text(b.markets, 200), text(b.platforms, 200), text(b.brief), text(b.mondayItemId, 40),
-        MONDAY_STAGES.includes(b.stage) ? b.stage : MONDAY_STAGES[0], actor]);
+        MONDAY_STAGES.includes(b.stage) ? b.stage : DEFAULT_STAGE, actor]);
     await logAct('campaign.add', cid, name);
     return json({ campaign: await loadFull(cid) }, 201);
   }
@@ -233,7 +235,7 @@ export async function handleCampaigns(ctx) {
       await query(
         `INSERT INTO campaigns (id, name, client, owner, cur, fx, budget, target_margin, markets, start_date, monday_item_id, monday_stage, created_by, contact_name, contact_role, contact_email, contact_phone)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
-        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, (MONDAY_STAGES.includes(d.status) ? d.status : MONDAY_STAGES[0]), actor, text(d.contact && d.contact.name, 200), text(d.contact && d.contact.role, 200), text(d.contact && d.contact.email, 200), text(d.contact && d.contact.phone, 60)]);
+        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, (MONDAY_STAGES.includes(d.status) ? d.status : DEFAULT_STAGE), actor, text(d.contact && d.contact.name, 200), text(d.contact && d.contact.role, 200), text(d.contact && d.contact.email, 200), text(d.contact && d.contact.phone, 60)]);
       await logAct('campaign.add', cid, d.name);
       made.push(cid);
     }
