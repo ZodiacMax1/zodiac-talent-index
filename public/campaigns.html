@@ -78,6 +78,14 @@ h2.sh{font:500 13px var(--display);letter-spacing:.16em;text-transform:uppercase
 .drop{border:1.5px dashed var(--line2);border-radius:14px;padding:22px;text-align:center;background:var(--soft)}.drop.on{border-color:var(--accent);background:var(--accent-soft)}
 .lnk{color:var(--accent);text-decoration:underline;cursor:pointer}
 tfoot td{background:var(--soft);font-weight:500;border-top:2px solid var(--line2)}
+.it th,.it td{padding:9px 9px}.it th:first-child,.it td:first-child{padding-left:16px}.it th:last-child,.it td:last-child{padding-right:14px}.it .in{width:76px;padding:6px 7px}.it td.r,.it th.r{padding-left:4px;padding-right:4px}.it .in.pc{margin:0 2px}.it .btn.sm{padding:4px 9px;min-height:30px}.it th,.it td{padding-left:7px;padding-right:7px}.it .who2{gap:9px}.it .sel{padding-right:22px;padding-left:9px}.it th:first-child,.it td:first-child{padding-left:14px}.it .in.pc{width:60px}.it .in.dim{color:var(--muted);font-size:13px}.it .scbtn{max-width:150px}.it .sel{max-width:120px}.it .bar{max-width:120px}
+.lt td.r,.lt td.num{white-space:nowrap}.lt th:nth-child(1){width:30%}.lt th:nth-child(2){width:150px}.scbtn.add{color:var(--accent)!important;font-size:12.5px}
+.kbd{font:500 11px var(--mono);border:1px solid var(--line2);border-radius:5px;padding:1px 6px;color:var(--muted);margin-left:6px;background:var(--soft)}
+.palbox{position:fixed;left:50%;top:14vh;transform:translateX(-50%);width:min(620px,94vw);background:var(--surface);border:1px solid var(--line2);border-radius:16px;box-shadow:0 24px 60px -12px rgba(0,0,0,.35);z-index:62;overflow:hidden}
+.palin{width:100%;border:0;border-bottom:1px solid var(--line);padding:18px 20px;font-size:17px;background:transparent;color:var(--fg);outline:none}
+.palres{max-height:52vh;overflow-y:auto;padding:6px}.palh{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 12px 4px}
+.palrow{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:9px 12px;border-radius:9px;cursor:pointer}.palrow.on,.palrow:hover{background:var(--accent-soft)}.palrow .small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.palft{display:flex;gap:18px;padding:9px 16px;border-top:1px solid var(--line);font:11px var(--mono);color:var(--muted)}
 .tabrow{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}.tabrow .tabs{flex:1}button.pill{border:0;cursor:pointer;font:inherit;font-size:12.5px}
 .att{padding:7px 4px;border-top:1px solid var(--line);cursor:pointer;gap:12px}.att:hover{background:var(--soft)}
 .gh.clk{cursor:pointer}.gh .chev{display:inline-block;width:14px;color:var(--muted)}.gh.arc td{background:var(--bg);border-top:2px solid var(--line2);color:var(--fg)}.gh.sub td{background:transparent;padding:8px 16px 4px;font-size:10px}
@@ -87,7 +95,7 @@ button.idx{background:none;border:0;padding:0;cursor:pointer}button.idx:hover{te
 .ftag{background:#000;color:#E4E2DD;border-radius:6px;padding:2px 8px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-right:8px}.dtx{font-weight:500}.dtx.late{color:var(--bad-fg)}
 .cell .s{font-size:12px;color:var(--muted);margin-top:2px}
 .gbp{font:500 13px var(--mono);color:var(--gold);margin-top:3px}.cell.ok{background:var(--ok-bg)}.cell.ok .v{color:var(--ok-fg)}.cell.bad{background:var(--bad-bg)}.cell.bad .v{color:var(--bad-fg)}
-.prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px}
+.prog{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px}
 .pcell{padding:10px 18px;border-right:1px solid var(--line)}.pcell:last-child{border-right:0}
 .pcell .v{font:500 16px/1 var(--display);margin:3px 0 7px;font-variant-numeric:tabular-nums}
 .pcell .v small{font:400 13px var(--body);color:var(--muted);margin-left:6px}
@@ -173,7 +181,7 @@ b,strong{font-weight:400!important}.dtabs button.on,.lkx,.tabs button.on{font-we
   
   <main class="main" id="main"></main>
 </div>
-<div id="layer"></div><div id="toast"></div>
+<div id="layer"></div><div id="pal"></div><div id="toast"></div>
 <script>
 (function(){
 var STAGES=['Shortlisted','Outreach','Negotiating','Confirmed'];
@@ -214,12 +222,13 @@ function hydrate(c){
   return c;
 }
 var CUR=null;
-var S={gcol:{},mdCol:{},clientPop:null,lf:{q:'',client:'All',stage:'All',owner:'All',group:'Stage'},ltab:'Active',dockind:'Client deck',tick:0,dfs:'All',dfg:'All',view:'campaigns',cid:null,tab:'Influencers',filter:'All',sel:null,adding:false,newc:false,pick:false,pickTab:'Index',pickSel:{},pickQ:'',pickReg:'All',pickMsg:'',editC:false,editSec:null,dd:null,dtab:'Overview',addDel:false,editD:false,editI:false,rmd:null,archiving:false};
+var S={clientPage:null,backc:null,gcol:{},mdCol:{},clientPop:null,lf:{q:'',client:'All',stage:'All',owner:'All',group:'Stage'},ltab:'Active',dockind:'Client deck',tick:0,dfs:'All',dfg:'All',view:'campaigns',cid:null,tab:'Influencers',filter:'All',sel:null,adding:false,newc:false,pick:false,pickTab:'Index',pickSel:{},pickQ:'',pickReg:'All',pickMsg:'',editC:false,editSec:null,dd:null,dtab:'Overview',addDel:false,editD:false,editI:false,rmd:null,archiving:false};
 function camp(){return FULL&&FULL.id===S.cid?FULL:null;}
 function won(c){return c.stage==='7 - Won';}
 function base(i){return i.neg||i.initial;}
 function moneyIn(n,c){var cur=(c&&c.cur)||'GBP';var t=Math.abs(Math.round(n)).toLocaleString('en-GB');return (n<0?'-':'')+(cur==='AED'?t+' AED':SYM[cur]+t);}
 function money(n){return moneyIn(n,CUR);}
+function pn(n){return Math.round(n).toLocaleString('en-GB');}
 function gbpIn(n,c){return '£'+Math.round(n*c.fx).toLocaleString('en-GB');}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function initials(n){return n.replace(/[^A-Za-z0-9\s]/g,' ').trim().split(/\s+/).map(function(p){return p.charAt(0);}).join('').slice(0,2).toUpperCase();}
@@ -330,8 +339,6 @@ function attention(){
     var pc=c.price>0?c.margin/c.price*100:null,it=[];
     if(c.overdue)it.push(['bad',c.overdue+' overdue']);
     if(pc!==null&&pc+0.05<c.target)it.push(['bad','margin '+pc.toFixed(1)+'% vs '+c.target+'%']);
-    if(c.unsigned)it.push(['warn',c.unsigned+' unsigned']);
-    if(c.uninvoiced)it.push(['warn',c.uninvoiced+' not invoiced']);
     if(it.length)rows.push({c:c,it:it,w:it.reduce(function(a,x){return a+(x[0]==='bad'?2:1);},0)});
   });
   if(!rows.length)return '';
@@ -342,7 +349,7 @@ function attention(){
   return h+'</div>';
 }
 function viewCampaigns(){
-  var h='<div class="top"><div><h1>Campaigns</h1></div>'+(canEdit()?'<div class="row">'+(CAMPS.some(function(c){return c.mondayItemId;})?'<button class="btn" data-act="mrefresh" title="Re-read the company name (and contact) from monday for campaigns already imported">Update company from monday</button>':'')+'<button class="btn" data-act="mimp">Import from monday</button><button class="btn pri" data-act="newc">+ New campaign</button></div>':'')+'</div>';
+  var h='<div class="top"><div><h1>Campaigns</h1></div><div class="row"><button class="btn" data-palopen="1" title="Search everything">Search <kbd class="kbd">⌘K</kbd></button>'+(canEdit()?'<div class="row">'+(CAMPS.some(function(c){return c.mondayItemId;})?'<button class="btn" data-act="mrefresh" title="Re-read the company name (and contact) from monday for campaigns already imported">Update company from monday</button>':'')+'<button class="btn" data-act="mimp">Import from monday</button><button class="btn pri" data-act="newc">+ New campaign</button></div>':'')+'</div></div>';
   if(S.mimp)h+=mondayImport();
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
   if(S.newc)h+='<form class="add card" id="newc-form" style="margin-bottom:16px"><input class="fld" style="flex:2;min-width:160px" id="nc-name" placeholder="Campaign name" required><input class="fld" style="flex:2;min-width:160px" id="nc-client" placeholder="Client / brand" required><select class="sel plain" id="nc-cur" style="width:auto"><option value="GBP">£ GBP</option><option value="USD">$ USD</option><option value="AED">AED</option></select><input class="fld" style="flex:1;min-width:140px" id="nc-budget" type="number" min="0" placeholder="Client budget" required><button class="btn pri" type="submit">Create</button><button class="btn" type="button" data-act="newc">Cancel</button></form>';
@@ -367,7 +374,7 @@ function viewCampaigns(){
   var SC={'2 - Discovery / Scoping':'#3d9fd6','8 - Closed Lost':'#df2f4a','3 - Proposal Sent':'#2fb8b0','4 - Negotiation':'#c99a00','5 - Verbal Agreement':'#5559df','6 - Contract Sent':'#037f4c','7 - Won':'#00a05c'};
   var cols=8,open=function(k,def){return S.gcol[k]===undefined?def:S.gcol[k];};
   var hdr=function(k,title,n,color,def){var o=open(k,def);return '<tr class="gh clk" data-gtog="'+esc(k)+'"><td colspan="'+cols+'"><span class="chev">'+(o?'▾':'▸')+'</span> <span'+(color?' style="color:'+color+'"':'')+'>'+esc(title)+'</span> · '+n+'</td></tr>';};
-  h+='<div class="card sc"><table><thead><tr><th>Campaign</th><th>monday stage</th><th class="r">Budget</th><th class="r">Creator costs</th><th class="r">Margin</th><th class="r">Margin %</th><th>Selected</th><th>Owner</th></tr></thead><tbody>';
+  h+='<div class="card sc"><table class="lt"><thead><tr><th>Campaign</th><th>Stage</th><th class="r">Budget</th><th class="r">Creator costs</th><th class="r">Margin</th><th class="r">Margin %</th><th>Selected</th><th>Owner</th></tr></thead><tbody>';
   if(!list.length&&!alist.length)h+='<tr><td colspan="'+cols+'" class="small" style="padding:26px">'+(CAMPS.length?'Nothing matches these filters.':'No campaigns yet.')+'</td></tr>';
   var G={},order=[];
   if(F.group==='None'){list.forEach(function(c){h+=row(c);});}
@@ -393,23 +400,24 @@ function deadlines(c){
   var tot=0,cnt={bad:0,warn:0,neu:0,ok:0};
   selected(c).forEach(function(i){i.deliv.forEach(function(d){tot++;cnt[dinfo(d).k]++;});});
   if(!tot)return '';
-  return '<div class="row" style="gap:8px;padding-bottom:6px">'+(cnt.bad?'<button class="pill bad" data-tab="Deliverables">'+cnt.bad+' overdue</button>':'')+(cnt.warn?'<button class="pill warn" data-tab="Deliverables">'+cnt.warn+' due soon</button>':'')+(cnt.neu?'<button class="pill neu" data-tab="Deliverables">'+cnt.neu+' upcoming</button>':'')+'<button class="pill ok" data-tab="Deliverables">✓ '+cnt.ok+' of '+tot+' done</button></div>';
+  return '<span class="row" style="gap:8px;margin-left:10px">'+(cnt.bad?'<button class="pill bad" data-tab="Deliverables">'+cnt.bad+' overdue</button>':'')+(cnt.warn?'<button class="pill warn" data-tab="Deliverables">'+cnt.warn+' due soon</button>':'')+(cnt.neu?'<button class="pill neu" data-tab="Deliverables">'+cnt.neu+' upcoming</button>':'')+'<button class="pill ok" data-tab="Deliverables">✓ '+cnt.ok+' of '+tot+' done</button></span>';
 }
 function viewCampaign(){
   if(!camp())return '<div class="ld">Loading campaign…</div>';
   var c=camp(),s=stats(c),w=won(c),h='',ng=c.cur!=='GBP';
-  h+='<div class="top"><div><button class="crumb" data-go="campaigns">← All campaigns</button><h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+(c.contactName?' · '+esc(c.contactName)+(c.contactRole?' ('+esc(c.contactRole)+')':''):'')+' · Owner '+esc(c.owner)+' · '+esc(c.dates)+'</div></div>'
-   +'<div class="row">'+(canEdit()&&!c.archived?'<button class="btn sm" data-act="carch">Archive campaign</button>':'')+'<span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div><label class="small" for="mstage" style="margin-left:6px">monday</label><select id="mstage" class="sel '+stcls(c.stage)+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></div></div>';
+  h+='<div class="top"><div>'+(S.backc?'<button class="crumb" data-client="'+esc(S.backc)+'">← '+esc(S.backc)+'</button>':'<button class="crumb" data-go="campaigns">← All campaigns</button>')+'<h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+(c.contactName?' · '+esc(c.contactName)+(c.contactRole?' ('+esc(c.contactRole)+')':''):'')+' · Owner '+esc(c.owner)+' · '+esc(c.dates)+'</div></div>'
+   +'<div class="row" style="gap:10px 18px"><label class="row" style="gap:8px;flex-wrap:nowrap" for="mstage"><span class="lbl">Stage</span><select id="mstage" class="sel '+stcls(c.stage)+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div></span>'+(canEdit()&&!c.archived?'<button class="btn sm" data-act="carch">Archive</button>':'')+'</div></div>';
   if(c.archived)h+='<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span><b>Archived</b> in “'+esc(c.archived.group)+'” · '+esc(c.archived.reason)+' · '+fd(c.archived.date)+(c.archived.note?' · '+esc(c.archived.note):'')+'</span>'+(canEdit()?'<button class="btn sm" data-act="crestore">Restore</button>':'')+'</div>';
   if(S.carch&&canEdit()){var gs={};CAMPS.forEach(function(x){if(x.archived&&x.archived.group)gs[x.archived.group]=1;});
     h+='<form class="card" id="carch-form" style="padding:16px 20px;margin-bottom:16px;display:grid;gap:10px"><div class="lbl">Archive this campaign</div><div class="row" style="gap:10px"><label style="flex:1;min-width:200px"><span class="lbl">Group</span><input class="fld" id="ca-group" list="grplist" value="'+esc(c.client||'')+'" placeholder="e.g. client name or 2026 Q4"></label><datalist id="grplist">'+Object.keys(gs).map(function(g){return '<option value="'+esc(g)+'">';}).join('')+'</datalist><label style="flex:1;min-width:200px"><span class="lbl">Why</span><select class="sel plain" id="ca-reason">'+['Completed','Lost','Cancelled','On hold','Other'].map(function(r){return '<option>'+r+'</option>';}).join('')+'</select></label></div><input class="fld" id="ca-note" placeholder="Note (optional)"><div class="row"><button class="btn pri" type="submit">Archive</button><button class="btn" type="button" data-act="carch">Cancel</button></div></form>';}
   var below=s.price&&s.pc<c.target;
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
-  h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),money(Math.max(0,c.budget-s.price))+' left',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',money(s.m),'client price '+money(s.price),false,ng?gbpIn(s.m,c):'')+cellS('Margin %',s.price?s.pc.toFixed(1)+'%':'–','target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below target</b>':''),s.price?(below?'bad':'ok'):'','')+'</div>';
+  var over=s.price>c.budget&&c.budget>0;
+  h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),over?'<b style="color:var(--bad-fg)">over by '+money(s.price-c.budget)+'</b>':money(Math.max(0,c.budget-s.price))+' unallocated',false,ng?gbpIn(c.budget,c):'')+cellS('Client price',money(s.price),'what the client pays',false,ng?gbpIn(s.price,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',s.price?money(s.m):'–',s.price?s.pc.toFixed(1)+'% · target '+c.target+'%'+(below?' · <b style="color:var(--bad-fg)">below</b>':''):'target '+c.target+'%',s.price?(below?'bad':'ok'):'',ng&&s.price?gbpIn(s.m,c):'')+'</div>';
   if(w){h+=prog(c);}
   var tabs=['Influencers'].concat(w?['Archive']:[]).concat(['Decks & links','Deliverables','Brief & setup']);
   var arc=c.infl.length-s.n;
-  h+='<div class="tabrow"><div class="tabs">'+tabs.map(function(t){var lab=t==='Archive'?'Archive ('+arc+')':t;return '<button class="tab'+(S.tab===t?' on':'')+'" data-tab="'+t+'">'+lab+'</button>';}).join('')+'</div>'+(w?deadlines(c):'')+'</div>';
+  h+='<div class="tabrow"><div class="tabs">'+tabs.map(function(t){var lab=t==='Archive'?'Archive ('+arc+')':t==='Influencers'?'Influencers ('+(w?s.n:c.infl.filter(function(i){return i.approved!=='Declined';}).length)+')':t;return '<button class="tab'+(S.tab===t?' on':'')+'" data-tab="'+t+'">'+lab+'</button>';}).join('')+'</div></div>';
   if(tabs.indexOf(S.tab)<0)S.tab='Influencers';
   if(S.tab==='Influencers')h+=tabInfl(c);else if(S.tab==='Archive')h+=tabArchive(c);else if(S.tab==='Decks & links')h+=tabDecks(c);else if(S.tab==='Deliverables')h+=tabDeliv(c);else h+=tabSetup(c);
   return h;
@@ -417,7 +425,7 @@ function viewCampaign(){
 var SCOPE_ITEMS=['IG Reel','IG Story','IG Post','IG Carousel','TikTok video','YouTube video','YouTube Short','YouTube integration','Event / attendance','Filming day','Usage rights'];
 function scopeSum(i){
   var sc=i.scope||[];
-  if(!sc.length)return canEdit()?'<button class="scbtn add" data-sced="'+i.id+'">+ Add</button>':'<span class="small">–</span>';
+  if(!sc.length)return canEdit()?'<button class="scbtn add" data-sced="'+i.id+'">+ Add deliverables</button>':'<span class="small">–</span>';
   var txt=sc.slice(0,2).map(function(x){return x.qty+'× '+esc(x.item);}).join(' · ')+(sc.length>2?' <span class="small">+'+(sc.length-2)+' more</span>':'');
   return '<div class="scl"><span class="scbtn" data-tip="'+i.id+'"'+(canEdit()?' data-sced="'+i.id+'"':'')+'>'+txt+'</span>'+(canEdit()?'<button class="plusb" data-sced="'+i.id+'" title="Add or edit deliverables" aria-label="Add or edit deliverables">+</button>':'')+'</div>';
 }
@@ -438,30 +446,30 @@ function scopeModal(){
 }
 function saveScope(i){S.scopeOther=null;render();post(P('/talents/'+i.id),'PATCH',{scope:i.scope},{quiet:true});}
 function nameCell(i){var x=ix(i.tid);return '<div class="who2"><div class="ini">'+initials(x.name)+'</div><div><button class="name" data-pick="'+i.id+'">'+esc(x.name)+'</button><div class="small" style="white-space:nowrap">'+'<button class="idx" data-openix="'+i.tid+'" title="Open this profile in the Talent Index">● Index ↗</button></div></div></div>';}
-function rmBtn(i){if(!canEdit())return '';return S.rmrow===i.id?'<button class="btn sm" data-rmrowgo="'+i.id+'" style="color:var(--bad-fg)">Yes, remove</button> <button class="btn sm" data-rmrowno="1">No</button>':'<button class="btn sm" data-rmrow="'+i.id+'" title="Remove from this campaign">Remove</button>';}
+function rmBtn(i){if(!canEdit())return '';return S.rmrow===i.id?'<button class="btn sm" data-rmrowgo="'+i.id+'" style="color:var(--bad-fg)">Yes, remove</button> <button class="btn sm" data-rmrowno="1">No</button>':'<button class="btn sm" data-rmrow="'+i.id+'" title="Remove from this campaign" aria-label="Remove from this campaign">✕</button>';}
 function tabInfl(c){
   var w=won(c),h='';
   var base0=w?selected(c):c.infl;
   var cnt={All:0,Approved:0,'Not approved':0,Declined:0};
   c.infl.forEach(function(i){if(i.approved==='Declined')cnt.Declined++;else{cnt.All++;if(i.approved==='Yes')cnt.Approved++;else cnt['Not approved']++;}});
-  h+='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row">'+(w?'<span class="lbl">'+base0.length+' selected creators</span>':'<span class="lbl" style="margin-right:4px">Show</span>'+['All','Approved','Not approved','Declined'].map(function(f){return '<button class="btn sm'+(S.filter===f?' on':'')+'" data-filter="'+f+'">'+f+' '+cnt[f]+'</button>';}).join(''))+'</div><button class="btn pri" data-act="pick">+ Add from Talent Index</button></div>';
+  h+='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row">'+(w?'<span class="lbl">'+base0.length+' selected creators · '+(c.cur==='AED'?'AED':c.cur==='USD'?'$':'£')+'</span>'+deadlines(c):'<span class="lbl" style="margin-right:4px">Show</span>'+['All','Approved','Not approved','Declined'].map(function(f){return '<button class="btn sm'+(S.filter===f?' on':'')+'" data-filter="'+f+'">'+f+' '+cnt[f]+'</button>';}).join(''))+'</div><button class="btn pri" data-act="pick">+ Add from Talent Index</button></div>';
   var list=w?base0:c.infl.filter(function(i){
     if(S.filter==='All')return i.approved!=='Declined';if(S.filter==='Approved')return i.approved==='Yes';
     if(S.filter==='Not approved')return i.approved!=='Yes'&&i.approved!=='Declined';return i.approved==='Declined';});
-  h+='<div class="card sc"><table><thead><tr><th>Influencer</th>'+(w?'':'<th>Approved</th>')+'<th>Stage</th><th>Deliverables</th><th class="r">Initial</th><th class="r">Negotiated</th><th class="r">Client rate</th><th class="r">Margin</th>'+(w?'<th>Contract</th><th>Invoicing</th><th></th>':'<th></th>')+'</tr></thead><tbody>';
+  h+='<div class="card sc"><table class="it"><thead><tr><th>Influencer</th>'+(w?'':'<th>Approved</th>')+'<th>Stage</th><th>Deliverables</th><th class="r">Initial</th><th class="r">Negotiated</th><th class="r">Client rate</th><th class="r">Margin</th>'+(w?'<th>Contract</th><th>Invoicing</th><th></th>':'<th></th>')+'</tr></thead><tbody>';
   if(!list.length)h+='<tr><td colspan="12" class="small" style="padding:26px">Nobody here yet. Use “Add from Talent Index”.</td></tr>';
   list.forEach(function(i){
     h+='<tr><td>'+nameCell(i)+'</td>'+(w?'':'<td>'+sel('approved',i.approved,APPROVED,i.id)+'</td>')+'<td>'+sel('stage',i.stage,STAGES,i.id)+'</td><td>'+scopeSum(i)+(w?dsum(i):'')+'</td>'
-     +'<td class="r"><input class="in dim" inputmode="numeric" data-f="initial" data-i="'+i.id+'" value="'+money(i.initial)+'" aria-label="Initial rate" title="Click to edit"></td>'
-     +'<td class="r"><input class="in strong" inputmode="numeric" data-f="neg" data-i="'+i.id+'" value="'+(i.neg?money(i.neg):'')+'" placeholder="–" aria-label="Negotiated rate" title="Click to edit"></td>'
-     +'<td class="r"><input class="in" inputmode="numeric" data-f="client" data-i="'+i.id+'" value="'+money(i.client)+'" aria-label="Client rate" title="Click to edit">'+(i.neg?'':'<div class="small" style="font-size:11px;padding-right:9px">from initial</div>')+'</td>'
+     +'<td class="r"><input class="in dim" inputmode="numeric" data-f="initial" data-i="'+i.id+'" value="'+pn(i.initial)+'" aria-label="Initial rate" title="Click to edit"></td>'
+     +'<td class="r"><input class="in strong" inputmode="numeric" data-f="neg" data-i="'+i.id+'" value="'+(i.neg?pn(i.neg):'')+'" placeholder="–" aria-label="Negotiated rate" title="Click to edit"></td>'
+     +'<td class="r"><input class="in dim" inputmode="numeric" data-f="client" data-i="'+i.id+'" value="'+pn(i.client)+'" aria-label="Client rate" title="Click to edit">'+(i.neg?'':'<div class="small" style="font-size:11px;padding-right:9px">from initial</div>')+'</td>'
      +'<td class="r"><input class="in pc '+(i.margin+0.05>=c.target?'mok':'mbad')+'" inputmode="decimal" data-f="margin" data-i="'+i.id+'" value="'+(Math.round(i.margin*10)/10)+'%" aria-label="Margin percent" title="Click to edit"></td>'
      +(w?'<td>'+sel('contract',i.contract,CONTRACT,i.id)+'</td><td>'+sel('invoice',i.invoice,INVOICE,i.id)+'</td><td class="r" style="white-space:nowrap"><button class="btn sm" data-archrow="'+i.id+'">Archive</button> '+rmBtn(i)+'</td>':'<td class="r">'+rmBtn(i)+'</td>')+'</tr>';
   });
   h+='</tbody>';
   var sl=selected(c),ti=0,tn=0,tc=0;sl.forEach(function(i){ti+=i.initial;if(i.neg)tn+=i.neg;tc+=i.client;});
   if(sl.length){var st=stats(c);
-    h+='<tfoot><tr><td><b>Total · '+sl.length+' selected</b><div class="small" style="font-weight:400">Creator costs '+money(st.cost)+' · Margin '+money(st.m)+'</div></td>'+(w?'':'<td></td>')+'<td></td><td></td><td class="r num">'+money(ti)+'</td><td class="r num">'+(tn?money(tn):'–')+'</td><td class="r num">'+money(tc)+'</td><td class="r num">'+(st.price?st.pc.toFixed(1)+'%':'–')+'</td>'+(w?'<td></td><td></td><td></td>':'<td></td>')+'</tr></tfoot>';}
+    h+='<tfoot><tr><td><b>Total · '+sl.length+' selected</b></td>'+(w?'':'<td></td>')+'<td></td><td></td><td class="r num">'+pn(ti)+'</td><td class="r num">'+(tn?pn(tn):'–')+'</td><td class="r num">'+pn(tc)+'</td><td class="r num">'+(st.price?st.pc.toFixed(1)+'%':'–')+'</td>'+(w?'<td></td><td></td><td></td>':'<td></td>')+'</tr></tfoot>';}
   return h+'</table></div>';
 }
 function tabArchive(c){
@@ -536,7 +544,7 @@ function sec(key,title,read,edit){
 }
 function tabSetup(c){
   var ci=['Not started','Sent to client','Signed'].indexOf(c.cStatus);if(ci<0)ci=0;
-  var hero='<div class="hero"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="lbl" style="color:#D9C9A8">'+esc(c.client)+'</div><h3>'+esc(c.name)+'</h3></div><span class="pill '+stcls(c.stage)+'">monday · '+esc(c.stage)+'</span></div><div class="tiles"><div class="t"><div class="l">Client budget</div><div class="v">'+money(c.budget)+'</div></div><div class="t"><div class="l">Target margin</div><div class="v">'+c.target+'%</div></div><div class="t"><div class="l">Dates</div><div class="v">'+esc(c.dates)+'</div></div><div class="t"><div class="l">Owner</div><div class="v">'+esc(c.owner)+'</div></div><div class="t"><div class="l">Markets</div><div class="v">'+esc(c.markets||'–')+'</div></div><div class="t"><div class="l">Platforms</div><div class="v">'+esc(c.platforms||'–')+'</div></div></div></div>';
+  var hero='<div class="row" style="gap:6px 26px;margin-bottom:14px;font-size:13.5px"><span><span class="lbl">Target margin</span> <b>'+c.target+'%</b></span><span><span class="lbl">Markets</span> <b>'+esc(c.markets||'–')+'</b></span><span><span class="lbl">Platforms</span> <b>'+esc(c.platforms||'–')+'</b></span></div>';
   var campE='<div class="g2">'+fcf('Campaign name','name',c)+fcf('Client / brand','client',c)+fcf('Owner','owner',c)+fcf('Start date','start',c,'date')+fcf('End date','end',c,'date')+fcf('monday deal item ID','mondayItemId',c)+fcf('Client budget ('+c.cur+')','budget',c,'number')+fcf('Target margin (%)','target',c,'number')+fcf('£ per 1 '+c.cur,'fx',c,'number')+fcf('Markets','markets',c)+fcf('Platforms','platforms',c)+'</div><label style="display:block;margin-top:14px"><span class="lbl" style="display:block;margin-bottom:5px">Brief</span><textarea class="fld" data-cf="brief">'+esc(c.brief)+'</textarea></label>';
   var briefR='<div style="max-width:70ch;line-height:1.65">'+(c.brief?esc(c.brief):'<span class="small">No brief added yet. Use Edit to add it.</span>')+'</div>';
   var steps=['Not started','Sent to client','Signed'].map(function(n,k){return '<div class="p '+(k<ci||ci===2&&k===2?'d':k===ci?'c':'')+'"><i>'+(k<ci||ci===2&&k===2?'✓':k+1)+'</i>'+n+'</div>'+(k<2?'<div class="ln'+(k<ci?' d':'')+'"></div>':'');}).join('');
@@ -632,6 +640,72 @@ document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.targ
   tp.innerHTML=i.scope.map(function(x){return '<b>'+x.qty+'×</b> '+esc(x.item);}).join('<br>');tp.style.display='block';
   var r=t.getBoundingClientRect();tp.style.left=Math.max(8,Math.min(r.left,window.innerWidth-tp.offsetWidth-8))+'px';
   var top=r.bottom+6;if(top+tp.offsetHeight>window.innerHeight-8)top=Math.max(8,r.top-tp.offsetHeight-6);tp.style.top=top+'px';});
+function viewClient(){
+  var nm=S.clientPage||'',key=nm.trim().toLowerCase();
+  var L=CAMPS.filter(function(c){return (c.client||'').trim().toLowerCase()===key;});
+  L.sort(function(a,b){return (a.archived?1:0)-(b.archived?1:0)||MONDAY.indexOf(a.stage)-MONDAY.indexOf(b.stage)||String(b.start||'').localeCompare(String(a.start||''));});
+  var g=function(c,x){return (x||0)*(c.fx||1);},P0={cur:'GBP'};
+  var won=L.filter(function(c){return c.stage==='7 - Won'&&!c.archived;}),wonAll=L.filter(function(c){return c.stage==='7 - Won';});
+  var open=L.filter(function(c){return !c.archived&&c.stage!=='7 - Won'&&c.stage!=='8 - Closed Lost';});
+  var wv=0,op=0,mp=0,pr=0;
+  wonAll.forEach(function(c){wv+=g(c,c.budget);mp+=g(c,c.margin);pr+=g(c,c.price);});
+  open.forEach(function(c){op+=g(c,c.budget);});
+  var first=L.map(function(c){return String(c.start||'').slice(0,4);}).filter(Boolean).sort()[0];
+  var h='<div class="top"><div><button class="crumb" data-go="campaigns">← All campaigns</button><h1 style="margin-top:8px">'+esc(nm)+'</h1><div class="sub">'+L.length+' campaign'+(L.length===1?'':'s')+(first?' · first in '+first:'')+'</div></div></div>';
+  if(!L.length)return h+'<div class="card" style="padding:24px">No campaigns for this client.</div>';
+  h+='<div class="band">'+cellS('Won',String(wonAll.length),wonAll.length?moneyIn(wv,P0)+' budget':'none yet',false,'')
+    +cellS('In progress',String(open.length),open.length?moneyIn(op,P0)+' budget':'nothing open',false,'')
+    +cellS('Margin earned',wonAll.length?moneyIn(mp,P0):'–','on won campaigns',false,'')
+    +cellS('Avg margin',pr>0?(mp/pr*100).toFixed(1)+'%':'–','across won',false,'')+'</div>';
+  var seen={},ppl=[];L.forEach(function(c){var k=(c.contactEmail||c.contactName||'').toLowerCase();if(!k||seen[k])return;seen[k]=1;ppl.push(c);});
+  if(ppl.length)h+='<div class="card" style="padding:16px 20px;margin-bottom:16px"><div class="lbl" style="margin-bottom:10px">Contacts</div><div class="g2">'+ppl.map(function(c){return '<div class="row" style="flex-wrap:nowrap;gap:12px"><div class="cav" style="width:38px;height:38px;font-size:13px">'+esc(initials(c.contactName||'?'))+'</div><div style="min-width:0"><div style="font-weight:500">'+esc(c.contactName||'No name')+'</div><div class="small">'+esc(c.contactRole||'')+(c.contactRole&&c.contactEmail?' · ':'')+(c.contactEmail?'<a href="mailto:'+esc(c.contactEmail)+'" style="color:var(--accent)">'+esc(c.contactEmail)+'</a>':'')+(c.contactPhone?' · '+esc(c.contactPhone):'')+'</div></div></div>';}).join('')+'</div></div>';
+  h+='<div class="card sc"><table class="lt"><thead><tr><th>Campaign</th><th>Stage</th><th class="r">Budget</th><th class="r">Margin %</th><th>Dates</th><th>Owner</th></tr></thead><tbody>';
+  L.forEach(function(c){var pc=c.price>0?c.margin/c.price*100:0;
+    h+='<tr class="clk" data-open="'+c.id+'"><td><b>'+esc(c.name)+'</b>'+(c.archived?' <span class="pill neu">Archived</span>':'')+'</td><td><span class="pill '+stcls(c.stage)+'">'+esc(c.stage)+'</span></td><td class="r num">'+moneyIn(c.budget,c)+(c.cur!=='GBP'?'<div class="small">'+moneyIn(g(c,c.budget),P0)+'</div>':'')+'</td><td class="r num">'+(c.price?pc.toFixed(1)+'%':'–')+'</td><td class="small">'+(c.start?fd(c.start):'–')+'</td><td>'+esc(c.owner)+'</td></tr>';});
+  return h+'</tbody></table></div>';
+}
+var PAL={on:false,q:'',i:0,res:[]};
+function palItems(q){
+  q=q.toLowerCase().trim();var out=[],mt=function(x){return !q||String(x).toLowerCase().indexOf(q)>=0;};
+  if(canEdit()){[['New campaign','newc'],['Import from monday','mimp']].forEach(function(a){if(mt(a[0]))out.push({t:'Action',l:a[0],s:'',a:'act',v:a[1]});});}
+  CAMPS.filter(function(c){return mt(c.name+' '+c.client+' '+c.owner);}).slice(0,q?7:5).forEach(function(c){out.push({t:'Campaign',l:c.name,s:(c.client||'')+(c.client?' · ':'')+c.stage+(c.archived?' · archived':''),a:'open',v:c.id});});
+  var cl={};CAMPS.forEach(function(c){if(c.client&&mt(c.client))cl[c.client]=(cl[c.client]||0)+1;});
+  if(q)Object.keys(cl).sort().slice(0,4).forEach(function(n){out.push({t:'Client',l:n,s:cl[n]+' campaign'+(cl[n]===1?'':'s'),a:'client',v:n});});
+  if(q.length>=2)TAL.filter(function(t){return mt(t.name);}).slice(0,6).forEach(function(t){out.push({t:'Talent',l:t.name,s:t.plat||'',a:'talent',v:t.id});});
+  return out;
+}
+function palRender(){
+  var el=document.getElementById('pal');if(!PAL.on){el.innerHTML='';return;}
+  PAL.res=palItems(PAL.q);if(PAL.i>=PAL.res.length)PAL.i=Math.max(0,PAL.res.length-1);
+  var h='<div class="ov" data-palx="1"></div><div class="palbox" role="dialog" aria-label="Search"><input id="palq" class="palin" placeholder="Search campaigns, clients and talent" value="'+esc(PAL.q)+'" autocomplete="off"><div class="palres">';
+  if(!PAL.res.length)h+='<div class="small" style="padding:18px">No matches.</div>';
+  var last='';PAL.res.forEach(function(r,k){if(r.t!==last){h+='<div class="palh">'+r.t+(r.t==='Campaign'||r.t==='Client'||r.t==='Talent'?'s':'')+'</div>';last=r.t;}
+    h+='<div class="palrow'+(k===PAL.i?' on':'')+'" data-palk="'+k+'"><b>'+esc(r.l)+'</b><span class="small">'+esc(r.s)+'</span></div>';});
+  el.innerHTML=h+'</div><div class="palft"><span>↑↓ move</span><span>↵ open</span><span>esc close</span></div></div>';
+  var inp=document.getElementById('palq');inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+  var on=el.querySelector('.palrow.on');if(on)on.scrollIntoView({block:'nearest'});
+}
+function palOpen(){PAL.on=true;PAL.q='';PAL.i=0;palRender();}
+function palClose(){PAL.on=false;palRender();}
+function palGo(k){
+  var r=PAL.res[k];if(!r)return;palClose();
+  if(r.a==='talent'){var x=TAL.filter(function(t){return t.id===r.v;})[0];try{window.parent.postMessage({type:'zodiac-open-talent',id:r.v,name:x?x.name:r.l},location.origin);}catch(er){}return;}
+  var b=document.createElement('button');
+  if(r.a==='open')b.dataset.open=r.v;else if(r.a==='client')b.dataset.client=r.v;else b.dataset.act=r.v;
+  if(r.a==='act'&&S.view!=='campaigns'){S.view='campaigns';S.cid=null;FULL=null;}
+  document.body.appendChild(b);b.click();b.remove();
+}
+document.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();PAL.on?palClose():palOpen();return;}
+  if(!PAL.on)return;
+  if(e.key==='Escape'){e.preventDefault();palClose();}
+  else if(e.key==='ArrowDown'){e.preventDefault();PAL.i=Math.min(PAL.res.length-1,PAL.i+1);palRender();}
+  else if(e.key==='ArrowUp'){e.preventDefault();PAL.i=Math.max(0,PAL.i-1);palRender();}
+  else if(e.key==='Enter'){e.preventDefault();palGo(PAL.i);}
+},true);
+document.addEventListener('input',function(e){if(e.target.id==='palq'){PAL.q=e.target.value;PAL.i=0;palRender();}});
+document.addEventListener('click',function(e){var r=e.target.closest('[data-palk]');if(r){palGo(+r.dataset.palk);return;}if(e.target.closest('[data-palx]'))palClose();if(e.target.closest('[data-palopen]'))palOpen();},true);
+window.addEventListener('message',function(e){if(e.origin===location.origin&&e.data&&e.data.type==='zodiac-palette'){PAL.on?palClose():palOpen();}});
 function clientModal(){
   var nm=S.clientPop,key=nm.trim().toLowerCase();
   var L=CAMPS.filter(function(c){return (c.client||'').trim().toLowerCase()===key;});
@@ -646,7 +720,7 @@ function clientModal(){
 function render(){
   CUR=S.view==='campaign'?camp():null;
   var m=document.getElementById('main');
-  m.innerHTML=S.view==='campaign'?viewCampaign():viewCampaigns();
+  m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():viewCampaigns();
   document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'');
   var so=document.querySelector('[data-sother]');if(so)so.focus();
   var lq=document.getElementById('lq');if(lq&&S.lqFocus){lq.focus();lq.setSelectionRange(lq.value.length,lq.value.length);}
@@ -782,10 +856,10 @@ document.addEventListener('submit',function(e){
 document.addEventListener('click',function(e){
   var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-rmrow],[data-rmrowgo],[data-rmrowno]');if(!t)return;
   var d=t.dataset;
-  if(d.go){S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
-  else if(d.client){S.clientPop=d.client;render();}
+  if(d.go){S.backc=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
+  else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.view='campaign';S.cid=d.open;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.view='campaign';S.cid=d.open;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Decks & links')loadShares();}
   else if(d.rmrow){S.rmrow=d.rmrow;render();}
   else if(d.rmrowno){S.rmrow=null;render();}

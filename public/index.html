@@ -2723,6 +2723,15 @@ renderShortlist();
       setTimeout(() => { const el = document.querySelector('[data-notes="' + m.id + '"]'); if(el) el.scrollIntoView({block:'center'}); }, 80);
     }catch(x){}
   });
+  // ⌘K / Ctrl+K opens the search palette in Campaign Management from anywhere
+  document.addEventListener('keydown', e => {
+    if(!((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) return;
+    if(!document.getElementById('password-gate').classList.contains('unlocked')) return;
+    e.preventDefault();
+    const fresh = !frame.dataset.loaded;
+    if(box.hidden) showView('campaigns');
+    setTimeout(() => { try{ frame.contentWindow.postMessage({type:'zodiac-palette'}, location.origin); }catch(x){} }, fresh ? 1500 : 30);
+  });
   function who(){
     const n = (typeof ME !== 'undefined' && ME && ME.name) || 'Zodiac team';
     document.getElementById('zname').textContent = n;

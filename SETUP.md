@@ -99,3 +99,18 @@ No new migration (still up to 14). Upload the contents as before.
 - Compact campaign header: slimmer stat band, thin progress row, deadlines moved onto the tab row.
 - Initial / Negotiated / Client rate / Margin kept, restyled (muted initial, bold negotiated, margin chip green/red vs target).
 - "Needs attention" card on the campaign list (overdue, margin below target, unsigned, not invoiced). List endpoint now returns overdue, unsigned, uninvoiced per campaign.
+
+## Update 31
+No new migration. Layout and clarity pass on Campaign Management:
+- Needs attention now only flags overdue deliverables and margin below target.
+- Influencer table fits a laptop screen: amounts show as plain numbers (currency shown above the table), Initial and Client rate are lighter, Remove is a small ✕.
+- Deadline pills moved next to "selected creators" (Influencers tab only).
+- Header: Stage / Currency / Archive in one row; stat band is now Budget, Client price, Creator costs, Margin (amount, % and target together). "left" became "unallocated" or "over by".
+- Brief & setup: banner replaced by one slim line.
+- "+ Add deliverables" is clearer; campaign list columns no longer wrap or gap.
+
+## Update 32
+No new migration.
+- Client page: clicking a client name now opens a full page (won, in progress, margin earned, contacts, every campaign at any stage). Opening a campaign from it gives a "← Client" back link.
+- ⌘K / Ctrl+K search from anywhere: campaigns, clients, talent (opens the Talent Index profile) and quick actions. There is also a Search button on the campaign list.
+- The Influencers tab now shows its count, e.g. "Influencers (5)".
