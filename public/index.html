@@ -2363,10 +2363,11 @@ async function openRatesModal(r){
     const th = 'padding:6px 8px;';
     body.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead><tr style="text-align:left;color:var(--grey);font-family:'Oswald',sans-serif;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;">
-        <th style="${th}padding-left:0;">Date</th><th style="${th}">Campaign</th><th style="${th}text-align:right;">Initial</th><th style="${th}text-align:right;">Negotiated</th><th style="${th}padding-right:0;">Outcome</th></tr></thead>
+        <th style="${th}padding-left:0;">Date</th><th style="${th}">Campaign</th><th style="${th}">Covers</th><th style="${th}text-align:right;">Initial</th><th style="${th}text-align:right;">Negotiated</th><th style="${th}padding-right:0;">Outcome</th></tr></thead>
       <tbody>${j.rates.map(d => `<tr style="border-top:1px solid var(--line-strong);color:var(--ink);">
         <td style="padding:8px 8px 8px 0;white-space:nowrap;">${d.date ? new Date(d.date).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '—'}</td>
         <td style="padding:8px;">${escapeHtml(d.campaign || '')}${d.client ? `<div style="color:var(--grey);font-size:12px;">${escapeHtml(d.client)}</div>` : ''}</td>
+        <td style="padding:8px;font-size:12.5px;">${(d.scope||[]).length ? d.scope.map(x => escapeHtml(x.qty + '× ' + x.item)).join('<br>') : '<span style="color:var(--grey)">Not specified</span>'}</td>
         <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.initial, d.cur)}</td>
         <td style="padding:8px;text-align:right;white-space:nowrap;">${fmtMoney(d.neg, d.cur)}</td>
         <td style="padding:8px 0 8px 8px;">${escapeHtml(d.outcome)}</td></tr>`).join('')}</tbody></table></div>`;
@@ -2696,6 +2697,18 @@ renderShortlist();
   }
   document.querySelectorAll('.znav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
   window.addEventListener('message', e => { if(e.origin === location.origin && e.data === 'zodiac-locked'){ try{ lockGate(); }catch(x){} } });
+  // "Open in Talent Index" from Campaign Management
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if(e.origin !== location.origin || !m || m.type !== 'zodiac-open-talent') return;
+    try{
+      showView('talent'); resetFilters();
+      document.getElementById('search').value = m.name || '';
+      state.q = String(m.name || '').trim().toLowerCase();
+      expandedId = m.id; render();
+      setTimeout(() => { const el = document.querySelector('[data-notes="' + m.id + '"]'); if(el) el.scrollIntoView({block:'center'}); }, 80);
+    }catch(x){}
+  });
   function who(){
     const n = (typeof ME !== 'undefined' && ME && ME.name) || 'Zodiac team';
     document.getElementById('zname').textContent = n;

@@ -8,11 +8,23 @@ const FX_DEFAULT = { GBP: 1, USD: 0.75, AED: 0.2 };
 // Stages on the monday Agency Sales Pipeline board (5092522587)
 const MONDAY_STAGES = ['3 - Proposal Sent', '4 - Negotiation', '5 - Verbal Agreement', '6 - Contract Sent', '7 - Won'];
 const DEALS_BOARD = '5092522587';
-const DEAL_COLS = ['deal_stage', 'deal_owner', 'color_mm1ybd67', 'deal_value', 'numeric_mm12q2jt', 'dropdown_mm2ns2za', 'deal_expected_close_date', 'board_relation_mm2179a3', 'board_relation_mm128ss1'];
+const DEAL_COLS = ['deal_stage', 'deal_owner', 'color_mm1ybd67', 'deal_value', 'numeric_mm12q2jt', 'dropdown_mm2ns2za', 'deal_expected_close_date', 'board_relation_mm2179a3', 'board_relation_mm128ss1', 'board_relation_mm21kfwp'];
+
+const MONDAY_ITEM = 'id name column_values(ids: $cols) { id text ... on BoardRelationValue { linked_items { id name column_values(ids: ["email_mm12f05w","text_mm20qw8s","title5"]) { id text } } } }';
+// Client (account) and first linked contact for a monday deal item
+function mondayWho(it) {
+  const col = (id) => it.column_values.find((c) => c.id === id) || {};
+  const names = (id) => (col(id).linked_items || []).map((l) => l.name).filter(Boolean);
+  const parts = it.name.split('//').map((x) => x.trim());
+  const client = names('board_relation_mm2179a3')[0] || col('board_relation_mm2179a3').text || names('board_relation_mm128ss1')[0] || (parts.length > 1 ? parts[0] : '');
+  const c0 = (col('board_relation_mm21kfwp').linked_items || [])[0];
+  const cv = (id) => ((c0 && c0.column_values.find((x) => x.id === id)) || {}).text || '';
+  return { client, contact: c0 ? { name: c0.name || '', role: cv('title5'), email: cv('email_mm12f05w'), phone: cv('text_mm20qw8s') } : null };
+}
 
 // Deals sitting at Proposal Sent (the point where the creator list is put together), newest start date first.
 async function mondayProposals() {
-  const ITEM = 'id name column_values(ids: $cols) { id text }';
+  const ITEM = MONDAY_ITEM;
   const qp = { rules: [{ column_id: 'deal_stage', compare_value: [0], operator: 'any_of' }] };
   const out = [];
   let data = await gql(`query($id:[ID!], $cols:[String!], $qp:ItemsQuery){ boards(ids:$id){ items_page(limit:100, query_params:$qp){ cursor items{ ${ITEM} } } } }`, { id: [DEALS_BOARD], cols: DEAL_COLS, qp });
@@ -28,7 +40,7 @@ async function mondayProposals() {
     const parts = it.name.split('//').map((x) => x.trim());
     return {
       id: it.id, name: it.name, status: '3 - Proposal Sent',
-      client: t('board_relation_mm2179a3') || t('board_relation_mm128ss1') || (parts.length > 1 ? parts[0] : ''),
+      ...(() => { const w = mondayWho(it); return { client: w.client, contact: w.contact }; })(),
       owner: t('deal_owner'), cur: t('color_mm1ybd67'), value: Number(t('deal_value').replace(/,/g, '')) || 0,
       target: Number(t('numeric_mm12q2jt')) || null, market: t('dropdown_mm2ns2za'), start: t('deal_expected_close_date'),
     };
@@ -71,13 +83,18 @@ export function rateToGbp(rateText) {
 }
 
 // Keep the Talent Index "typical rate" in step with the latest rate entered on any campaign
-export function rateText(n, cur) {
-  const f = Math.round(n).toLocaleString('en-GB');
-  return cur === 'GBP' ? '£' + f : cur === 'USD' ? '$' + f : f + ' ' + cur;
+export function scopeText(scope) {
+  return (Array.isArray(scope) ? scope : []).map((x) => `${x.qty}× ${x.item}`).join(', ');
 }
-async function saveRateToIndex(logAct, tid, n, cur, campaignName) {
+export function rateText(n, cur, scope) {
+  const f = Math.round(n).toLocaleString('en-GB');
+  const base = cur === 'GBP' ? '£' + f : cur === 'USD' ? '$' + f : f + ' ' + cur;
+  const sc = scopeText(scope);
+  return sc ? `${base} (${sc})` : base;
+}
+async function saveRateToIndex(logAct, tid, n, cur, campaignName, scope) {
   if (!(n > 0)) return;
-  const text = rateText(n, cur);
+  const text = rateText(n, cur, scope);
   const [t] = await query('SELECT name, rate FROM talents WHERE id = $1 AND deleted_at IS NULL', [tid]);
   if (!t || t.rate === text) return;
   await query('UPDATE talents SET rate = $2, updated_at = now() WHERE id = $1', [tid, text]);
@@ -99,6 +116,7 @@ function shapeCampaign(c) {
     mondayItemId: c.monday_item_id || '', stage: c.monday_stage,
     contactName: c.contact_name || '', contactRole: c.contact_role || '', contactEmail: c.contact_email || '', contactPhone: c.contact_phone || '',
     cStatus: c.c_status, cValue: Number(c.c_value), cSigned: c.c_signed || '', cTerms: c.c_terms, cUsage: c.c_usage || '',
+    archived: c.arch || null,
     cFile: c.c_file_name ? { name: c.c_file_name, size: c.c_file_size, type: c.c_file_type, at: c.c_file_at } : null,
   };
 }
@@ -129,7 +147,7 @@ async function loadFull(id) {
     id: x.id, tid: x.talent_id, name: x.name, plat: platLine(x), region: x.region || '', location: x.location || '', niche: x.niche || '',
     mgr: x.manager_name || '', email: x.manager_email || '', phone: x.manager_phone || '',
     approved: x.approved, stage: x.stage, initial: Number(x.initial), neg: x.neg == null ? null : Number(x.neg), margin: Number(x.margin), client: Number(x.client_rate),
-    contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
+    scope: x.scope || [], contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
       id: d.id, name: d.name, plat: d.platform || '', stage: d.stage, recv: d.recv_by || '', recvAt: d.recv_at || '', live: d.live_by || '', liveAt: d.live_at || '',
       noPost: !!d.no_post, links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
@@ -138,6 +156,8 @@ async function loadFull(id) {
     quotes: quotes.filter((q) => q.ct_id === x.id).map((q) => ({ id: Number(q.id), a: q.amount, n: q.note || '', by: q.author || '', d: q.created_at })),
   }));
   out.links = links;
+  out.docs = (await query(`SELECT id, name, kind, mime, size, url, created_by, created_at FROM campaign_docs WHERE campaign_id = $1 ORDER BY created_at DESC`, [id]))
+    .map((d) => ({ id: d.id, name: d.name, kind: d.kind, type: d.mime || '', size: d.size || 0, url: d.url || '', by: d.created_by || '', at: d.created_at }));
   return out;
 }
 
@@ -211,26 +231,48 @@ export async function handleCampaigns(ctx) {
       const cur = CURS.includes(d.cur) ? d.cur : 'GBP';
       const cid = newId('c');
       await query(
-        `INSERT INTO campaigns (id, name, client, owner, cur, fx, budget, target_margin, markets, start_date, monday_item_id, monday_stage, created_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
-        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, MONDAY_STAGES[0], actor]);
+        `INSERT INTO campaigns (id, name, client, owner, cur, fx, budget, target_margin, markets, start_date, monday_item_id, monday_stage, created_by, contact_name, contact_role, contact_email, contact_phone)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+        [cid, d.name.slice(0, 200), text(d.client, 200), text(d.owner.split(',')[0], 100), cur, await fxFor(cur), d.value, d.target && d.target <= 95 ? d.target : 30, text(d.market, 200), dateOrNull(d.start), d.id, MONDAY_STAGES[0], actor, text(d.contact && d.contact.name, 200), text(d.contact && d.contact.role, 200), text(d.contact && d.contact.email, 200), text(d.contact && d.contact.phone, 60)]);
       await logAct('campaign.add', cid, d.name);
       made.push(cid);
     }
     return json({ imported: made.length });
   }
 
+  // ---- Pull client and contact from monday for campaigns that were imported from it
+  if (id === 'refresh-monday' && method === 'POST') {
+    const rows = await query(`SELECT id, monday_item_id FROM campaigns WHERE deleted_at IS NULL AND monday_item_id IS NOT NULL`);
+    let n = 0;
+    try {
+      for (let k = 0; k < rows.length; k += 50) {
+        const chunk = rows.slice(k, k + 50);
+        const data = await gql(`query($ids:[ID!], $cols:[String!]){ items(ids:$ids){ ${MONDAY_ITEM} } }`, { ids: chunk.map((r) => r.monday_item_id), cols: DEAL_COLS });
+        for (const it of data.items || []) {
+          const w = mondayWho(it);
+          const mine = chunk.filter((r) => r.monday_item_id === String(it.id));
+          for (const r of mine) {
+            await query(`UPDATE campaigns SET client = COALESCE($2, client), contact_name = COALESCE($3, contact_name), contact_role = COALESCE($4, contact_role), contact_email = COALESCE($5, contact_email), contact_phone = COALESCE($6, contact_phone), updated_at = now() WHERE id = $1`,
+              [r.id, text(w.client, 200), text(w.contact && w.contact.name, 200), text(w.contact && w.contact.role, 200), text(w.contact && w.contact.email, 200), text(w.contact && w.contact.phone, 60)]);
+            n++;
+          }
+        }
+      }
+    } catch (e) { return json({ error: 'Could not read monday: ' + e.message }, 502); }
+    return json({ updated: n });
+  }
+
   // ---- Every rate we have entered for a talent across campaigns
   if (id === 'talent-rates' && method === 'GET') {
     const rows = await query(
       `SELECT c.name AS campaign, c.client, c.cur, COALESCE(c.start_date, c.created_at::date) AS date,
-              ct.initial, ct.neg, ct.approved, ct.archived
+              ct.initial, ct.neg, ct.approved, ct.archived, ct.scope
          FROM campaign_talents ct JOIN campaigns c ON c.id = ct.campaign_id
         WHERE ct.talent_id = $1 AND (ct.initial > 0 OR ct.neg > 0)
         ORDER BY COALESCE(c.start_date, c.created_at::date) DESC, c.created_at DESC`, [parts[2]]);
     return json({ rates: rows.map((r) => ({
       campaign: r.campaign, client: r.client, cur: r.cur, date: r.date,
-      initial: Number(r.initial) || null, neg: r.neg == null ? null : Number(r.neg),
+      initial: Number(r.initial) || null, neg: r.neg == null ? null : Number(r.neg), scope: r.scope || [],
       outcome: r.archived ? 'Archived' + (r.archived.reason ? ' · ' + r.archived.reason : '') : r.approved === 'Yes' ? 'Selected' : r.approved === 'Declined' ? 'Declined' : 'Proposed',
     })) });
   }
@@ -296,6 +338,10 @@ export async function handleCampaigns(ctx) {
     if ('start' in b) set('start_date', dateOrNull(b.start));
     if ('end' in b) set('end_date', dateOrNull(b.end));
     if ('cSigned' in b) set('c_signed', dateOrNull(b.cSigned));
+    if ('archive' in b) {
+      const a = b.archive;
+      set('arch', a ? JSON.stringify({ reason: text(a.reason, 60) || 'Other', note: text(a.note, 500) || '', group: text(a.group, 100) || 'Archived', date: new Date().toISOString().slice(0, 10) }) : null);
+    }
     if ('stage' in b) { if (!MONDAY_STAGES.includes(b.stage)) return bad('Invalid stage'); set('monday_stage', b.stage); }
     if ('cStatus' in b) { if (!C_STATUS.includes(b.cStatus)) return bad('Invalid contract status'); set('c_status', b.cStatus); }
     if ('cTerms' in b) { if (!TERMS.includes(b.cTerms)) return bad('Invalid payment terms'); set('c_terms', b.cTerms); }
@@ -329,6 +375,40 @@ export async function handleCampaigns(ctx) {
     await query('UPDATE campaigns SET deleted_at = now() WHERE id = $1', [id]);
     await logAct('campaign.delete', id, exists.name);
     return json({ ok: true });
+  }
+
+  // ---- Documents (client deck, proposals): uploaded files or links
+  if (sub === 'docs') {
+    const docId = parts[3];
+    if (method === 'GET' && docId) {
+      const [f] = await query('SELECT name, mime, data FROM campaign_docs WHERE id = $1 AND campaign_id = $2 AND data IS NOT NULL', [docId, id]);
+      if (!f) return json({ error: 'No file' }, 404);
+      return new Response(f.data, { headers: { 'content-type': f.mime || 'application/octet-stream', 'content-disposition': `inline; filename="${String(f.name).replace(/[^\w.\- ]/g, '_')}"`, 'cache-control': 'no-store' } });
+    }
+    if (method === 'POST' && !docId) {
+      const b = await body();
+      const kind = text(b.kind, 40) || 'Client deck';
+      const did = newId('d');
+      if (b.url) {
+        const u = String(b.url).trim();
+        if (!/^https?:\/\//i.test(u)) return bad('The link has to start with https://');
+        await query('INSERT INTO campaign_docs (id, campaign_id, name, kind, url, created_by) VALUES ($1,$2,$3,$4,$5,$6)', [did, id, text(b.name, 200) || u.slice(0, 80), kind, u.slice(0, 1000), actor]);
+      } else {
+        const buf = Buffer.from(String(b.data || '').replace(/^data:[^,]*,/, ''), 'base64');
+        if (!buf.length) return bad('No file received');
+        if (buf.length > MAX_FILE) return bad('That file is over 4MB. Add it as a link instead (Drive, Dropbox, Canva), or compress it.');
+        await query('INSERT INTO campaign_docs (id, campaign_id, name, kind, mime, size, data, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [did, id, text(b.name, 200) || 'document', kind, text(b.type, 100) || 'application/octet-stream', buf.length, buf, actor]);
+      }
+      await touch();
+      await logAct('campaign.doc', id, exists.name, { doc: text(b.name, 200) });
+      return json({ campaign: await loadFull(id) });
+    }
+    if (method === 'DELETE' && docId) {
+      await query('DELETE FROM campaign_docs WHERE id = $1 AND campaign_id = $2', [docId, id]);
+      await touch();
+      return json({ campaign: await loadFull(id) });
+    }
+    return json({ error: 'Not found' }, 404);
   }
 
   // ---- Signed agreement (stored in the database)
@@ -426,6 +506,11 @@ export async function handleCampaigns(ctx) {
       if ('invoice' in b) { if (!INVOICE.includes(b.invoice)) return bad('Invalid invoice status'); upd.invoice = b.invoice; }
       if ('next' in b) upd.next_action = text(b.next, 500);
       if ('feedback' in b) upd.feedback = text(b.feedback, 2000);
+      let scopeChanged = false;
+      if ('scope' in b) {
+        const sc = (Array.isArray(b.scope) ? b.scope : []).slice(0, 20).map((x) => ({ item: text(x && x.item, 60), qty: Math.round(num(x && x.qty)) })).filter((x) => x.item && x.qty >= 1 && x.qty <= 999);
+        upd.scope = JSON.stringify(sc); scopeChanged = true;
+      }
       if ('archived' in b) {
         if (b.archived === null) upd.archived = null;
         else upd.archived = JSON.stringify({ reason: text(b.archived.reason, 60) || 'Other', note: text(b.archived.note, 500) || '', date: new Date().toISOString().slice(0, 10) });
@@ -441,16 +526,17 @@ export async function handleCampaigns(ctx) {
       if (money) { upd.initial = r2(initial); upd.neg = neg == null ? null : r2(neg); upd.margin = Math.round(margin * 100) / 100; upd.client_rate = r2(client); }
       const cols = Object.keys(upd);
       if (cols.length) {
-        await query(`UPDATE campaign_talents SET ${cols.map((c, i) => `${c} = $${i + 3}${c === 'archived' ? '::jsonb' : ''}`).join(', ')} WHERE id = $1 AND campaign_id = $2`, [ctId, id, ...cols.map((c) => upd[c])]);
+        await query(`UPDATE campaign_talents SET ${cols.map((c, i) => `${c} = $${i + 3}${c === 'archived' || c === 'scope' ? '::jsonb' : ''}`).join(', ')} WHERE id = $1 AND campaign_id = $2`, [ctId, id, ...cols.map((c) => upd[c])]);
         await touch();
         if ('archived' in b || 'approved' in b || 'stage' in b) {
           const [t] = await query('SELECT name FROM talents WHERE id = $1', [ct.talent_id]);
           await logAct('campaign.talent.edit', id, exists.name, { talent: t && t.name, fields: cols });
         }
       }
-      if (money && ('initial' in b || 'neg' in b)) {
+      if ((money && ('initial' in b || 'neg' in b)) || scopeChanged) {
         const [cp] = await query('SELECT cur FROM campaigns WHERE id = $1', [id]);
-        await saveRateToIndex(logAct, ct.talent_id, neg || initial, cp.cur, exists.name);
+        const [fresh] = await query('SELECT scope FROM campaign_talents WHERE id = $1', [ctId]);
+        await saveRateToIndex(logAct, ct.talent_id, neg || initial, cp.cur, exists.name, fresh && fresh.scope);
         await bump();
       }
       return json({ campaign: await loadFull(id) });

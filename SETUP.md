@@ -66,3 +66,12 @@ A new Campaign Management section sits in the left-hand menu beside Talent Index
 - Deliverables tab has a Stage column (six-step bar plus stage name); the Influencers tab lists each deliverable's stage under its summary.
 - Talent Index: "Campaign rates (n)" button on a profile lists every rate entered on a campaign (date, campaign, initial, negotiated, outcome).
 - Fix: saving a rate to the Index no longer errors.
+
+## Update 25
+- Migration 14: quote scope on influencers, whole-campaign archive, campaign documents.
+- Quote covers: pick deliverables and quantities on each influencer line (e.g. 2× IG Reel, 5× IG Story). It also shows in the Talent Index typical rate and the Campaign rates list.
+- The Index tag on an influencer opens their profile in the Talent Index.
+- Totals row under the influencers table.
+- Decks and links: Documents (drop files up to 4MB, or add a link for larger decks).
+- Archive campaign (with a group), Active/Archived tabs, filters (client, stage, owner, search) and group by client or stage.
+- monday import now pulls the client (Accounts) and first linked contact (Contacts board). "Refresh client and contact" updates campaigns already imported.
