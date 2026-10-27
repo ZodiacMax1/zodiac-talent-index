@@ -102,7 +102,7 @@ No new migration (still up to 14). Upload the contents as before.
 
 ## Update 31
 No new migration. Layout and clarity pass on Campaign Management:
-- Needs attention now only flags overdue deliverables and margin below target.
+
 - Influencer table fits a laptop screen: amounts show as plain numbers (currency shown above the table), Initial and Client rate are lighter, Remove is a small ✕.
 - Deadline pills moved next to "selected creators" (Influencers tab only).
 - Header: Stage / Currency / Archive in one row; stat band is now Budget, Client price, Creator costs, Margin (amount, % and target together). "left" became "unallocated" or "over by".
@@ -114,3 +114,12 @@ No new migration.
 - Client page: clicking a client name now opens a full page (won, in progress, margin earned, contacts, every campaign at any stage). Opening a campaign from it gives a "← Client" back link.
 - ⌘K / Ctrl+K search from anywhere: campaigns, clients, talent (opens the Talent Index profile) and quick actions. There is also a Search button on the campaign list.
 - The Influencers tab now shows its count, e.g. "Influencers (5)".
+
+## Update 34
+Needs attention now only flags late deliverables (content or posting overdue). Margin below target is no longer flagged.
+
+## Update 35
+Amounts in the influencer table and totals row show currency signs again (£ / $ / AED). Archive is now a small icon button so the table still fits a laptop screen. Quoted deliverables show wider on campaigns not yet won.
+
+## Update 36
+On won campaigns the per-creator Archive button is gone. "Archived" is now the last option in each creator's Stage dropdown (Shortlisted, Outreach, Negotiating, Confirmed, Archived). Choosing it asks for the reason, then moves them to the Archive tab.
