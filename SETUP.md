@@ -126,3 +126,9 @@ On won campaigns the per-creator Archive button is gone. "Archived" is now the l
 
 ## Update 37
 Target margin is no longer shown or flagged anywhere: no "target 30%", no red margin box, chips or "below target" on the list. The target field is still in Brief & setup and is used for the default margin on new creators.
+
+## Update 38
+Budget box now says what margin you would make if the whole budget is used (e.g. "Budget fully used = 65.0% margin") instead of "unallocated". "Apply" sets every selected creator to that margin (with a Yes/No check), so client price matches the budget. Nothing changes unless you press it. Rounds down so the price never goes over budget.
+
+## Update 39
+Margin = budget minus creator costs (everything left over from the client budget), shown in the header box, on the campaign list and with the percentage of budget. The budget box just says "client budget"; the Apply button from update 38 is gone. Only applies once creators are selected. Per-creator rates, margin chips and the table totals still work from each creator's own margin.
