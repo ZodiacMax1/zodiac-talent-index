@@ -123,3 +123,6 @@ Amounts in the influencer table and totals row show currency signs again (£ / $
 
 ## Update 36
 On won campaigns the per-creator Archive button is gone. "Archived" is now the last option in each creator's Stage dropdown (Shortlisted, Outreach, Negotiating, Confirmed, Archived). Choosing it asks for the reason, then moves them to the Archive tab.
+
+## Update 37
+Target margin is no longer shown or flagged anywhere: no "target 30%", no red margin box, chips or "below target" on the list. The target field is still in Brief & setup and is used for the default margin on new creators.
