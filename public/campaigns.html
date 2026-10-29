@@ -555,6 +555,11 @@ function dcell(d,kind){
   if(!dl)return '<span class="small">No date</span>';
   return '<span class="dtx'+(m.k==='bad'?' late':'')+'">'+fd(dl)+'</span> <span class="pill '+m.k+'">'+esc(m.sub)+'</span>';
 }
+function scPlat(x){return /^IG/.test(x)?'Instagram':/TikTok/.test(x)?'TikTok':/YouTube/.test(x)?'YouTube':'';}
+function scPending(c){var a=[];selected(c).forEach(function(i){if(i.deliv.length)return;(i.scope||[]).forEach(function(x){a.push({iid:i.id,name:x.qty+' × '+x.item,plat:scPlat(x.item)});});});return a;}
+function scFill(c,quiet){var a=scPending(c);if(!a.length||S.filling)return;S.filling=true;var n=0,id=c.id;
+  (function nx(){var x=a[n++];if(!x){S.filling=false;toast('Added '+a.length+' deliverable'+(a.length===1?'':'s')+' from the scope');render();return;}
+    post('/campaigns/'+id+'/talents/'+x.iid+'/deliverables','POST',{name:x.name,platform:x.plat},{quiet:true}).then(nx).catch(function(e){S.filling=false;toast(e.message);});})();}
 function tabDeliv(c){
   var rows=[];selected(c).forEach(function(i){i.deliv.forEach(function(d){rows.push([i,d]);});});
   rows.sort(function(a,b){var ka=dinfo(a[1]),kb=dinfo(b[1]);if(ka.done!==kb.done)return ka.done?1:-1;return (ka.key||'9')<(kb.key||'9')?-1:1;});
@@ -563,8 +568,9 @@ function tabDeliv(c){
   var all=rows.length;
   rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg);});
   var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div>';
+  var pend=scPending(c).length;if(pend&&canEdit())bar='<div class="row" style="margin-bottom:12px"><button class="btn sm pri" data-act="scfill">Add '+pend+' deliverable'+(pend===1?'':'s')+' from scope</button></div>'+bar;
   var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="5" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Open an influencer to add them.')+'</td></tr>';
+  if(!rows.length)h+='<tr><td colspan="5" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
   rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td></tr>';});
   return h+'</tbody></table></div>';
 }
@@ -981,6 +987,7 @@ document.addEventListener('change',function(e){var t=e.target;if(t.id==='sd-per'
 function render(){
   CUR=S.view==='campaign'?camp():null;
   var m=document.getElementById('main');
+  if(S.view==='campaign'&&S.tab==='Deliverables'&&FULL&&CUR&&canEdit()){S.af=S.af||{};if(!S.af[FULL.id]){S.af[FULL.id]=1;setTimeout(function(){if(FULL&&S.tab==='Deliverables')scFill(FULL);},0);}}
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
   document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'');
@@ -1189,6 +1196,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='sdall'){S.sd.all=!S.sd.all;render();}
   else if(d.act==='sdcsv'){sdCsv();}
   else if(d.act==='wkdl'){wkDl();}
+  else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='wkopen'){S.view='weekly';render();window.scrollTo(0,0);}
   else if(d.sdcur){S.sd.cur=d.sdcur;render();}
   else if(d.act==='newc'){S.newc=!S.newc;render();}

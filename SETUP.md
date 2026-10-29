@@ -156,3 +156,6 @@ No new migration. New "Sales dashboard" item under Campaign Management in the si
 - Sales dashboard → **Reports**. "Forecast, by deal" follows the Influencer Marketing Forecast layout: closed won and pipeline totals, Key Updates, Active Conversations, and every deal listed with its value and margin. Pick the owner (defaults to Jonny). "Weekly update, by TM" is the earlier team version.
 - Key Updates = won deals still delivering, or won this month. Active Conversations = deals at Discovery / Scoping. Pipeline = Proposal Sent, Negotiation, Verbal Agreement and Contract Sent. Add a note per deal under "Deal notes" and it appears on the report.
 - Pipeline margin uses creator costs where creators are added, otherwise the campaign's target margin (30% by default).
+
+## Update 43c – Deliverables from scope
+- Opening the Deliverables tab now creates a deliverable for each scope line (e.g. "2 × IG Reel") for any selected influencer who has a scope but no deliverables yet. Set the dates afterwards. An "Add from scope" button appears if any are still missing.
