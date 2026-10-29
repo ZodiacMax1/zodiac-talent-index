@@ -464,6 +464,7 @@
   .zside .zbrand img{display:block;width:100%;max-width:170px;}
   .zside .zsec{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;padding:8px 10px 6px;}
   .zside .znav{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:10px;color:inherit;font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 12px;cursor:pointer;opacity:.82;}
+  .zside .znav.sub{padding-left:38px;font-size:14px;margin-top:-6px;opacity:.82;}.zside .znav.sub svg{width:17px;height:17px;}
   .zside .znav:hover{background:rgba(255,255,255,.07);opacity:1;}
   .zside .znav.on{background:#4D0011;opacity:1;font-weight:500;}
   .zside .znav.on::before{content:"";position:absolute;left:-16px;top:10px;bottom:10px;width:3px;background:var(--gold);border-radius:0 3px 3px 0;}
@@ -500,6 +501,7 @@
   <div class="zsec">Workspace</div>
   <button class="znav on" id="nav-talent" data-view="talent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.4c1.8.8 3 2.7 3 5.6"/></svg>Talent Index</button>
   <button class="znav" id="nav-campaigns" data-view="campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M8 13h4M8 16h8"/></svg>Campaign Management</button>
+  <button class="znav sub" id="nav-sales" data-view="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales dashboard</button>
   <div class="zwho"><div class="zav" id="zav">Z</div><div><b id="zname" style="font-weight:500">Zodiac team</b><br><span id="zrole" style="opacity:.7"></span></div></div>
 </aside>
 <div class="cm-view" id="cm-view" hidden><iframe id="cm-frame" title="Campaign Management" src="about:blank"></iframe></div>
@@ -2692,13 +2694,21 @@ renderShortlist();
   document.body.classList.add('zshell');
   const frame = document.getElementById('cm-frame'), box = document.getElementById('cm-view'), wrap = document.querySelector('.wrap');
   function showView(v){
-    const cm = v === 'campaigns';
+    const cm = v === 'campaigns' || v === 'sales';
     box.hidden = !cm; document.getElementById('shortlist-fab').style.visibility = cm ? 'hidden' : ''; wrap.style.display = cm ? 'none' : '';
     document.getElementById('nav-talent').classList.toggle('on', !cm);
-    document.getElementById('nav-campaigns').classList.toggle('on', cm);
-    if(cm && !frame.dataset.loaded){ frame.src = '/campaigns.html'; frame.dataset.loaded = '1'; }
-    try{ history.replaceState(null, '', cm ? '#campaigns' : location.pathname + location.search); }catch(e){}
+    document.getElementById('nav-campaigns').classList.toggle('on', v === 'campaigns');
+    document.getElementById('nav-sales').classList.toggle('on', v === 'sales');
+    if(cm && !frame.dataset.loaded){ frame.src = '/campaigns.html' + (v === 'sales' ? '#sales' : ''); frame.dataset.loaded = '1'; }
+    else if(cm){ try{ frame.contentWindow.postMessage({type:'zodiac-view', view:v}, location.origin); }catch(e){} }
+    try{ history.replaceState(null, '', cm ? '#' + v : location.pathname + location.search); }catch(e){}
   }
+  window.addEventListener('message', e => {
+    const m = e.data;
+    if(e.origin !== location.origin || !m || m.type !== 'zodiac-nav') return;
+    document.getElementById('nav-campaigns').classList.toggle('on', m.view === 'campaigns');
+    document.getElementById('nav-sales').classList.toggle('on', m.view === 'sales');
+  });
   document.querySelectorAll('.znav').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
   window.addEventListener('message', e => { if(e.origin === location.origin && e.data === 'zodiac-locked'){ try{ lockGate(); }catch(x){} } });
   // "Add Talent" form opened from Campaign Management; the new talent is handed back to be added to the campaign
@@ -2743,10 +2753,10 @@ renderShortlist();
     who();
     // if someone signs out and back in, make sure the embedded page picks up the new session
     if(!open){ frame.src = 'about:blank'; delete frame.dataset.loaded; }
-    else if(location.hash === '#campaigns' && !frame.dataset.loaded) showView('campaigns');
+    else if((location.hash === '#campaigns' || location.hash === '#sales') && !frame.dataset.loaded) showView(location.hash.slice(1));
   }).observe(document.getElementById('password-gate'), {attributes:true, attributeFilter:['class']});
   who();
-  if(location.hash === '#campaigns') showView('campaigns');
+  if(location.hash === '#campaigns' || location.hash === '#sales') showView(location.hash.slice(1));
 })();
 </script>
 

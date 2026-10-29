@@ -111,6 +111,8 @@ async function fxFor(cur) {
 function shapeCampaign(c) {
   return {
     id: c.id, name: c.name, client: c.client || '', owner: c.owner || '',
+    created: c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : '',
+    wonAt: c.won_at || '', fnote: c.fnote || '',
     start: c.start_date || '', end: c.end_date || '',
     cur: c.cur, fx: Number(c.fx), budget: Number(c.budget), target: Number(c.target_margin),
     markets: c.markets || '', platforms: c.platforms || '', brief: c.brief || '', deck: c.deck_name || '',
@@ -122,7 +124,8 @@ function shapeCampaign(c) {
   };
 }
 
-const CAMP_SQL = `SELECT *, to_char(start_date,'YYYY-MM-DD') AS start_date, to_char(end_date,'YYYY-MM-DD') AS end_date, to_char(c_signed,'YYYY-MM-DD') AS c_signed FROM campaigns`;
+const CAMP_SQL = `SELECT *, to_char(start_date,'YYYY-MM-DD') AS start_date, to_char(end_date,'YYYY-MM-DD') AS end_date, to_char(c_signed,'YYYY-MM-DD') AS c_signed, to_char(won_at,'YYYY-MM-DD') AS won_at FROM campaigns`;
+const today = () => new Date(Date.now() + 4 * 3600e3).toISOString().slice(0, 10);
 
 async function loadFull(id) {
   const [c] = await query(`${CAMP_SQL} WHERE id = $1 AND deleted_at IS NULL`, [id]);
@@ -180,7 +183,7 @@ export async function handleCampaigns(ctx) {
   // ---- List
   if (!id && method === 'GET') {
     const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL ORDER BY updated_at DESC`);
-    const cts = await query(`SELECT campaign_id, approved, archived, initial, neg, client_rate, id, contract, invoice FROM campaign_talents WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]);
+    const cts = await query(`SELECT campaign_id, approved, archived, initial, neg, client_rate, id, contract, invoice, to_char(invoiced_at,'YYYY-MM-DD') AS invoiced_at FROM campaign_talents WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]);
     const dels = await query(`SELECT ct.campaign_id, d.stage, (NOT d.no_post AND d.stage <> 'Live' AND ((d.recv_by < CURRENT_DATE AND d.recv_at IS NULL) OR d.live_by < CURRENT_DATE)) AS late FROM campaign_deliverables d JOIN campaign_talents ct ON ct.id = d.ct_id WHERE ct.campaign_id = ANY($1::text[]) AND ct.approved = 'Yes' AND ct.archived IS NULL`, [rows.map((r) => r.id)]);
     return json({
       campaigns: rows.map((c) => {
@@ -189,7 +192,8 @@ export async function handleCampaigns(ctx) {
         const cost = sel.reduce((a, x) => a + Number(x.neg ?? x.initial), 0);
         const price = sel.reduce((a, x) => a + Number(x.client_rate), 0);
         const dd = dels.filter((d) => d.campaign_id === c.id);
-        return { ...shapeCampaign(c), total: mine.length, selected: sel.length, cost, price, margin: price - cost, deliverables: dd.length, live: dd.filter((d) => d.stage === 'Live').length,
+        const invs = mine.filter((x) => x.invoice !== 'Not invoiced' && x.approved === 'Yes' && !x.archived).map((x) => ({ d: x.invoiced_at || '', v: Number(x.client_rate), c: Number(x.neg ?? x.initial) }));
+        return { ...shapeCampaign(c), invs, total: mine.length, selected: sel.length, cost, price, margin: price - cost, deliverables: dd.length, live: dd.filter((d) => d.stage === 'Live').length,
           overdue: dd.filter((d) => d.late).length, unsigned: c.monday_stage === '7 - Won' ? sel.filter((x) => x.contract !== 'Signed').length : 0, uninvoiced: c.monday_stage === '7 - Won' ? sel.filter((x) => x.invoice === 'Not invoiced').length : 0 };
       }),
     });
@@ -326,7 +330,7 @@ export async function handleCampaigns(ctx) {
     return c ? json({ campaign: c }) : json({ error: 'Campaign not found' }, 404);
   }
 
-  const [exists] = await query('SELECT id, name, cur, fx FROM campaigns WHERE id = $1 AND deleted_at IS NULL', [id]);
+  const [exists] = await query(`SELECT id, name, cur, fx, to_char(won_at,'YYYY-MM-DD') AS won_at FROM campaigns WHERE id = $1 AND deleted_at IS NULL`, [id]);
   if (!exists) return json({ error: 'Campaign not found' }, 404);
   const touch = () => query('UPDATE campaigns SET updated_at = now() WHERE id = $1', [id]);
 
@@ -334,7 +338,7 @@ export async function handleCampaigns(ctx) {
     const b = await body();
     const sets = []; const vals = [id];
     const set = (col, v) => { vals.push(v); sets.push(`${col} = $${vals.length}`); };
-    const strMap = { name: ['name', 200], client: ['client', 200], owner: ['owner', 100], markets: ['markets', 200], platforms: ['platforms', 200], brief: ['brief', 8000], deck: ['deck_name', 200], mondayItemId: ['monday_item_id', 40],
+    const strMap = { name: ['name', 200], client: ['client', 200], owner: ['owner', 100], markets: ['markets', 200], platforms: ['platforms', 200], brief: ['brief', 8000], fnote: ['fnote', 300], deck: ['deck_name', 200], mondayItemId: ['monday_item_id', 40],
       contactName: ['contact_name', 200], contactRole: ['contact_role', 200], contactEmail: ['contact_email', 200], contactPhone: ['contact_phone', 60], cUsage: ['c_usage', 8000] };
     for (const [k, [col, max]] of Object.entries(strMap)) if (k in b) { if (k === 'name' && !text(b.name)) return bad('Campaign name is required'); set(col, text(b[k], max)); }
     if ('start' in b) set('start_date', dateOrNull(b.start));
@@ -344,7 +348,8 @@ export async function handleCampaigns(ctx) {
       const a = b.archive;
       set('arch', a ? JSON.stringify({ reason: text(a.reason, 60) || 'Other', note: text(a.note, 500) || '', group: text(a.group, 100) || 'Archived', date: new Date().toISOString().slice(0, 10) }) : null);
     }
-    if ('stage' in b) { if (!MONDAY_STAGES.includes(b.stage)) return bad('Invalid stage'); set('monday_stage', b.stage); }
+    if ('stage' in b) { if (!MONDAY_STAGES.includes(b.stage)) return bad('Invalid stage'); set('monday_stage', b.stage); if (!('wonAt' in b)) set('won_at', b.stage === '7 - Won' ? (exists.won_at || today()) : null); }
+    if ('wonAt' in b) set('won_at', dateOrNull(b.wonAt));
     if ('cStatus' in b) { if (!C_STATUS.includes(b.cStatus)) return bad('Invalid contract status'); set('c_status', b.cStatus); }
     if ('cTerms' in b) { if (!TERMS.includes(b.cTerms)) return bad('Invalid payment terms'); set('c_terms', b.cTerms); }
     for (const [k, col] of [['budget', 'budget'], ['cValue', 'c_value'], ['target', 'target_margin'], ['fx', 'fx']]) {
@@ -505,7 +510,8 @@ export async function handleCampaigns(ctx) {
       if ('approved' in b) { if (!APPROVED.includes(b.approved)) return bad('Invalid value'); upd.approved = b.approved; }
       if ('stage' in b) { if (!CT_STAGES.includes(b.stage)) return bad('Invalid stage'); upd.stage = b.stage; }
       if ('contract' in b) { if (!CONTRACT.includes(b.contract)) return bad('Invalid contract status'); upd.contract = b.contract; }
-      if ('invoice' in b) { if (!INVOICE.includes(b.invoice)) return bad('Invalid invoice status'); upd.invoice = b.invoice; }
+      if ('invoice' in b) { if (!INVOICE.includes(b.invoice)) return bad('Invalid invoice status'); upd.invoice = b.invoice; upd.invoiced_at = b.invoice === 'Not invoiced' ? null : (ct.invoiced_at ? new Date(ct.invoiced_at).toISOString().slice(0, 10) : today()); }
+      if ('invoicedAt' in b) upd.invoiced_at = dateOrNull(b.invoicedAt);
       if ('next' in b) upd.next_action = text(b.next, 500);
       if ('feedback' in b) upd.feedback = text(b.feedback, 2000);
       let scopeChanged = false;

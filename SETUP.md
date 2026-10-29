@@ -132,3 +132,27 @@ Budget box now says what margin you would make if the whole budget is used (e.g.
 
 ## Update 39
 Margin = budget minus creator costs (everything left over from the client budget), shown in the header box, on the campaign list and with the percentage of budget. The budget box just says "client budget"; the Apply button from update 38 is gone. Only applies once creators are selected. Per-creator rates, margin chips and the table totals still work from each creator's own margin.
+
+## Update 40
+Header stat band is now Budget, Creator costs, Margin, Margin % (Client price box removed).
+
+## Update 41
+Deliverables tab, deliverable tracking in each creator's panel, and the deadline pills now work at any monday stage, not just 7 - Won. Creators count once their Approved is "Yes".
+
+## Update 42: Sales dashboard
+No new migration. New "Sales dashboard" item under Campaign Management in the sidebar.
+- Filters: period (this year, month, quarter, last 12 months, each year, all time), owner, £ / AED display, CSV download.
+- Headline numbers: won revenue, margin, average deal, win rate, open pipeline.
+- Charts: won revenue by month (margin vs creator costs), won vs lost deals by month, pipeline by stage, closest to signing, by salesperson, top clients, by market, and a deals table. Everything opens through to the campaign, with a "← Sales" link back.
+- Built from the campaigns already in the system (monday imports plus anything added here). Dates use each deal's start or expected close date. Margin only counts won deals that have creators added.
+
+## Update 43 – Weekly sales report
+- New migration `15_won_invoiced_dates.sql` (runs automatically on deploy). It adds a "won on" date to campaigns and an "invoiced on" date to each influencer, and backfills existing ones from the campaign start date (approximate for older deals).
+- Moving a campaign to 7 - Won stamps today's date. Setting an influencer to Invoiced / Part paid / Paid stamps today's date. Moving back to Not invoiced clears it.
+- Sales dashboard → **Weekly report**: pick any of the last 12 weeks, preview it, **Download HTML**. Same layout as the usual weekly update. Built only from campaigns in this app, in £.
+
+## Update 43b – Forecast report by deal
+- New migration `16_forecast_note.sql` (one-line note per deal).
+- Sales dashboard → **Reports**. "Forecast, by deal" follows the Influencer Marketing Forecast layout: closed won and pipeline totals, Key Updates, Active Conversations, and every deal listed with its value and margin. Pick the owner (defaults to Jonny). "Weekly update, by TM" is the earlier team version.
+- Key Updates = won deals still delivering, or won this month. Active Conversations = deals at Discovery / Scoping. Pipeline = Proposal Sent, Negotiation, Verbal Agreement and Contract Sent. Add a note per deal under "Deal notes" and it appears on the report.
+- Pipeline margin uses creator costs where creators are added, otherwise the campaign's target margin (30% by default).
