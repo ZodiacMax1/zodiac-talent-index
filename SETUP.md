@@ -202,3 +202,6 @@ No new migration.
 - Year view: no dragging. Click a deliverable in To schedule, then click the month (any row works; it always goes to that deliverable's creator, whose row is highlighted). It goes live on the last day of the month.
 - Month view: editors' ‹ › now step one month at a time, including empty months, so you can drag or click-place into any month. A clicked deliverable stays selected while you change month.
 - Add to calendar pop-up: creator rate removed (rates are added on Influencers as usual). Deliverables use the same editor as Influencers (+ Add a deliverable…, quantity steppers, Other…). They are saved to the creator's quoted deliverables and created as "2 × IG Reel" etc. with the dates given. Filming day / Event take the date as the filming date; Usage rights is saved to the quote only.
+
+## Update 50 – Social media links on the creator panel
+No new migration. Creator panel in a campaign has a third tab, "Social media links": Instagram, TikTok and YouTube from their Talent Index profile, with handle, follower count, open link, Copy link and Copy all links. Edit them in the Talent Index ("Edit in Talent Index ↗").

@@ -132,7 +132,7 @@ async function loadFull(id) {
   if (!c) return null;
   const cts = await query(
     `SELECT ct.*, t.name, t.region, t.location, t.niche, t.ig_followers, t.tt_followers, t.yt_followers,
-            t.manager_name, t.manager_email, t.manager_phone
+            t.manager_name, t.manager_email, t.manager_phone, t.instagram, t.tiktok, t.youtube
        FROM campaign_talents ct JOIN talents t ON t.id = ct.talent_id
       WHERE ct.campaign_id = $1 ORDER BY ct.created_at, ct.id`, [id]);
   const ids = cts.map((x) => x.id);
@@ -150,6 +150,7 @@ async function loadFull(id) {
   out.infl = cts.map((x) => ({
     id: x.id, tid: x.talent_id, name: x.name, plat: platLine(x), region: x.region || '', location: x.location || '', niche: x.niche || '',
     mgr: x.manager_name || '', email: x.manager_email || '', phone: x.manager_phone || '',
+    social: { instagram: x.instagram || '', tiktok: x.tiktok || '', youtube: x.youtube || '', ig_followers: x.ig_followers == null ? null : Number(x.ig_followers), tt_followers: x.tt_followers == null ? null : Number(x.tt_followers), yt_followers: x.yt_followers == null ? null : Number(x.yt_followers) },
     approved: x.approved, stage: x.stage, initial: Number(x.initial), neg: x.neg == null ? null : Number(x.neg), margin: Number(x.margin), client: Number(x.client_rate),
     scope: x.scope || [], contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
