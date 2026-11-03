@@ -211,3 +211,20 @@ No new migration.
 - Campaign tabs are now Influencers, Campaign Overview, Deliverables, Content Calendar (Financials comes with the payments build). Campaign Overview = Brief & setup with Decks & links underneath. Archived creators sit at the bottom of the Influencers tab (collapsible) instead of their own tab.
 - Every amount shows its currency: £1,000 / $1,000 / AED 1,000 (AED now in front, matching the sales dashboard). Negatives read -£1,000 (was £-1,000). Quote history amounts and the monday import list show the currency too.
 - Fixes: "Open in monday ↗" now opens the deal (it did nothing); Sync only says imported when there is a monday deal; client agreement's first step reads "Drafted" once past it; campaigns spanning two years show both years; empty client-links box no longer duplicated; negative margins on the campaign list in red.
+
+## Update 52 – Rates, payments and Financials
+New migration `18_payments.sql` (runs automatically on deploy).
+
+The rule throughout: a creator is only paid for a deliverable once it's live **and** the client has paid for it.
+
+- **Creator panel → Rates & payments** (panel is wider on this tab)
+  - Rate card: each quoted deliverable with quantity, creator rate and total. Saving rates sets the negotiated rate to the card total. "Split X across the N" fills the rates when only the total is known.
+  - Payments by deliverable: Deliverable (opens it) · Content · Live (green ✓ once posted, red if the date has passed unposted) · Creator rate (from the rate card, or typed per deliverable) · Client payment (from Financials, with the invoice that covers it) · Creator payment (click: Not due → Invoiced → Paid; Paid is refused until posted and client-paid).
+  - Drop a creator invoice on a row (that deliverable) or on the box (pick which deliverables it covers). Checks the amount against the ticked deliverables, warns if the client hasn't paid yet, and shows the PDF and "On hold · waits for client" / "Ready to pay" against each deliverable.
+- **Header on won campaigns**: Client · money in (paid / invoiced unpaid / left to invoice) and Creators · money out (paid out / left to spend / cash position). The per-creator Invoiced/Paid bars are replaced by these.
+- **Financials tab** (won campaigns)
+  - Billing: On completion (one Final invoice for the budget, the default), Quarterly upfront or Monthly upfront (rows generated from the campaign dates, budget split evenly, amounts editable), or Custom (add your own). Can't be switched once an invoice is issued.
+  - Each invoice: amount, Mark invoiced / Mark paid (dates editable), drop the PDF. A paid invoice marks every deliverable going live in its period as client-paid; On completion covers everything.
+  - Creator payments per creator (total, paid, ready to pay, left, invoices) and every creator invoice received, filterable On hold / Ready to pay / Paid, with Mark paid.
+- The influencer Invoicing field is now set from the client invoices (read-only), so the sales dashboard and weekly reports keep working. Older won campaigns keep their hand-set statuses until an invoice is issued here; if every creator was already invoiced or paid, the Final invoice starts that way.
+- Changing the campaign currency converts invoice amounts and rates too.

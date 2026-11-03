@@ -2,6 +2,7 @@
 import { pool, query, bump } from './db.mjs';
 import { normLocation } from './places.mjs';
 import { gql } from './monday.mjs';
+import { loadPayments, ensureBilling, setBilling, syncCtInvoice, payBlock, handleClientInvoices, handleCreatorInvoices, CR_STATUS } from './payments.mjs';
 
 const CURS = ['GBP', 'USD', 'AED'];
 const FX_DEFAULT = { GBP: 1, USD: 0.75, AED: 0.2 };
@@ -112,7 +113,7 @@ function shapeCampaign(c) {
   return {
     id: c.id, name: c.name, client: c.client || '', owner: c.owner || '',
     created: c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : '',
-    wonAt: c.won_at || '', fnote: c.fnote || '', calNote: c.cal_note || '',
+    wonAt: c.won_at || '', fnote: c.fnote || '', billing: c.billing || 'completion', calNote: c.cal_note || '',
     start: c.start_date || '', end: c.end_date || '',
     cur: c.cur, fx: Number(c.fx), budget: Number(c.budget), target: Number(c.target_margin),
     markets: c.markets || '', platforms: c.platforms || '', brief: c.brief || '', deck: c.deck_name || '',
@@ -138,7 +139,8 @@ async function loadFull(id) {
   const ids = cts.map((x) => x.id);
   const dels = ids.length ? await query(
     `SELECT id, ct_id, name, platform, stage, to_char(recv_by,'YYYY-MM-DD') AS recv_by, to_char(recv_at,'YYYY-MM-DD') AS recv_at,
-            to_char(live_by,'YYYY-MM-DD') AS live_by, to_char(live_at,'YYYY-MM-DD') AS live_at, links, insights, no_post
+            to_char(live_by,'YYYY-MM-DD') AS live_by, to_char(live_at,'YYYY-MM-DD') AS live_at, links, insights, no_post,
+            cr_rate, cr_status, cr_invoice, to_char(cr_paid_at,'YYYY-MM-DD') AS cr_paid_at
        FROM campaign_deliverables WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const coms = ids.length ? await query(`SELECT id, ct_id, author, body, link, tag, created_at FROM campaign_comments WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const quotes = ids.length ? await query(`SELECT id, ct_id, amount, note, author, created_at FROM campaign_quotes WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
@@ -155,11 +157,15 @@ async function loadFull(id) {
     scope: x.scope || [], contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
       id: d.id, name: d.name, plat: d.platform || '', stage: d.stage, recv: d.recv_by || '', recvAt: d.recv_at || '', live: d.live_by || '', liveAt: d.live_at || '',
-      noPost: !!d.no_post, links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
+      noPost: !!d.no_post, crRate: d.cr_rate == null ? null : Number(d.cr_rate), crStatus: d.cr_status || 'Not due', crInv: d.cr_invoice || '', crPaidAt: d.cr_paid_at || '', links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
     })),
     comments: coms.filter((m) => m.ct_id === x.id).map((m) => ({ id: Number(m.id), by: m.author, at: m.created_at, t: m.body, link: m.link || '', tag: m.tag || '' })),
     quotes: quotes.filter((q) => q.ct_id === x.id).map((q) => ({ id: Number(q.id), a: q.amount, n: q.note || '', by: q.author || '', d: q.created_at })),
   }));
+  if (c.monday_stage === '7 - Won') await ensureBilling(id);
+  const pay = await loadPayments(id, ids);
+  out.cinv = pay.cinv;
+  out.infl.forEach((x) => { x.crinv = pay.crinv.filter((v) => v.ct === x.id); });
   out.links = links;
   out.docs = (await query(`SELECT id, name, kind, mime, size, url, created_by, created_at FROM campaign_docs WHERE campaign_id = $1 ORDER BY created_at DESC`, [id]))
     .map((d) => ({ id: d.id, name: d.name, kind: d.kind, type: d.mime || '', size: d.size || 0, url: d.url || '', by: d.created_by || '', at: d.created_at }));
@@ -337,6 +343,7 @@ export async function handleCampaigns(ctx) {
 
   if (!sub && method === 'PATCH') {
     const b = await body();
+    if ('billing' in b) { const why = await setBilling(id, b.billing); if (why) return bad(why); await logAct('campaign.billing', id, exists.name, { billing: b.billing }); if (Object.keys(b).length === 1) return json({ campaign: await loadFull(id) }); }
     const sets = []; const vals = [id];
     const set = (col, v) => { vals.push(v); sets.push(`${col} = $${vals.length}`); };
     const strMap = { name: ['name', 200], client: ['client', 200], owner: ['owner', 100], markets: ['markets', 200], platforms: ['platforms', 200], brief: ['brief', 8000], fnote: ['fnote', 300], calNote: ['cal_note', 500], deck: ['deck_name', 200], mondayItemId: ['monday_item_id', 40],
@@ -372,7 +379,16 @@ export async function handleCampaigns(ctx) {
         if (!('cValue' in b)) sets.push(`c_value = round(c_value * ${convert}, 2)`);
         await client.query(`UPDATE campaign_talents SET initial = round(initial * $2, 2), neg = round(neg * $2, 2), client_rate = round(client_rate * $2, 2) WHERE campaign_id = $1`, [id, convert]);
       }
+      if (convert) {
+        await client.query('UPDATE client_invoices SET amount = round(amount * $2, 2) WHERE campaign_id = $1', [id, convert]);
+        await client.query('UPDATE creator_invoices SET amount = round(amount * $2, 2) WHERE ct_id IN (SELECT id FROM campaign_talents WHERE campaign_id = $1)', [id, convert]);
+        await client.query('UPDATE campaign_deliverables SET cr_rate = round(cr_rate * $2, 2) WHERE cr_rate IS NOT NULL AND ct_id IN (SELECT id FROM campaign_talents WHERE campaign_id = $1)', [id, convert]);
+        const scs = (await client.query('SELECT id, scope FROM campaign_talents WHERE campaign_id = $1', [id])).rows;
+        for (const r of scs) { const sc = Array.isArray(r.scope) ? r.scope : []; if (!sc.some((x) => x.rate != null)) continue;
+          await client.query('UPDATE campaign_talents SET scope = $2::jsonb WHERE id = $1', [r.id, JSON.stringify(sc.map((x) => (x.rate != null ? { ...x, rate: r2(x.rate * convert) } : x)))]); }
+      }
       if (sets.length) await client.query(`UPDATE campaigns SET ${sets.join(', ')}, updated_at = now() WHERE id = $1`, vals);
+      if ('budget' in b) await client.query("UPDATE client_invoices SET amount = $2 WHERE campaign_id = $1 AND period_start IS NULL AND invoiced_at IS NULL AND paid_at IS NULL AND (SELECT count(*) FROM client_invoices WHERE campaign_id = $1) = 1", [id, num(b.budget)]);
       await client.query('COMMIT');
     } catch (e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
     await logAct('campaign.edit', id, exists.name, { fields: Object.keys(b) });
@@ -417,6 +433,16 @@ export async function handleCampaigns(ctx) {
       return json({ campaign: await loadFull(id) });
     }
     return json({ error: 'Not found' }, 404);
+  }
+
+  // ---- Client invoices (Financials tab)
+  if (sub === 'cinv') {
+    try {
+      const r = await handleClientInvoices({ id, parts, method, body, json, bad, logAct, campName: exists.name });
+      if (r) return r;
+    } catch (e) { if (e.status) return bad(e.message); throw e; }
+    await touch();
+    return json({ campaign: await loadFull(id) });
   }
 
   // ---- Signed agreement (stored in the database)
@@ -517,7 +543,7 @@ export async function handleCampaigns(ctx) {
       if ('feedback' in b) upd.feedback = text(b.feedback, 2000);
       let scopeChanged = false;
       if ('scope' in b) {
-        const sc = (Array.isArray(b.scope) ? b.scope : []).slice(0, 20).map((x) => ({ item: text(x && x.item, 60), qty: Math.round(num(x && x.qty)) })).filter((x) => x.item && x.qty >= 1 && x.qty <= 999);
+        const sc = (Array.isArray(b.scope) ? b.scope : []).slice(0, 20).map((x) => { const o = { item: text(x && x.item, 60), qty: Math.round(num(x && x.qty)) }; const rt = num(x && x.rate); if (x && x.rate !== '' && x.rate != null && Number.isFinite(rt) && rt >= 0) o.rate = r2(rt); return o; }).filter((x) => x.item && x.qty >= 1 && x.qty <= 999);
         upd.scope = JSON.stringify(sc); scopeChanged = true;
       }
       if ('archived' in b) {
@@ -575,6 +601,15 @@ export async function handleCampaigns(ctx) {
       return json({ campaign: await loadFull(id) });
     }
 
+    if (what === 'crinv') {
+      try {
+        const r = await handleCreatorInvoices({ id, ctId, parts, method, body, json, bad, actor, logAct, campName: exists.name });
+        if (r) return r;
+      } catch (e) { if (e.status) return bad(e.message); throw e; }
+      await touch();
+      return json({ campaign: await loadFull(id) });
+    }
+
     if (what === 'deliverables') {
       const did = parts[5];
       if (!did && method === 'POST') {
@@ -599,6 +634,12 @@ export async function handleCampaigns(ctx) {
         if ('stage' in b) { if (!D_STAGES.includes(b.stage)) return bad('Invalid stage'); upd.stage = b.stage; }
         for (const [k, col] of [['recv', 'recv_by'], ['recvAt', 'recv_at'], ['live', 'live_by'], ['liveAt', 'live_at']]) if (k in b) upd[col] = dateOrNull(b[k]);
         if ('noPost' in b) { upd.no_post = !!b.noPost; if (b.noPost) { upd.live_by = null; upd.live_at = null; } }
+        if ('crRate' in b) { if (b.crRate === null || b.crRate === '') upd.cr_rate = null; else { const n = num(b.crRate); if (!Number.isFinite(n) || n < 0) return bad('Invalid creator rate'); upd.cr_rate = r2(n); } }
+        if ('crStatus' in b) {
+          if (!CR_STATUS.includes(b.crStatus)) return bad('Invalid creator payment status');
+          if (b.crStatus === 'Paid') { const why = await payBlock(id, [did]); if (why) return bad(why); }
+          upd.cr_status = b.crStatus; upd.cr_paid_at = b.crStatus === 'Paid' ? today() : null;
+        }
         if ('links' in b) {
           if (!Array.isArray(b.links)) return bad('Invalid links');
           upd.links = JSON.stringify(b.links.slice(0, 30).map((l) => ({ l: text(l.l, 120) || 'Link', u: text(l.u, 800) || '' })).filter((l) => /^https?:\/\//i.test(l.u)));
@@ -611,6 +652,7 @@ export async function handleCampaigns(ctx) {
         const cols = Object.keys(upd);
         if (cols.length) {
           await query(`UPDATE campaign_deliverables SET ${cols.map((c, i) => `${c} = $${i + 3}${c === 'links' || c === 'insights' ? '::jsonb' : ''}`).join(', ')} WHERE id = $1 AND ct_id = $2`, [did, ctId, ...cols.map((c) => upd[c])]);
+          if ('live_by' in upd || 'recv_by' in upd || 'no_post' in upd) await syncCtInvoice(id);
           await touch();
         }
         return json({ campaign: await loadFull(id) });
