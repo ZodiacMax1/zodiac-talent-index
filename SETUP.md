@@ -284,3 +284,22 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Sidebar: Home, Talent Index, Campaign Management, Sales dashboard. The logo also goes Home.
 - Search on the home page opens the ⌘K search.
 - New files: public/fonts/aileron-*.woff2, public/zodiac-mark.png. No database changes.
+
+## Update 62 · Home clock and sign-in
+- Home has a live clock (ticks every second): Dubai time with date, plus London time.
+- Tagline is larger with a burgundy rule.
+- Signing in (or reopening the site) always lands on Home.
+
+## Update 63 · Home page redesign (ChatGPT concept)
+- Home rebuilt to the new concept: top bar (date · Dubai time ticking · live Dubai weather from Open-Meteo, no key needed), search, notifications bell (red dot when something needs attention; opens a list that jumps to the campaign), settings (opens your account menu).
+- Hero "zodiac os." with the night-time Earth and Z artwork (public/home-earth.jpg, cropped from the concept; swap for a high-res export when available).
+- Cards: Talent Index (total talent, added this month) and Campaign Management (active campaigns, need attention, to invoice).
+- Needs Attention bar: deliverables overdue, deliverables due this week, campaigns ready to invoice; each opens the campaign.
+- Sidebar: count badges on Talent Index and Campaign Management; Home highlighted in burgundy.
+- API: campaign list now returns dueWeek, readyInv and toInvoice; talents return their added date. No database changes.
+
+## Update 64 · Opening screen
+- New opening screen using the Earth + Z artwork (public/zodiac-splash.jpg): "zodiac os." with the tagline and a loading line, then fades into Home.
+- Plays when the site opens with a saved sign-in (no more flash of the sign-in card), straight after signing in, and when you come back to the tab after 30+ minutes away (it then returns you to Home).
+- If the saved sign-in has expired, the sign-in card appears as before.
+- The Home hero now uses the same high-res artwork.

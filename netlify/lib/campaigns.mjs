@@ -191,7 +191,11 @@ export async function handleCampaigns(ctx) {
   if (!id && method === 'GET') {
     const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL ORDER BY updated_at DESC`);
     const cts = await query(`SELECT campaign_id, approved, archived, initial, neg, client_rate, id, contract, invoice, to_char(invoiced_at,'YYYY-MM-DD') AS invoiced_at FROM campaign_talents WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]);
-    const dels = await query(`SELECT ct.campaign_id, d.stage, (NOT d.no_post AND d.stage <> 'Live' AND ((d.recv_by < CURRENT_DATE AND d.recv_at IS NULL) OR d.live_by < CURRENT_DATE)) AS late FROM campaign_deliverables d JOIN campaign_talents ct ON ct.id = d.ct_id WHERE ct.campaign_id = ANY($1::text[]) AND ct.approved = 'Yes' AND ct.archived IS NULL`, [rows.map((r) => r.id)]);
+    const dels = await query(`SELECT ct.campaign_id, d.stage, (NOT d.no_post AND d.stage <> 'Live' AND ((d.recv_by < CURRENT_DATE AND d.recv_at IS NULL) OR d.live_by < CURRENT_DATE)) AS late,
+        (d.stage <> 'Live' AND ((d.recv_at IS NULL AND d.recv_by BETWEEN CURRENT_DATE AND CURRENT_DATE + 7) OR (NOT d.no_post AND d.live_by BETWEEN CURRENT_DATE AND CURRENT_DATE + 7))) AS due_week FROM campaign_deliverables d JOIN campaign_talents ct ON ct.id = d.ct_id WHERE ct.campaign_id = ANY($1::text[]) AND ct.approved = 'Yes' AND ct.archived IS NULL`, [rows.map((r) => r.id)]);
+    // client invoices that are ready to raise: a period that has started (or starts within a week), or the final invoice once every post is live
+    const cinvs = await query(`SELECT campaign_id, amount, to_char(period_start,'YYYY-MM-DD') AS ps, invoiced_at FROM client_invoices WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]).catch(() => []);
+    const soon = new Date(Date.now() + (4 + 24 * 7) * 3600e3).toISOString().slice(0, 10);
     return json({
       campaigns: rows.map((c) => {
         const mine = cts.filter((x) => x.campaign_id === c.id);
@@ -201,6 +205,11 @@ export async function handleCampaigns(ctx) {
         const dd = dels.filter((d) => d.campaign_id === c.id);
         const invs = mine.filter((x) => x.invoice !== 'Not invoiced' && x.approved === 'Yes' && !x.archived).map((x) => ({ d: x.invoiced_at || '', v: Number(x.client_rate), c: Number(x.neg ?? x.initial) }));
         return { ...shapeCampaign(c), invs, total: mine.length, selected: sel.length, cost, price, margin: price - cost, deliverables: dd.length, live: dd.filter((d) => d.stage === 'Live').length,
+          dueWeek: dd.filter((d) => d.due_week).length,
+          ...(() => { if (c.monday_stage !== '7 - Won') return { toInvoice: 0, readyInv: 0 };
+            const allLive = dd.length > 0 && dd.every((d) => d.stage === 'Live');
+            const ready = cinvs.filter((v) => v.campaign_id === c.id && !v.invoiced_at && (v.ps ? v.ps <= soon : allLive));
+            return { toInvoice: ready.reduce((a, v) => a + Number(v.amount || 0), 0), readyInv: ready.length }; })(),
           overdue: dd.filter((d) => d.late).length, unsigned: c.monday_stage === '7 - Won' ? sel.filter((x) => x.contract !== 'Signed').length : 0, uninvoiced: c.monday_stage === '7 - Won' ? sel.filter((x) => x.invoice === 'Not invoiced').length : 0 };
       }),
     });

@@ -61,6 +61,7 @@ function shapeTalent(r) {
     photo: r.photo, public_bio: r.public_bio,
     manager_name: r.manager_name || null, manager_email: r.manager_email || null, manager_phone: r.manager_phone || null,
     deal_count: Number(r.deal_count || 0), rate_count: Number(r.rate_count || 0), monday_linked: !!r.monday_linked, note_count: Number(r.note_count || 0),
+    added: r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : '',
   };
 }
 
