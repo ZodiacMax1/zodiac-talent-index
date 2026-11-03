@@ -197,6 +197,73 @@ form.add{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:14px 16p
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 b,strong{font-weight:400!important}.dtabs button.on,.lkx,.tabs button.on{font-weight:500!important}.side{display:none}.app{display:block}.main{max-width:none}.ro{background:var(--warn-bg);color:var(--warn-fg);border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:14px}.ld{padding:60px 0;text-align:center;color:var(--muted)}
+/* Content calendar */
+:root{--cdue-bg:#F3E6CC;--cdue-fg:#5E410C;--cdue-bd:#B08D57;--clive-bg:#4D0011;--clive-fg:#FFFFFF;--cfilm-bg:#17130F;--cfilm-fg:#E4E2DD}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--cdue-bg:#3F3216;--cdue-fg:#EBD3A0;--cdue-bd:#C9A56E;--clive-bg:#7A2236;--clive-fg:#FFF2F4;--cfilm-bg:#000;--cfilm-fg:#E4E2DD}}
+:root[data-theme="dark"]{--cdue-bg:#3F3216;--cdue-fg:#EBD3A0;--cdue-bd:#C9A56E;--clive-bg:#7A2236;--clive-fg:#FFF2F4;--cfilm-bg:#000;--cfilm-fg:#E4E2DD}
+.calbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.calnav{display:flex;align-items:center;gap:6px}
+.calnav h2{font:500 24px var(--display);letter-spacing:.02em;text-transform:uppercase;margin:0 10px 0 4px;min-width:190px}
+.calarr{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);background:var(--surface);cursor:pointer;display:grid;place-items:center;font-size:16px}
+.calarr:disabled{opacity:.35;cursor:default}.calarr:not(:disabled):hover{border-color:var(--accent)}
+.calms{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.calm{border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.calm b{font-weight:500}.calm span{color:var(--muted);margin-left:6px;font:500 11px var(--mono)}
+.calm.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}.calm.on span{color:inherit;opacity:.75}
+.calm.late{border-color:var(--bad-fg)}
+.callg{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted)}
+.callg button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;cursor:pointer;color:var(--fg);padding:4px 2px}
+.callg button.off{opacity:.38;text-decoration:line-through}
+.callg i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.calh,.calw{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.calh div{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.cday{min-height:118px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 5px 6px;min-width:0;transition:background .12s}
+.calw .cday:nth-child(7){border-right:0}.calw:last-child .cday{border-bottom:0}
+.cday.out{background:var(--soft)}.cday.out .cdn{color:var(--muted);opacity:.7}
+.cday.drop{background:var(--accent-soft);outline:2px dashed var(--accent);outline-offset:-3px}
+.cdn{display:block;margin:0 auto 3px;border:0;background:none;cursor:pointer;font-size:12.5px;font-weight:500;min-width:26px;height:26px;border-radius:999px;padding:0 6px}
+.cdn:hover{background:var(--soft)}
+.cdn.today{background:var(--accent);color:var(--accent-fg)}
+.cev{display:block;width:100%;text-align:left;border:0;border-radius:5px;padding:2px 7px;margin-top:2px;font-size:12px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.cev em{font-style:normal;font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-right:5px;opacity:.8}
+.cev.due{background:var(--cdue-bg);color:var(--cdue-fg);box-shadow:inset 3px 0 0 var(--cdue-bd)}
+.cev.live{background:var(--clive-bg);color:var(--clive-fg)}
+.cev.film{background:var(--cfilm-bg);color:var(--cfilm-fg)}
+.cev.done{opacity:.5}
+.cev.late{box-shadow:inset 0 0 0 2px var(--bad-fg)}
+.cev[draggable="true"]{cursor:grab}
+.cev:hover{filter:brightness(1.06)}
+.cmore{border:0;background:none;padding:2px 7px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer}.cmore:hover{color:var(--accent)}
+.cpop .cev{font-size:13px;padding:6px 10px;margin-top:6px;white-space:normal}
+@media (max-width:760px){.cday{min-height:64px;padding:3px}.cev{font-size:0;height:7px;padding:0;margin-top:3px;border-radius:4px}.cev em{display:none}.cmore{font-size:11px;padding:0}.calnav h2{font-size:19px;min-width:0}.cpop .cev{font-size:13px;height:auto;padding:6px 10px}.cpop .cev em{display:inline}}
+
+.calseg{display:inline-flex;background:var(--soft);border:1px solid var(--line2);border-radius:10px;padding:3px;margin-right:10px}
+.calseg button{border:0;background:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted)}
+.calseg button.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.yv{border-collapse:collapse;width:100%;min-width:max-content}
+.yv th{background:var(--accent);color:var(--accent-fg);font:500 13px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:10px 8px;text-align:center;min-width:92px}
+.yv th span{opacity:.6;margin-left:4px;font-size:11px}
+.yv th.yc,.yv td.yc{text-align:left;position:sticky;left:0;z-index:1;min-width:170px}
+.yv td.yc{background:var(--surface)}.yv th.yc{background:var(--accent)}
+.yv td{border-bottom:1px solid var(--line);border-left:1px solid var(--line);padding:5px;vertical-align:top;text-align:center}
+.yv td.emp{background:var(--soft)}
+.yv td.now{background:color-mix(in srgb,var(--accent-soft) 55%,var(--surface))}.yv tfoot td.now{background:var(--accent-soft)}.yv th.now{box-shadow:inset 0 -3px 0 var(--gold)}
+.yv tfoot td{background:var(--soft);font-weight:500;padding:9px 5px;border-top:2px solid var(--line2)}
+.yv tfoot td.yc{background:var(--soft)}
+.yev{display:block;width:100%;border:0;border-radius:5px;padding:4px 6px;margin:2px 0;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;text-align:left}
+.yev span{float:right;font:500 10.5px var(--mono);opacity:.7;margin-left:6px}
+.yev.live{background:var(--accent-soft);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.yev.due{background:var(--cdue-bg);color:var(--cdue-fg);box-shadow:inset 3px 0 0 var(--cdue-bd)}
+.yev.film{background:var(--cfilm-bg);color:var(--cfilm-fg)}
+.yev.done{opacity:.5}.yev.late{box-shadow:inset 0 0 0 2px var(--bad-fg)}
+.ag{width:100%;border-collapse:collapse}.ag td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.ag .agw td{background:var(--soft);font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 12px}
+.ag .agw.bad td{background:var(--bad-bg);color:var(--bad-fg)}
+.agday{width:64px;white-space:nowrap}.agday b{font:500 22px var(--display);display:block;line-height:1}.agday span{font-size:11.5px;color:var(--muted)}
+.ag tr.agd{opacity:.55}
+@media (max-width:760px){.calseg button{padding:6px 10px}.ag td:nth-child(5){display:none}}
+
 </style>
 </head>
 <body>
@@ -448,11 +515,11 @@ function viewCampaign(){
   var ef=eff(c,s);
   h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),'client budget',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',ef.price?money(ef.m):'–','budget minus creator costs',false,ng&&ef.price?gbpIn(ef.m,c):'')+cellS('Margin %',ef.price?ef.pc.toFixed(1)+'%':'–','of budget',ef.price?'ok':'','')+'</div>';
   if(w){h+=prog(c);}
-  var tabs=['Influencers'].concat(w?['Archive']:[]).concat(['Decks & links','Deliverables','Brief & setup']);
+  var tabs=['Influencers'].concat(w?['Archive']:[]).concat(['Decks & links','Deliverables','Content calendar','Brief & setup']);
   var arc=c.infl.length-s.n;
   h+='<div class="tabrow"><div class="tabs">'+tabs.map(function(t){var lab=t==='Archive'?'Archive ('+arc+')':t==='Influencers'?'Influencers ('+(w?s.n:c.infl.filter(function(i){return i.approved!=='Declined';}).length)+')':t;return '<button class="tab'+(S.tab===t?' on':'')+'" data-tab="'+t+'">'+lab+'</button>';}).join('')+'</div></div>';
   if(tabs.indexOf(S.tab)<0)S.tab='Influencers';
-  if(S.tab==='Influencers')h+=tabInfl(c);else if(S.tab==='Archive')h+=tabArchive(c);else if(S.tab==='Decks & links')h+=tabDecks(c);else if(S.tab==='Deliverables')h+=tabDeliv(c);else h+=tabSetup(c);
+  if(S.tab==='Influencers')h+=tabInfl(c);else if(S.tab==='Archive')h+=tabArchive(c);else if(S.tab==='Decks & links')h+=tabDecks(c);else if(S.tab==='Deliverables')h+=tabDeliv(c);else if(S.tab==='Content calendar')h+=tabCal(c);else h+=tabSetup(c);
   return h;
 }
 var SCOPE_ITEMS=['IG Reel','IG Story','IG Post','IG Carousel','TikTok video','YouTube video','YouTube Short','YouTube integration','Event / attendance','Filming day','Usage rights'];
@@ -574,6 +641,129 @@ function tabDeliv(c){
   rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td></tr>';});
   return h+'</tbody></table></div>';
 }
+
+/* ---------- Content calendar ---------- */
+var CALT={due:'Content due',live:'Goes live',film:'Filming'};
+function calEvents(c){
+  var ev=[];
+  selected(c).forEach(function(i){i.deliv.forEach(function(d){
+    var nm=ix(i.tid).name,base={iid:i.id,did:d.id,who:nm,what:d.name,plat:d.plat,stage:d.stage};
+    function add(type,date,done){if(!date)return;var o={};for(var k in base)o[k]=base[k];o.type=type;o.date=date;o.done=done;o.late=!done&&date<TODAY;ev.push(o);}
+    if(d.noPost)add('film',d.recv,dinfo(d).done);
+    else{add('due',d.recv,DSTAGES.indexOf(d.stage)>=2);add('live',d.live,d.stage==='Live');}
+  });});
+  return ev.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.type==='due'?0:1)-(b.type==='due'?0:1);});
+}
+function calFiltered(c){var t=S.calT||{},w=S.calWho||'All';return calEvents(c).filter(function(e){return !t[e.type]&&(w==='All'||e.iid===w);});}
+function mlabel(ym,short){var d=new Date(ym+'-01T00:00:00');return d.toLocaleDateString('en-GB',short?{month:'short',year:'numeric'}:{month:'long',year:'numeric'});}
+function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function cevBtn(e,full){
+  var drag=canEdit()&&!e.done&&!full;
+  return '<button class="cev '+e.type+(e.done?' done':'')+(e.late?' late':'')+'" data-dd="'+e.iid+'|'+e.did+'"'+(drag?' draggable="true" data-cdrag="'+e.iid+'|'+e.did+'|'+e.type+'"':'')+' title="'+esc(CALT[e.type]+' · '+e.who+' · '+e.what+(e.done?' · done':e.late?' · overdue':''))+'"><em>'+(e.done?'✓ ':e.late?'! ':'')+(e.type==='due'?'Due':e.type==='live'?'Live':'Film')+'</em>'+esc(e.who)+(full?' · '+esc(e.what)+(e.plat?' <span style="opacity:.7">('+esc(e.plat)+')</span>':''):' · '+esc(e.what))+'</button>';
+}
+function tabCal(c){
+  var all=calEvents(c),ev=calFiltered(c);
+  if(!all.length)return '<div class="card" style="padding:26px">No dated content yet. Add content due and go-live dates on the Deliverables tab and they will appear here.</div>';
+  var months=[];ev.forEach(function(e){var m=e.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);});
+  var cm=TODAY.slice(0,7);
+  if(months.indexOf(S.calM)<0){S.calM=months.indexOf(cm)>=0?cm:(months.filter(function(m){return m>cm;})[0]||months[months.length-1]);}
+  var mi=months.indexOf(S.calM),ym=S.calM;
+  var people=selected(c).filter(function(i){return i.deliv.some(function(d){return d.recv||d.live;});});
+  var t=S.calT||{},nd=0,nl=0;ev.forEach(function(e){if(e.type==='live')nl++;else nd++;});
+  var V=S.calV||'Month';
+  var seg='<div class="calseg" role="tablist">'+['Month','Year','Agenda'].map(function(v){return '<button class="'+(V===v?'on':'')+'" data-calv="'+v+'" role="tab" aria-selected="'+(V===v)+'">'+v+'</button>';}).join('')+'</div>';
+  var nav=V==='Month'?'<button class="calarr" data-calm="'+(months[mi-1]||'')+'"'+(mi>0?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(months[mi+1]||'')+'"'+(mi>=0&&mi<months.length-1?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>':'';
+  var h='<div class="calbar"><div class="calnav">'+seg+nav+'</div>'
+    +'<div class="row" style="gap:12px"><div class="callg">'+['due','live','film'].map(function(k){return '<button class="'+(t[k]?'off':'')+'" data-calt="'+k+'"><i style="background:var(--c'+k+'-bg);'+(k==='due'?'box-shadow:inset 3px 0 0 var(--cdue-bd)':'')+'"></i>'+CALT[k]+'</button>';}).join('')+'</div>'
+    +'<select id="calwho" class="sel plain" style="width:auto"><option value="All">All creators</option>'+people.map(function(i){return '<option value="'+esc(i.id)+'"'+(S.calWho===i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</select>'
+    +'<button class="btn sm" data-act="calics" title="Add these dates to Outlook or Google Calendar">Download .ics</button></div></div>';
+  if(V==='Year')return h+calYear(c);
+  if(V==='Agenda')return h+calAgenda(ev);
+  if(months.length>1)h+='<div class="calms">'+months.map(function(m){var me=ev.filter(function(e){return e.date.slice(0,7)===m;}),lt=me.some(function(e){return e.late;});return '<button class="calm'+(m===ym?' on':'')+(lt&&m!==ym?' late':'')+'" data-calm="'+m+'"><b>'+mlabel(m,true)+'</b><span>'+me.length+'</span></button>';}).join('')+'</div>';
+  if(!ym)return h+'<div class="card" style="padding:26px">Nothing matches these filters.</div>';
+  var first=ym+'-01',d0=new Date(first+'T00:00:00'),start=addDays(first,-((d0.getDay()+6)%7));
+  var nextM=addDays(addDays(first,31).slice(0,7)+'-01',0),endD=addDays(nextM,-1),de=new Date(endD+'T00:00:00'),end=addDays(endD,(7-de.getDay())%7);
+  var by={};ev.forEach(function(e){(by[e.date]=by[e.date]||[]).push(e);});
+  h+='<div class="cal"><div class="calh">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return '<div>'+x+'</div>';}).join('')+'</div>';
+  for(var wk=start;wk<=end;wk=addDays(wk,7)){
+    h+='<div class="calw">';
+    for(var k=0;k<7;k++){var day=addDays(wk,k),out=day.slice(0,7)!==ym,list=by[day]||[],dn=Number(day.slice(8));
+      var lab=dn===1?dn+' '+new Date(day+'T00:00:00').toLocaleDateString('en-GB',{month:'short'}):dn;
+      h+='<div class="cday'+(out?' out':'')+'" data-cday="'+day+'"><button class="cdn'+(day===TODAY?' today':'')+'" data-calmore="'+day+'" aria-label="'+esc(fd(day))+'">'+lab+'</button>';
+      list.slice(0,list.length>3?2:3).forEach(function(e){h+=cevBtn(e);});
+      if(list.length>3)h+='<button class="cmore" data-calmore="'+day+'">'+(list.length-2)+' more</button>';
+      h+='</div>';}
+    h+='</div>';
+  }
+  h+='</div><div class="small" style="margin-top:10px">'+nd+' content deadline'+(nd===1?'':'s')+' · '+nl+' go-live date'+(nl===1?'':'s')+' across '+months.length+' month'+(months.length===1?'':'s')+(canEdit()?' · Drag an item to another day to move its date':'')+'</div>';
+  return h;
+}
+
+function calYear(c){
+  var w=S.calWho||'All',t=S.calT||{};
+  var rows=selected(c).filter(function(i){return (w==='All'||i.id===w)&&i.deliv.some(function(d){return d.recv||d.live;});});
+  var items=[];
+  rows.forEach(function(i){i.deliv.forEach(function(d){
+    var type=d.noPost?'film':d.live?'live':'due',date=d.noPost?d.recv:(d.live||d.recv);if(!date||t[type])return;
+    var done=d.noPost?dinfo(d).done:d.live?d.stage==='Live':DSTAGES.indexOf(d.stage)>=2;
+    items.push({iid:i.id,did:d.id,type:type,date:date,m:date.slice(0,7),what:d.name,due:d.noPost?'':d.recv,done:done,late:!done&&date<TODAY});});});
+  if(!items.length)return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
+  items.sort(function(a,b){return a.date<b.date?-1:1;});
+  var m0=items[0].m,m1=items[items.length-1].m,ms=[];
+  for(var m=m0;m<=m1;m=addDays(addDays(m+'-01',31).slice(0,7)+'-01',0).slice(0,7))ms.push(m);
+  var yrs={};ms.forEach(function(x){yrs[x.slice(0,4)]=1;});var multi=Object.keys(yrs).length>1,cm=TODAY.slice(0,7);
+  var h='<div class="card sc"><table class="yv"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x){return '<th class="'+(x===cm?'now':'')+'">'+new Date(x+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short'})+(multi?'<span>'+x.slice(2,4)+'</span>':'')+'</th>';}).join('')+'<th class="r">Total</th></tr></thead><tbody>';
+  var colN={},has={};items.forEach(function(e){has[e.m]=1;});
+  rows.forEach(function(i){var mine=items.filter(function(x){return x.iid===i.id;});if(!mine.length)return;
+    h+='<tr><td class="yc"><b>'+esc(ix(i.tid).name)+'</b>'+(i.region?'<div class="small">'+esc(i.region)+'</div>':'')+'</td>';
+    ms.forEach(function(x){var cell=mine.filter(function(e){return e.m===x;});colN[x]=(colN[x]||0)+cell.length;
+      h+='<td class="'+(has[x]?'':'emp')+(x===cm?' now':'')+'">'+cell.map(function(e){return '<button class="yev '+e.type+(e.done?' done':'')+(e.late?' late':'')+'" data-dd="'+e.iid+'|'+e.did+'" title="'+esc(e.what+' · '+CALT[e.type]+' '+fd(e.date)+(e.due?' · content due '+fd(e.due):''))+'">'+(e.done?'✓ ':e.late?'! ':'')+esc(e.what)+'<span>'+Number(e.date.slice(8))+'</span></button>';}).join('')+'</td>';});
+    h+='<td class="r"><b>'+mine.length+'</b></td></tr>';});
+  h+='</tbody><tfoot><tr><td class="yc">Posts this month</td>'+ms.map(function(x){return '<td class="'+(colN[x]?'':'emp')+(x===cm?' now':'')+'">'+(colN[x]||0)+'</td>';}).join('')+'<td class="r">'+items.length+'</td></tr></tfoot></table></div>';
+  return h+'<div class="small" style="margin-top:10px">One item per deliverable, in the month it goes live (filming days on the filming date). The number is the day. Hover for the content due date.</div>';
+}
+function calAgenda(ev){
+  if(!ev.length)return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
+  var wk0=addDays(TODAY,-((new Date(TODAY+'T00:00:00').getDay()+6)%7));
+  var late=ev.filter(function(e){return e.late;}),past=ev.filter(function(e){return e.date<wk0&&!e.late;}),up=ev.filter(function(e){return e.date>=wk0&&!e.late;});
+  function row(e){var d=new Date(e.date+'T00:00:00'),diff=Math.round((d-new Date(TODAY+'T00:00:00'))/864e5);
+    var st=e.done?'<span class="pill ok">Done</span>':e.late?'<span class="pill bad">'+(-diff)+(diff===-1?' day':' days')+' overdue</span>':diff===0?'<span class="pill warn">Today</span>':diff<=3?'<span class="pill warn">In '+diff+(diff===1?' day':' days')+'</span>':'<span class="pill neu">In '+diff+' days</span>';
+    return '<tr class="clk'+(e.done?' agd':'')+'" data-dd="'+e.iid+'|'+e.did+'"><td class="agday"><b>'+d.toLocaleDateString('en-GB',{day:'numeric'})+'</b><span>'+d.toLocaleDateString('en-GB',{weekday:'short'})+' · '+d.toLocaleDateString('en-GB',{month:'short'})+'</span></td><td><span class="cev '+e.type+'" style="display:inline-block;width:auto;padding:3px 10px">'+CALT[e.type]+'</span></td><td><b>'+esc(e.who)+'</b></td><td>'+esc(e.what)+(e.plat?'<div class="small">'+esc(e.plat)+'</div>':'')+'</td><td class="small">'+esc(e.stage)+'</td><td class="r">'+st+'</td></tr>';}
+  function group(list,title){var h='',cur='';list.forEach(function(e){var w=addDays(e.date,-((new Date(e.date+'T00:00:00').getDay()+6)%7));
+      if(w!==cur){cur=w;var lab=w===wk0?'This week':w===addDays(wk0,7)?'Next week':'Week of '+fd(w);h+='<tr class="agw"><td colspan="6">'+lab+'</td></tr>';}h+=row(e);});
+    return h;}
+  var h='<div class="card sc"><table class="ag"><tbody>';
+  if(late.length)h+='<tr class="agw bad"><td colspan="6">Overdue ('+late.length+')</td></tr>'+late.map(row).join('');
+  h+=up.length?group(up):'<tr><td colspan="6" class="small" style="padding:20px">Nothing else coming up.</td></tr>';
+  if(past.length)h+='<tr class="agw"><td colspan="6"><button class="cmore" data-calpast="1" style="padding:0">'+(S.calPast?'Hide':'Show')+' earlier ('+past.length+')</button></td></tr>'+(S.calPast?group(past):'');
+  return h+'</tbody></table></div>';
+}
+function calDayModal(){
+  if(!FULL)return '';var day=S.calDay,list=calFiltered(FULL).filter(function(e){return e.date===day;});
+  var dt=new Date(day+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  return '<div class="ov" data-calx="1"></div><div class="smod cpop" role="dialog" aria-label="'+esc(dt)+'"><div class="row" style="justify-content:space-between"><div style="font:500 18px var(--display);text-transform:uppercase;letter-spacing:.02em">'+esc(dt)+'</div><button class="btn sm" data-calx="1">Close</button></div>'+(list.length?list.map(function(e){return cevBtn(e,true);}).join(''):'<div class="small" style="margin-top:10px">Nothing due this day.</div>')+'</div>';
+}
+function calIcs(c){
+  var ev=calFiltered(c),L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Zodiac Global//Campaign Management//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:'+icsEsc(c.name)];
+  var stamp=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  ev.forEach(function(e){L.push('BEGIN:VEVENT','UID:'+e.did+'-'+e.type+'@zodiacglobal.com','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+e.date.replace(/-/g,''),'DTEND;VALUE=DATE:'+addDays(e.date,1).replace(/-/g,''),'SUMMARY:'+icsEsc(CALT[e.type]+': '+e.who+' – '+e.what),'DESCRIPTION:'+icsEsc(c.name+(c.client?' ('+c.client+')':'')+(e.plat?' · '+e.plat:'')),'END:VEVENT');});
+  L.push('END:VCALENDAR');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([L.join('\r\n')],{type:'text/calendar'}));a.download=(c.name||'campaign').replace(/[^\w\- ]+/g,'').trim()+' – content calendar.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);
+}
+function icsEsc(x){return String(x||'').replace(/\\/g,'\\\\').replace(/;/g,'\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+document.addEventListener('dragstart',function(e){var t=e.target.closest&&e.target.closest('[data-cdrag]');if(!t)return;S.calDrag=t.getAttribute('data-cdrag');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',S.calDrag);}catch(er){}});
+document.addEventListener('dragend',function(){S.calDrag=null;document.querySelectorAll('.cday.drop').forEach(function(x){x.classList.remove('drop');});});
+document.addEventListener('dragover',function(e){if(!S.calDrag)return;var c=e.target.closest&&e.target.closest('[data-cday]');if(!c)return;e.preventDefault();document.querySelectorAll('.cday.drop').forEach(function(x){if(x!==c)x.classList.remove('drop');});c.classList.add('drop');});
+document.addEventListener('drop',function(e){
+  if(!S.calDrag)return;var c=e.target.closest&&e.target.closest('[data-cday]');if(!c)return;e.preventDefault();
+  var pr=S.calDrag.split('|'),day=c.getAttribute('data-cday');S.calDrag=null;c.classList.remove('drop');
+  var i=find(pr[0]),d=i&&i.deliv.filter(function(z){return z.id===pr[1];})[0];if(!d)return;
+  var key=pr[2]==='live'?'live':'recv';if(d[key]===day)return;
+  if(key==='recv'&&!d.noPost&&d.live&&day>d.live){toast('Content due can’t be after the go-live date ('+fd(d.live)+')');return;}
+  if(key==='live'&&d.recv&&day<d.recv){toast('Go-live can’t be before content is due ('+fd(d.recv)+')');return;}
+  var b={};b[key]=day;
+  post(P('/talents/'+pr[0]+'/deliverables/'+pr[1]),'PATCH',b,{msg:ix(i.tid).name+': '+(d.noPost?'filming':key==='live'?'go-live':'content due')+' moved to '+fd(day)});
+});
 function fcf(label,key,c,type,ph){return '<label><span class="lbl">'+label+'</span><input class="fld" data-cf="'+key+'" type="'+(type||'text')+'" value="'+esc(c[key])+'" placeholder="'+(ph||'')+'"></label>';}
 function kvr(pairs){return '<div class="kv" style="grid-template-columns:150px 1fr">'+pairs.map(function(p){return '<span class="k">'+p[0]+'</span><span>'+(p[1]===''||p[1]==null?'<span class="small">Not set</span>':p[1])+'</span>';}).join('')+'</div>';}
 function sec(key,title,read,edit){
@@ -990,7 +1180,7 @@ function render(){
   if(S.view==='campaign'&&S.tab==='Deliverables'&&FULL&&CUR&&canEdit()){S.af=S.af||{};if(!S.af[FULL.id]){S.af[FULL.id]=1;setTimeout(function(){if(FULL&&S.tab==='Deliverables')scFill(FULL);},0);}}
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
-  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'');
+  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'');
   var so=document.querySelector('[data-sother]');if(so)so.focus();
   var lq=document.getElementById('lq');if(lq&&S.lqFocus){lq.focus();lq.setSelectionRange(lq.value.length,lq.value.length);}
   var pq=document.getElementById('pq');if(pq&&S.pqFocus){pq.focus();pq.setSelectionRange(pq.value.length,pq.value.length);}
@@ -1077,6 +1267,7 @@ document.addEventListener('change',function(e){
   if(t.id==='lgroup'){S.lf.group=t.value;render();return;}
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
+  if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
   if(t.id==='lshare'){if(t.value)post(P('/links'),'POST',{code:t.value},{msg:'Link added to this campaign'});return;}
   if(t.id==='mstage'){post(P(''),'PATCH',{stage:t.value});return;}
   if(t.id==='shotfile'){var fl=t.files&&t.files[0];if(fl){
@@ -1124,13 +1315,19 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Decks & links')loadShares();}
+  else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;render();}}
+  else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
+  else if(d.calmore){S.calDay=d.calmore;render();}
+  else if(d.calx){S.calDay=null;render();}
+  else if(d.calv){S.calV=d.calv;render();}
+  else if(d.calpast){S.calPast=!S.calPast;render();}
   else if(d.rmrow){S.rmrow=d.rmrow;render();}
   else if(d.rmrowno){S.rmrow=null;render();}
   else if(d.rmrowgo){var rg=d.rmrowgo;S.rmrow=null;S.sel=null;post(P('/talents/'+rg),'DELETE',undefined,{msg:'Removed from the campaign'});}
@@ -1163,7 +1360,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='cview'){openFile();}
   else if(d.act==='adddel'){S.addDel=!S.addDel;render();}
   else if(d.cur){post(P(''),'PATCH',{cur:d.cur},{msg:'Converted to '+d.cur+' at the saved rate'});}
-  else if(d.dd){var pr=d.dd.split('|');S.dtab='Overview';S.sel=pr[0];S.dd={iid:pr[0],did:pr[1]};S.editD=false;S.editI=false;S.rmd=null;render();}
+  else if(d.dd){S.calDay=null;var pr=d.dd.split('|');S.dtab='Overview';S.sel=pr[0];S.dd={iid:pr[0],did:pr[1]};S.editD=false;S.editI=false;S.rmd=null;render();}
   else if(d.rml){var q=d.rml.split('|'),dd3=cdel();dd3.links=dd3.links.filter(function(l,ix2){return ix2!==Number(q[1]);});render();patchDel(dd3,{links:dd3.links});}
   else if(d.act==='ddback'){S.dd=null;render();}
   else if(d.act==='ddedit'){S.editD=!S.editD;render();}
@@ -1197,6 +1394,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='sdcsv'){sdCsv();}
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
+  else if(d.act==='calics'){if(FULL)calIcs(FULL);}
   else if(d.act==='wkopen'){S.view='weekly';render();window.scrollTo(0,0);}
   else if(d.sdcur){S.sd.cur=d.sdcur;render();}
   else if(d.act==='newc'){S.newc=!S.newc;render();}
