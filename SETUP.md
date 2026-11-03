@@ -252,3 +252,9 @@ No new migration.
 - **Undo**: client invoice Invoiced / Paid dates have × to undo; creator invoices can be deleted; Deliverables tab has Delete for ticked deliverables.
 - Deleting a deliverable takes it off the creator's quote too, and the Deliverables tab no longer re-creates deliverables from the quote by itself (use "Add N from scope"). This was why a deleted dummy came back.
 - Influencers table only shows "x of y posted" for selected creators, matching the Deliverables tab and calendar.
+
+## Update 56 – Cleaner headers
+No new migration. Campaign header shows client and dates only (no contact or owner). Money cards drop the "of …" captions. Rates on file shows 5, then "Show all". Every box and section heading uses one style: bold, black, small caps.
+
+## Update 57 – Next up
+No new migration. A slim "Next up" line under the campaign title lists what needs doing, worked out from what's already entered (hidden when there's nothing): overdue content, due in the next 2 days, client invoices to raise (final invoice once all content is live; quarterly/monthly a week before the period starts) or chase (invoiced 30+ days, unpaid), creators ready to pay, unsigned creator contracts, deliverables with no dates, and posts going live this week. Show ▾ opens the full list with one-click actions (Open, Mark invoiced, Mark paid, Schedule, Calendar).

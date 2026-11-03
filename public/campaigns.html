@@ -401,6 +401,25 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 @media (max-width:760px){.rg4{grid-template-columns:1fr 1fr}.rg4>div:nth-child(2){border-right:0}.pg2,.pfoot{grid-template-columns:1fr}}
 
 .drawer h2.sh,.card.fin h2.sh{font:700 12.5px var(--body);letter-spacing:.14em;color:var(--fg)}
+/* Box and section headings: one style everywhere */
+.top .lbl,.card.fin .lbl,.sel-bar .lbl,.band .lbl,.prog .lbl,.mh,h2.sh,.drawer h2.sh,.card.fin h2.sh,.k2,.pbox .lbl,.terms .l{font:700 11.5px var(--body)!important;letter-spacing:.08em!important;text-transform:uppercase;color:var(--fg)!important}
+.m3 .small{color:var(--fg);font-weight:500}
+
+/* Next up */
+.nu{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.nuhead{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;padding:8px 10px 8px 14px;cursor:pointer;text-align:left;font:inherit;color:inherit;min-height:46px}
+.nulead{display:inline-flex;align-items:center;gap:8px;font:700 11.5px var(--body);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.nucnt{background:var(--accent);color:var(--accent-fg);border-radius:999px;padding:0 8px;font-size:12px;letter-spacing:0}
+.nusep{width:1px;height:18px;background:var(--line2);flex:none}
+.nuit{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nuit i,.nuli i{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+.nuright{margin-left:auto;display:inline-flex;align-items:center;gap:10px;flex:none}
+.nulist{border-top:1px solid var(--line)}
+.nuli{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);font-size:13.5px}
+.nuli:first-child{border-top:0}.nuli b{font-weight:600!important}
+.nuact{display:inline-flex;gap:6px}
+@media (max-width:760px){.nuhead .nuit,.nuhead .nusep{display:none}}
+
 </style>
 </head>
 <body>
@@ -643,7 +662,7 @@ function deadlines(c){
 function viewCampaign(){
   if(!camp())return '<div class="ld">Loading campaign…</div>';
   var c=camp(),s=stats(c),w=won(c),h='',ng=c.cur!=='GBP';
-  h+='<div class="top"><div>'+(S.backv?'<button class="crumb" data-go="sales">← Sales</button>':S.backc?'<button class="crumb" data-client="'+esc(S.backc)+'">← '+esc(S.backc)+'</button>':'<button class="crumb" data-go="campaigns">← All campaigns</button>')+'<h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+(c.contactName?' · '+esc(c.contactName)+(c.contactRole?' ('+esc(c.contactRole)+')':''):'')+' · Owner '+esc(c.owner)+' · '+esc(c.dates)+'</div></div>'
+  h+='<div class="top"><div>'+(S.backv?'<button class="crumb" data-go="sales">← Sales</button>':S.backc?'<button class="crumb" data-client="'+esc(S.backc)+'">← '+esc(S.backc)+'</button>':'<button class="crumb" data-go="campaigns">← All campaigns</button>')+'<h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+' · '+esc(c.dates)+'</div></div>'
    +'<div class="row" style="gap:10px 18px"><label class="row" style="gap:8px;flex-wrap:nowrap" for="mstage"><span class="lbl">Stage</span><select id="mstage" class="sel '+stcls(c.stage)+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div></span>'+(canEdit()&&!c.archived?'<button class="btn sm" data-act="carch">Archive</button>':'')+'</div></div>';
   if(c.archived)h+='<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span><b>Archived</b> in “'+esc(c.archived.group)+'” · '+esc(c.archived.reason)+' · '+fd(c.archived.date)+(c.archived.note?' · '+esc(c.archived.note):'')+'</span>'+(canEdit()?'<button class="btn sm" data-act="crestore">Restore</button>':'')+'</div>';
   if(S.carch&&canEdit()){var gs={};CAMPS.forEach(function(x){if(x.archived&&x.archived.group)gs[x.archived.group]=1;});
@@ -651,6 +670,7 @@ function viewCampaign(){
   var below=s.price&&s.pc<c.target;
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
   var ef=eff(c,s);
+  h+=nextUpBar(c);
   h+='<div class="band">'+cellS('Budget',(canEdit()?'<input class="in bud" inputmode="numeric" data-cf="budget" value="'+money(c.budget)+'" aria-label="Client budget" title="Click to change the budget">':money(c.budget)),'client budget',false,ng?gbpIn(c.budget,c):'')+cellS('Creator costs',money(s.cost),s.n+' selected',false,ng?gbpIn(s.cost,c):'')+cellS('Margin',ef.price?money(ef.m):'–','budget minus creator costs',false,ng&&ef.price?gbpIn(ef.m,c):'')+cellS('Margin %',ef.price?ef.pc.toFixed(1)+'%':'–','of budget',ef.price?'ok':'','')+'</div>';
   if(w){h+=moneyCards(c)+prog(c);}
   var tabs=['Influencers','Campaign Overview','Deliverables','Content Calendar'].concat(w?['Financials']:[]);
@@ -925,6 +945,47 @@ function splitModal(){
   return h;
 }
 
+
+/* ---------- Next up: what needs doing on this campaign, worked out from what's already here ---------- */
+function daysBetween(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/864e5);}
+function nextUp(c){
+  var w=won(c),sel=selected(c),out=[],ed=canEdit();
+  var nm=function(i){return ix(i.tid).name;};
+  var od=[],soon=[],live=[],nodate=[];
+  sel.forEach(function(i){i.deliv.forEach(function(d){var n=dinfo(d);
+    if(n.k==='bad')od.push([i,d,n]);
+    else if(!n.done&&n.date&&n.diff!=null&&n.diff>=0&&n.diff<=2)soon.push([i,d,n]);
+    if(!d.noPost&&d.live&&d.stage!=='Live'&&d.live>=TODAY&&daysBetween(TODAY,d.live)<=7)live.push([i,d]);
+    if(!(d.noPost?d.recv:(d.recv||d.live)))nodate.push([i,d]);});});
+  var one=function(x){return '<button class="btn sm" data-dd="'+x[0].id+'|'+x[1].id+'">Open</button>';};
+  var list=function(a,f){return a.slice(0,3).map(f).join(' · ')+(a.length>3?' and '+(a.length-3)+' more':'');};
+  if(od.length)out.push({k:'bad',t:od.length+' overdue',d:list(od,function(x){return nm(x[0])+' ('+x[1].name+', '+x[2].t.replace(/ overdue| late to post/,'')+(/post/.test(x[2].t)?' late to post':' late')+')';}),a:od.length===1?one(od[0]):'<button class="btn sm" data-nutab="Deliverables" data-nudfs="Overdue">Open</button>'});
+  if(soon.length)out.push({k:'warn',t:soon.length+' due in the next 2 days',d:list(soon,function(x){return nm(x[0])+' ('+x[1].name+', '+x[2].t.toLowerCase()+')';}),a:soon.length===1?one(soon[0]):'<button class="btn sm" data-nutab="Deliverables" data-nudfs="Due soon">Open</button>'});
+  if(w){
+    (c.cinv||[]).forEach(function(v){
+      if(!v.invAt){var due=v.start?v.start:null,all=sel.length&&sel.every(function(i){return i.deliv.length&&i.deliv.every(function(d){return isPosted(d);});});
+        if(due?daysBetween(TODAY,due)<=7:all)out.push({k:'money',t:'Raise the '+(v.label==='Final invoice'?'final invoice':v.label+' invoice'),d:money(v.amount)+(due?(daysBetween(TODAY,due)>0?' · starts in '+daysBetween(TODAY,due)+' day'+(daysBetween(TODAY,due)===1?'':'s'):' · period has started'):' · all content is live'),a:ed?'<button class="btn sm pri" data-cimk="'+v.id+'|invAt">Mark invoiced</button>':''});}
+      else if(!v.paidAt&&daysBetween(v.invAt,TODAY)>30)out.push({k:'money',t:'Chase payment: '+v.label,d:money(v.amount)+' · invoiced '+daysBetween(v.invAt,TODAY)+' days ago',a:ed?'<button class="btn sm" data-cimk="'+v.id+'|paidAt">Mark paid</button>':''});
+    });
+    sel.forEach(function(i){var amt=0,ids={};i.deliv.forEach(function(d){if(d.crStatus==='Invoiced'&&isPosted(d)&&cliSt(cinvFor(c,d))==='Paid'){amt+=crRateOf(i,d)||0;if(d.crInv)ids[d.crInv]=1;}});
+      if(amt>0){var inv=Object.keys(ids);out.push({k:'ok',t:'Pay '+nm(i),d:money(amt)+' · client paid, content live',a:ed&&inv.length===1?'<button class="btn sm" data-crpay="'+i.id+'|'+inv[0]+'">Mark paid</button>':'<button class="btn sm" data-tab="Financials">Financials</button>'});}});
+    var uns=sel.filter(function(i){return i.contract!=='Signed';});
+    if(uns.length)out.push({k:'neu',t:uns.length+' creator contract'+(uns.length===1?'':'s')+' not signed',d:list(uns,function(i){return nm(i)+(i.contract==='Sent'?' (sent)':'');}),a:uns.length===1?'<button class="btn sm" data-pick="'+uns[0].id+'" data-nudtab="Details">Open</button>':'<button class="btn sm" data-tab="Influencers">Open</button>'});
+  }
+  if(nodate.length)out.push({k:'neu',t:nodate.length+' deliverable'+(nodate.length===1?' has':'s have')+' no dates',d:list(nodate,function(x){return nm(x[0])+' ('+x[1].name+')';}),a:'<button class="btn sm" data-tab="Content Calendar">Schedule</button>'});
+  if(live.length)out.push({k:'blue',t:live.length+' post'+(live.length===1?'':'s')+' go live this week',d:list(live.sort(function(a,b){return a[1].live<b[1].live?-1:1;}),function(x){return new Date(x[1].live+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short'})+' '+x[1].name+' ('+nm(x[0])+')';}),a:'<button class="btn sm" data-tab="Content Calendar">Calendar</button>'});
+  return out;
+}
+var NUC={bad:'var(--bad-fg)',warn:'#D9A93F',money:'#D9A93F',ok:'var(--ok-fg)',neu:'var(--neu-fg)',blue:'#1F4C7A'};
+function nextUpBar(c){
+  var it=nextUp(c);if(!it.length)return '';
+  var open=!!S.nuOpen;
+  var h='<div class="nu"><button class="nuhead" data-act="nutog" aria-expanded="'+open+'"><span class="nulead">Next up <span class="nucnt">'+it.length+'</span></span>';
+  if(!open){h+=it.slice(0,3).map(function(x){return '<span class="nusep"></span><span class="nuit"><i style="background:'+NUC[x.k]+'"></i>'+esc(x.t)+'</span>';}).join('');}
+  h+='<span class="nuright">'+(!open&&it.length>3?'<span class="small">+'+(it.length-3)+' more</span>':'')+'<span class="btn sm">'+(open?'Hide ▴':'Show ▾')+'</span></span></button>';
+  if(open)h+='<div class="nulist">'+it.map(function(x){return '<div class="nuli"><i style="background:'+NUC[x.k]+'"></i><span><b>'+esc(x.t)+'</b> <span class="small">· '+esc(x.d)+'</span></span><span class="nuact">'+x.a+'</span></div>';}).join('')+'</div>';
+  return h+'</div>';
+}
 /* ---------- Content calendar ---------- */
 var CALT={due:'Content due',live:'Goes live',film:'Filming'};
 function calEvents(c){
@@ -1326,9 +1387,12 @@ function ratesOnFile(i,c){
   rows.sort(function(a,b){return (b.d||'')<(a.d||'')?-1:1;});
   if(!rows.length)return h+'<div class="pempty">No other rates on file for this creator yet. Rates from future campaigns and managed deals will show here automatically.</div></div>';
   h+='<table class="pt"><colgroup><col style="width:14%"><col style="width:36%"><col style="width:22%"><col style="width:14%"><col style="width:14%"></colgroup><thead><tr><th>Date</th><th>Campaign</th><th>Covered</th><th class="r">Rate</th><th>Outcome</th></tr></thead><tbody>';
-  rows.slice(0,12).forEach(function(x){var od=/complet|selected|agreed|won/i.test(x.out)?'ok':/declin|archiv|lost/i.test(x.out)?'bad':'neu';
+  var all=S.rofAll&&S.rofAll[i.tid],more=rows.length-5;
+  (all?rows:rows.slice(0,5)).forEach(function(x){var od=/complet|selected|agreed|won/i.test(x.out)?'ok':/declin|archiv|lost/i.test(x.out)?'bad':'neu';
     h+='<tr><td class="small">'+(x.d?new Date(x.d+'T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'–')+'</td><td><b style="font-weight:500">'+esc(x.name)+'</b> <span class="srct '+(x.src==='Managed'?'m':'c')+'">'+x.src+'</span>'+(x.sub?'<div class="small">'+esc(x.sub)+'</div>':'')+'</td><td class="small">'+esc(x.cov||'–')+'</td><td class="r"><b class="num">'+x.rate+'</b>'+(x.ask?'<div class="small">'+x.ask+'</div>':'')+'</td><td>'+(x.out?'<span class="pill '+od+'">'+esc(x.out)+'</span>':'')+'</td></tr>';});
-  return h+'</tbody></table></div>';
+  h+='</tbody></table>';
+  if(more>0)h+='<button class="lkb lk2" style="justify-self:start" data-rofall="'+esc(i.tid)+'">'+(all?'Show fewer':'Show all '+rows.length+' rates')+'</button>';
+  return h+'</div>';
 }
 function scopeText(sc){return (sc||[]).map(function(x){return x.qty+' × '+x.item;}).join(', ');}
 /* ---- campaign money (header cards and Financials) ---- */
@@ -1340,8 +1404,8 @@ function moneyState(c){
 }
 function moneyCards(c){
   var m=moneyState(c),b=m.bud||1,sp=m.spend||1,w1=Math.min(100,m.paid/b*100),w2=Math.min(100-w1,m.inv/b*100),w3=Math.min(100,m.out/sp*100);
-  return '<div class="mcards"><div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Client · money in</span><span class="small">of '+money(m.bud)+'</span></div><div class="mbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--ok-fg)"></i>Paid</span><b>'+money(m.paid)+'</b></div><div><span class="small"><i class="dot" style="background:#D9A93F"></i>Invoiced, unpaid</span><b>'+money(m.inv)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to invoice</span><b>'+money(m.left)+'</b></div></div></div>'
-   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span><span class="small">of '+money(m.spend)+' creator spend</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to spend</span><b>'+money(m.spendLeft)+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
+  return '<div class="mcards"><div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Client · money in</span></div><div class="mbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--ok-fg)"></i>Paid</span><b>'+money(m.paid)+'</b></div><div><span class="small"><i class="dot" style="background:#D9A93F"></i>Invoiced, unpaid</span><b>'+money(m.inv)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to invoice</span><b>'+money(m.left)+'</b></div></div></div>'
+   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to spend</span><b>'+money(m.spendLeft)+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
 }
 function covers(c,v){var n=0;selected(c).forEach(function(i){i.deliv.forEach(function(d){if(cinvFor(c,d)===v)n++;});});
   var per=v.start&&v.end?(v.start.slice(0,7)===v.end.slice(0,7)?MON[+v.start.slice(5,7)-1]:MON[+v.start.slice(5,7)-1]+'–'+MON[+v.end.slice(5,7)-1]):'All deliverables';
@@ -1991,7 +2055,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -2020,6 +2084,8 @@ document.addEventListener('click',function(e){
   else if(d.bkdec!==undefined||d.bkinc!==undefined){bulkSnap();var bl=S.bulk.lines[Number(d.bkdec!==undefined?d.bkdec:d.bkinc)];if(bl){bl.qty=Math.max(1,Math.min(999,bl.qty+(d.bkinc!==undefined?1:-1)));if(bl.set)bl.set=Math.min(bl.set,bl.qty);render();}}
   else if(d.bkrm!==undefined){bulkSnap();S.bulk.lines.splice(Number(d.bkrm),1);render();}
   else if(d.ciclr){var cl=d.ciclr.split('|'),cb={};cb[cl[1]]='';if(cl[1]==='invAt')cb.paidAt='';post(P('/cinv/'+cl[0]),'PATCH',cb,{msg:cl[1]==='invAt'?'Back to not invoiced':'Back to not paid'});}
+  else if(d.nutab){S.tab=d.nutab;S.dfs=d.nudfs||'All';S.dfg='All';S.sel=null;render();}
+  else if(d.rofall){S.rofAll=S.rofAll||{};S.rofAll[d.rofall]=!S.rofAll[d.rofall];render();}
   else if(d.dsel){S.dsel=S.dsel||{};if(S.dsel[d.dsel])delete S.dsel[d.dsel];else S.dsel[d.dsel]=1;render();}
   else if(d.dsplit){var sp=d.dsplit.split('|'),si2=find(sp[0]),sd=si2&&si2.deliv.filter(function(z){return z.id===sp[1];})[0];S.splitD={key:d.dsplit,size:sd&&GROUPED.test(dItem(sd).item)?3:1};render();}
   else if(d.spx){S.splitD=null;render();}
@@ -2059,7 +2125,7 @@ document.addEventListener('click',function(e){
   else if(d.mark){var zz=cdel();var kk=d.mark==='recv'?'recvAt':'liveAt';zz[kk]=TODAY;syncStage(zz,kk);render();patchDel(zz).then(function(){render();});}
   else if(d.dfs){S.dfs=d.dfs;render();}
   else if(d.filter){S.filter=d.filter;render();}
-  else if(d.pick){S.sel=d.pick;S.dd=null;S.dtab='Overview';S.addDel=false;S.editC=false;S.archiving=false;render();}
+  else if(d.pick){S.sel=d.pick;S.dd=null;S.dtab=d.nudtab||'Overview';S.addDel=false;S.editC=false;S.archiving=false;render();}
   else if(d.book){find(d.book).stage='Confirmed';render();post(P('/talents/'+d.book),'PATCH',{stage:'Confirmed'},{quiet:true});}
   else if(d.restore){var r=find(d.restore);var rb=r.archived?{archived:null}:{approved:'Yes',stage:'Confirmed'};S.sel=null;post(P('/talents/'+d.restore),'PATCH',rb,{msg:'Restored to the selected list'});}
   else if(d.dst){var z=cdel();z.stage=d.s;var k=DSTAGES.indexOf(d.s);if(k>=2){if(!z.recvAt)z.recvAt=TODAY;}else z.recvAt='';if(d.s==='Live'){if(!z.liveAt)z.liveAt=TODAY;}else z.liveAt='';render();patchDel(z).then(function(){render();});}
@@ -2106,6 +2172,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='rcsplit'){var si=find(S.sel);if(si){var pcs=0;(si.scope||[]).forEach(function(x){pcs+=x.qty;});var each=r2(base(si)/pcs);saveRateCard(si,si.scope.map(function(x){return {item:x.item,qty:x.qty,rate:each};}));}}
+  else if(d.act==='nutog'){S.nuOpen=!S.nuOpen;render();}
   else if(d.act==='dgroup'){dGroup();}
   else if(d.act==='ddel'){var bad=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]),z=i&&i.deliv.filter(function(y){return y.id===p[1];})[0];return z&&z.crStatus==='Paid';});if(bad.length){toast('One of these has been paid to the creator. Change that on Financials first.');return;}S.ddelAsk=true;render();}
   else if(d.act==='ddelno'){S.ddelAsk=false;render();}
