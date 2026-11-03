@@ -159,3 +159,11 @@ No new migration. New "Sales dashboard" item under Campaign Management in the si
 
 ## Update 43c – Deliverables from scope
 - Opening the Deliverables tab now creates a deliverable for each scope line (e.g. "2 × IG Reel") for any selected influencer who has a scope but no deliverables yet. Set the dates afterwards. An "Add from scope" button appears if any are still missing.
+
+## Update 44 – Content calendar
+No new migration. New "Content calendar" tab on every campaign, built from the existing deliverable dates.
+- Month view (Mon–Sun), only showing months that have content. Month chips jump between them; ‹ › step through them. Opens on the current month, or the next month with content.
+- Colour coded: Content due (gold), Goes live (burgundy), Filming (black). Done items fade with ✓, overdue items get a red outline and "!". A month chip with anything overdue has a red outline.
+- Filter by creator, or toggle each type on/off in the legend. Click a day number or "n more" for that day's full list. Click any item to open the creator's deliverable.
+- Editors can drag an item to another day to move its date. Content due can't move past go-live, and go-live can't move before content due.
+- Download .ics adds the dates (as filtered) to Outlook or Google Calendar.
