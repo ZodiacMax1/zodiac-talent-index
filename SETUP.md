@@ -273,3 +273,7 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Creators · money out: Paid out · Assigned, not paid · Unassigned (client budget less target margin, minus creator costs; red if over) · Cash position.
 - Campaign list has the black Zodiac banner.
 - Migration 20 (runs on deploy): campaign_talents.contract_signed, campaign_docs.ct_id.
+
+## Update 60 · Overview layout, money out reverted
+- Campaign Overview: Brief (long briefs clamp with "Read the full brief") beside Client contact + monday deal; Client agreement full width (terms left, usage + file right); Creator contracts full width, two columns on wide screens.
+- Creators · money out back to Paid out · Left to spend · Cash position (Unassigned removed).
