@@ -241,22 +241,27 @@ b,strong{font-weight:400!important}.dtabs button.on,.lkx,.tabs button.on{font-we
 .calseg{display:inline-flex;background:var(--soft);border:1px solid var(--line2);border-radius:10px;padding:3px;margin-right:10px}
 .calseg button{border:0;background:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted)}
 .calseg button.on{background:var(--surface);color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.yv{border-collapse:collapse;width:100%;min-width:max-content}
-.yv th{background:var(--accent);color:var(--accent-fg);font:500 13px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:10px 8px;text-align:center;min-width:92px}
-.yv th span{opacity:.6;margin-left:4px;font-size:11px}
-.yv th.yc,.yv td.yc{text-align:left;position:sticky;left:0;z-index:1;min-width:170px}
-.yv td.yc{background:var(--surface)}.yv th.yc{background:var(--accent)}
-.yv td{border-bottom:1px solid var(--line);border-left:1px solid var(--line);padding:5px;vertical-align:top;text-align:center}
-.yv td.emp{background:var(--soft)}
-.yv td.now{background:color-mix(in srgb,var(--accent-soft) 55%,var(--surface))}.yv tfoot td.now{background:var(--accent-soft)}.yv th.now{box-shadow:inset 0 -3px 0 var(--gold)}
-.yv tfoot td{background:var(--soft);font-weight:500;padding:9px 5px;border-top:2px solid var(--line2)}
-.yv tfoot td.yc{background:var(--soft)}
-.yev{display:block;width:100%;border:0;border-radius:5px;padding:4px 6px;margin:2px 0;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;text-align:left}
-.yev span{float:right;font:500 10.5px var(--mono);opacity:.7;margin-left:6px}
-.yev.live{background:var(--accent-soft);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
-.yev.due{background:var(--cdue-bg);color:var(--cdue-fg);box-shadow:inset 3px 0 0 var(--cdue-bd)}
-.yev.film{background:var(--cfilm-bg);color:var(--cfilm-fg)}
-.yev.done{opacity:.5}.yev.late{box-shadow:inset 0 0 0 2px var(--bad-fg)}
+.calseg.sm{margin-right:0}.calseg.sm button{padding:5px 11px;font-size:12px}
+.yvw{border-radius:10px}
+.yv{border-collapse:collapse;width:100%;min-width:max-content;font-family:Arial,Helvetica,sans-serif}
+.yv th{background:#4D1A21;color:#fff;font:700 15px Arial,Helvetica,sans-serif;text-transform:none;letter-spacing:0;padding:10px 6px;text-align:center;min-width:86px;border-left:1px solid rgba(255,255,255,.12)}
+.yv th.yc{text-align:left;padding-left:10px}
+.yv td{border-bottom:1px solid #E3DED8;border-left:1px solid #E3DED8;padding:0;text-align:center;vertical-align:middle;height:34px;background:#fff;color:#17130F}
+.yv .yc{position:sticky;left:0;z-index:1;min-width:170px;text-align:left;font-weight:700;padding:0 10px;border-right:3px solid #D6D1CB;background:#fff}
+.yv th.yc{background:#4D1A21;border-right:3px solid #D6D1CB}
+.yv td.emp{background:#E6E2DE}
+.yv td.on{background:#F3DFDF}.yv td.on.fl{background:#EAE6E0}
+.yv td.tot{font-weight:700}
+.ycl{display:block;width:100%;border:0;background:none;padding:7px 6px;font:700 14.5px Arial,Helvetica,sans-serif;color:#5C1520;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;margin:0 auto}
+.ycl+.ycl{border-top:1px solid rgba(92,21,32,.15)}
+.ycl:hover{text-decoration:underline}
+.ycl.due{color:#7A5414}.ycl.done{opacity:.55}.ycl.late{color:#B4232A}
+td.fl .ycl{color:#17130F}
+.yv tfoot td{background:#EDEBE5;font-weight:700;height:36px;border-top:1px solid #D6D1CB}
+.yv tfoot td.yc{background:#EDEBE5}
+.ynote{display:block;width:100%;margin-top:10px;border:1px solid transparent;background:transparent;font:italic 14px Arial,Helvetica,sans-serif;color:var(--muted);padding:6px 8px;border-radius:6px}
+input.ynote:hover{border-color:var(--line2)}input.ynote:focus{border-color:var(--accent);background:var(--surface);outline:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .yvw{background:#fff}}
 .ag{width:100%;border-collapse:collapse}.ag td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
 .ag .agw td{background:var(--soft);font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 12px}
 .ag .agw.bad td{background:var(--bad-bg);color:var(--bad-fg)}
@@ -699,28 +704,38 @@ function tabCal(c){
   return h;
 }
 
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function calYear(c){
   var w=S.calWho||'All',t=S.calT||{};
   var rows=selected(c).filter(function(i){return (w==='All'||i.id===w)&&i.deliv.some(function(d){return d.recv||d.live;});});
   var items=[];
-  rows.forEach(function(i){i.deliv.forEach(function(d){
-    var type=d.noPost?'film':d.live?'live':'due',date=d.noPost?d.recv:(d.live||d.recv);if(!date||t[type])return;
-    var done=d.noPost?dinfo(d).done:d.live?d.stage==='Live':DSTAGES.indexOf(d.stage)>=2;
-    items.push({iid:i.id,did:d.id,type:type,date:date,m:date.slice(0,7),what:d.name,due:d.noPost?'':d.recv,done:done,late:!done&&date<TODAY});});});
+  rows.forEach(function(i){var n=0,mine=[];
+    i.deliv.forEach(function(d){var type=d.noPost?'film':d.live?'live':'due',date=d.noPost?d.recv:(d.live||d.recv);if(!date)return;
+      var done=d.noPost?dinfo(d).done:d.live?d.stage==='Live':DSTAGES.indexOf(d.stage)>=2;
+      mine.push({iid:i.id,did:d.id,type:type,date:date,m:date.slice(0,7),y:date.slice(0,4),what:d.name,due:d.noPost?'':d.recv,done:done,late:!done&&date<TODAY});});
+    mine.sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:0;});
+    mine.forEach(function(e){if(e.type!=='film')e.n=++n;if(!t[e.type])items.push(e);});});
   if(!items.length)return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
-  items.sort(function(a,b){return a.date<b.date?-1:1;});
-  var m0=items[0].m,m1=items[items.length-1].m,ms=[];
-  for(var m=m0;m<=m1;m=addDays(addDays(m+'-01',31).slice(0,7)+'-01',0).slice(0,7))ms.push(m);
-  var yrs={};ms.forEach(function(x){yrs[x.slice(0,4)]=1;});var multi=Object.keys(yrs).length>1,cm=TODAY.slice(0,7);
-  var h='<div class="card sc"><table class="yv"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x){return '<th class="'+(x===cm?'now':'')+'">'+new Date(x+'-01T00:00:00').toLocaleDateString('en-GB',{month:'short'})+(multi?'<span>'+x.slice(2,4)+'</span>':'')+'</th>';}).join('')+'<th class="r">Total</th></tr></thead><tbody>';
-  var colN={},has={};items.forEach(function(e){has[e.m]=1;});
-  rows.forEach(function(i){var mine=items.filter(function(x){return x.iid===i.id;});if(!mine.length)return;
-    h+='<tr><td class="yc"><b>'+esc(ix(i.tid).name)+'</b>'+(i.region?'<div class="small">'+esc(i.region)+'</div>':'')+'</td>';
-    ms.forEach(function(x){var cell=mine.filter(function(e){return e.m===x;});colN[x]=(colN[x]||0)+cell.length;
-      h+='<td class="'+(has[x]?'':'emp')+(x===cm?' now':'')+'">'+cell.map(function(e){return '<button class="yev '+e.type+(e.done?' done':'')+(e.late?' late':'')+'" data-dd="'+e.iid+'|'+e.did+'" title="'+esc(e.what+' · '+CALT[e.type]+' '+fd(e.date)+(e.due?' · content due '+fd(e.due):''))+'">'+(e.done?'✓ ':e.late?'! ':'')+esc(e.what)+'<span>'+Number(e.date.slice(8))+'</span></button>';}).join('')+'</td>';});
-    h+='<td class="r"><b>'+mine.length+'</b></td></tr>';});
-  h+='</tbody><tfoot><tr><td class="yc">Posts this month</td>'+ms.map(function(x){return '<td class="'+(colN[x]?'':'emp')+(x===cm?' now':'')+'">'+(colN[x]||0)+'</td>';}).join('')+'<td class="r">'+items.length+'</td></tr></tfoot></table></div>';
-  return h+'<div class="small" style="margin-top:10px">One item per deliverable, in the month it goes live (filming days on the filming date). The number is the day. Hover for the content due date.</div>';
+  var years=[];items.forEach(function(e){if(years.indexOf(e.y)<0)years.push(e.y);});years.sort();
+  var ty=TODAY.slice(0,4);if(years.indexOf(S.calY)<0)S.calY=years.indexOf(ty)>=0?ty:(years.filter(function(y){return y>ty;})[0]||years[years.length-1]);
+  var Y=S.calY,yi=years.indexOf(Y),yit=items.filter(function(e){return e.y===Y;}),lab=S.calLab||'Post';
+  var ms=[];for(var k=1;k<=12;k++)ms.push(Y+'-'+p2(k));
+  var colN={};yit.forEach(function(e){colN[e.m]=(colN[e.m]||0)+1;});
+  var h='<div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="calnav"><button class="calarr" data-caly="'+(years[yi-1]||'')+'"'+(yi>0?'':' disabled')+' aria-label="Previous year">‹</button><button class="calarr" data-caly="'+(years[yi+1]||'')+'"'+(yi<years.length-1?'':' disabled')+' aria-label="Next year">›</button><h2>'+Y+'</h2></div>'
+    +'<div class="calseg sm">'+[['Post','Post numbers'],['Name','Deliverable names']].map(function(o){return '<button class="'+(lab===o[0]?'on':'')+'" data-callab="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
+  h+='<div class="card sc yvw"><table class="yv"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x,k){return '<th>'+MON[k]+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
+  rows.forEach(function(i){var mine=yit.filter(function(x){return x.iid===i.id;});if(!mine.length)return;
+    h+='<tr><td class="yc">'+esc(ix(i.tid).name)+'</td>';
+    ms.forEach(function(x){var cell=mine.filter(function(e){return e.m===x;});
+      h+='<td class="'+(!colN[x]?'emp':cell.length?'on'+(cell.some(function(e){return e.type==='film';})&&cell.every(function(e){return e.type==='film';})?' fl':''):'')+(x===TODAY.slice(0,7)?' now':'')+'">'+cell.map(function(e){var tx=e.type==='film'?'Filming':lab==='Name'?e.what:'Post '+e.n;
+        return '<button class="ycl'+(e.done?' done':'')+(e.late?' late':'')+(e.type==='due'?' due':'')+'" data-dd="'+e.iid+'|'+e.did+'" title="'+esc(e.what+' · '+CALT[e.type]+' '+fd(e.date)+(e.due?' · content due '+fd(e.due):'')+(e.done?' · done':e.late?' · overdue':''))+'">'+(e.done?'✓ ':e.late?'! ':'')+esc(tx)+'</button>';}).join('')+'</td>';});
+    h+='<td class="tot">'+mine.length+'</td></tr>';});
+  h+='</tbody><tfoot><tr><td class="yc">Posts this month</td>'+ms.map(function(x){return '<td>'+(colN[x]||0)+'</td>';}).join('')+'<td>'+yit.length+'</td></tr></tfoot></table></div>';
+  var empty=ms.filter(function(x){return !colN[x];}).map(function(x){return MON[Number(x.slice(5))-1];});
+  var note=c.calNote||'';
+  if(canEdit())h+='<input class="ynote" id="calnote" value="'+esc(note)+'" placeholder="'+esc(empty.length?'Add a note, e.g. No posting in '+empty.join(', ')+' (Ramadan / summer pause)':'Add a note for this calendar')+'">';
+  else if(note)h+='<div class="ynote ro">'+esc(note)+'</div>';
+  return h;
 }
 function calAgenda(ev){
   if(!ev.length)return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
@@ -1268,6 +1283,7 @@ document.addEventListener('change',function(e){
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
   if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
+  if(t.id==='calnote'){var cv=t.value.trim();FULL.calNote=cv;post(P(''),'PATCH',{calNote:cv},{quiet:true,msg:'Note saved'});return;}
   if(t.id==='lshare'){if(t.value)post(P('/links'),'POST',{code:t.value},{msg:'Link added to this campaign'});return;}
   if(t.id==='mstage'){post(P(''),'PATCH',{stage:t.value});return;}
   if(t.id==='shotfile'){var fl=t.files&&t.files[0];if(fl){
@@ -1315,12 +1331,12 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Decks & links')loadShares();}
   else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;render();}}
   else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
@@ -1328,6 +1344,8 @@ document.addEventListener('click',function(e){
   else if(d.calx){S.calDay=null;render();}
   else if(d.calv){S.calV=d.calv;render();}
   else if(d.calpast){S.calPast=!S.calPast;render();}
+  else if(d.caly!==undefined){if(d.caly){S.calY=d.caly;render();}}
+  else if(d.callab){S.calLab=d.callab;render();}
   else if(d.rmrow){S.rmrow=d.rmrow;render();}
   else if(d.rmrowno){S.rmrow=null;render();}
   else if(d.rmrowgo){var rg=d.rmrowgo;S.rmrow=null;S.sel=null;post(P('/talents/'+rg),'DELETE',undefined,{msg:'Removed from the campaign'});}

@@ -174,3 +174,9 @@ Month / Year / Agenda switcher at the top of the Content calendar.
 - **Year**: creator per row, month per column (first to last month with content, empty months shaded), one item per deliverable in the month it goes live with the day number, totals per creator and "Posts this month". Hover for the content due date.
 - **Agenda**: chronological list grouped by week – Overdue first, then This week, Next week and on. Earlier items hidden behind "Show earlier".
 - Creator filter, type toggles and Download .ics work in every view. Fix: Download .ics now downloads.
+
+## Update 46 – Year view matches the posting plan sheet
+- New migration `17_calendar_note.sql` (runs automatically on deploy): one note per campaign under the Year view.
+- Year view is now a fixed Jan–Dec grid for one year (‹ › to change year, only years with content). Creator rows, pink "Post 1, Post 2…" cells numbered in go-live order per creator, months with no posting shaded grey, Total column and "Posts this month" row.
+- Toggle "Post numbers / Deliverable names". Click any cell to open the deliverable; hover for dates. ✓ = done, ! = overdue.
+- Note line under the table (editors type straight into it, e.g. "No posting in Feb (Ramadan, c. 8 Feb to 9 Mar, provisional), Jul or Aug (summer pause).").
