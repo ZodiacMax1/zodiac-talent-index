@@ -495,7 +495,7 @@
   .zside .znav .zct{margin-left:auto;font:500 12px 'DM Sans',sans-serif;background:rgba(228,226,221,.1);border:1px solid rgba(228,226,221,.12);border-radius:8px;padding:2px 8px;opacity:.9}
   .zside .znav.on{background:linear-gradient(90deg,#6b0a1f,#4D0011);box-shadow:0 8px 24px -10px rgba(140,16,40,.7)}
   .zside .znav.on::before{display:none}
-  .zh-earth{position:absolute;right:0;top:34px;width:min(62%,1000px);aspect-ratio:1684/600;background:url(/home-earth.jpg) right top/cover no-repeat;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 55%,transparent 98%),linear-gradient(90deg,transparent 0,#000 18%);-webkit-mask-composite:source-in;mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 55%,transparent 98%),linear-gradient(90deg,transparent 0,#000 18%);mask-composite:intersect;animation:zrise 1.4s cubic-bezier(.2,.7,.2,1) both}
+  .zh-earth{position:absolute;right:0;top:0;width:min(64%,1080px);aspect-ratio:1774/887;background:url(/zodiac-splash.jpg) right top/cover no-repeat;pointer-events:none;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 55%,transparent 98%),linear-gradient(90deg,transparent 0,#000 18%);-webkit-mask-composite:source-in;mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 55%,transparent 98%),linear-gradient(90deg,transparent 0,#000 18%);mask-composite:intersect;animation:zrise 1.4s cubic-bezier(.2,.7,.2,1) both}
   @keyframes zrise{from{opacity:0;transform:translateY(24px) scale(1.03)}to{opacity:1;transform:none}}
   .zh-glow{position:absolute;right:8%;top:-10%;width:60%;height:70%;background:radial-gradient(ellipse at 60% 40%,rgba(160,20,50,.28),transparent 65%);pointer-events:none}
   .zh-stars{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.7}
@@ -550,9 +550,36 @@
   .zh-p.n{background:rgba(228,226,221,.05);border:1px solid rgba(228,226,221,.14);cursor:default}
   @media(max-width:1100px){.zh-pills{grid-template-columns:1fr}.zh-att{flex-direction:column;align-items:stretch}.zh-att .lab{border-right:0;padding-right:0}}
   @media(max-width:900px){.home-view{left:0;top:58px}.zh{padding:20px}.zh-cards{grid-template-columns:1fr}.zh-earth{width:100%;opacity:.6}.zside .zbrand b{font-size:20px}.zh-st>div{padding:0 12px}}
+
+  /* ---- opening screen ---- */
+  html.zboot .password-gate{visibility:hidden}
+  .zsplash{position:fixed;inset:0;z-index:100000;background:#000 url(/zodiac-splash.jpg) center/cover no-repeat;display:flex;flex-direction:column;justify-content:flex-end;padding:0 7vw 9vh;color:#F1EEE9;font-family:Aileron,'DM Sans',sans-serif;opacity:0;visibility:hidden;transition:opacity .7s ease,visibility 0s .7s}
+  .zsplash.on{opacity:1;visibility:visible;transition:opacity .35s ease}
+  .zsplash.on.out{opacity:0;transition:opacity .75s ease;pointer-events:none}
+  .zsplash:before{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.25) 40%,transparent 65%),radial-gradient(ellipse at 30% 40%,transparent 40%,rgba(0,0,0,.35));pointer-events:none}
+  .zsplash.on{animation:zzoom 2.6s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes zzoom{from{background-size:auto 118%;background-position:center 40%}to{background-size:cover;background-position:center}}
+  .zsplash>*{position:relative}
+  .zs-h{font:800 clamp(64px,9vw,150px)/.85 Aileron,'DM Sans',sans-serif;letter-spacing:-.07em;text-transform:none!important;opacity:0;transform:translateY(18px)}
+  .zs-h em{font-style:normal;background:linear-gradient(180deg,#c0173a,#7d0b23);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .zs-t{font:500 clamp(12px,1.1vw,15px) Oswald,sans-serif;letter-spacing:.4em;text-transform:uppercase;color:rgba(241,238,233,.75);margin-top:18px;opacity:0;transform:translateY(12px)}
+  .zs-bar{margin-top:28px;width:min(320px,60vw);height:2px;background:rgba(241,238,233,.14);border-radius:2px;overflow:hidden;opacity:0}
+  .zs-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7d0b23,#e0344f);box-shadow:0 0 12px #e0344f}
+  .zsplash.on .zs-h{animation:zin .9s .15s cubic-bezier(.2,.7,.2,1) forwards}
+  .zsplash.on .zs-t{animation:zin .9s .35s cubic-bezier(.2,.7,.2,1) forwards}
+  .zsplash.on .zs-bar{animation:zfade .4s .45s forwards}.zsplash.on .zs-bar i{animation:zload 1.5s .5s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes zin{to{opacity:1;transform:none}}@keyframes zfade{to{opacity:1}}@keyframes zload{to{width:100%}}
+  @media (prefers-reduced-motion:reduce){.zsplash.on,.zsplash.on *{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
 <body>
+<script>try{ if(localStorage.getItem('zodiacTalentToken_v2') && !location.hash.startsWith('#deck')) document.documentElement.classList.add('zboot'); }catch(e){}</script>
+<div class="zsplash" id="zsplash" aria-hidden="true"><div class="zs-h">zodiac <em>os.</em></div><div class="zs-t">Built for creators. Trusted by brands.</div><div class="zs-bar"><i></i></div></div>
+<script>(function(){ var z=document.getElementById('zsplash'); if(document.documentElement.classList.contains('zboot')) z.classList.add('on');
+  var hideAt=0;
+  window.zSplash=function(){ z.classList.remove('on','out'); void z.offsetWidth; z.classList.add('on'); hideAt=Date.now()+2100; };
+  window.zSplashDone=function(){ var w=Math.max(0,(hideAt||(performance.now()<4000?2100-performance.now():0))-(hideAt?Date.now():0)); setTimeout(function(){ z.classList.add('out'); document.documentElement.classList.remove('zboot'); setTimeout(function(){ z.classList.remove('on','out'); }, 800); }, w); };
+})();</script>
 <div class="password-gate" id="password-gate">
   <div class="gate-card">
     <div class="gate-top"><img src="/zodiac-logo.png" alt="Zodiac Global Group"><div class="gate-tag">Built for creators. Trusted by brands.</div></div>
@@ -859,8 +886,10 @@ document.getElementById('gate-form').addEventListener('submit', async function(e
     TOKEN = j.token; ROLE = j.role; ME = j.me || null;
     try{ localStorage.setItem(TOKEN_KEY, TOKEN); }catch(e2){}
     input.value = '';
+    try{ window.zSplash(); }catch(e2){}
     document.getElementById('password-gate').classList.add('unlocked');
     await loadState();
+    try{ window.zSplashDone(); }catch(e2){}
     if(ME && ME.mustChange) openChangePassword(true);
   }catch(ex){
     err.textContent = ex.message || 'Could not sign in';
@@ -2775,7 +2804,9 @@ document.getElementById('brief-btn').addEventListener('click', openBriefMatcher)
     document.getElementById('password-gate').classList.add('unlocked');
     if(sharedDeck){ document.getElementById('deck-overlay').classList.add('open'); renderDeck(sharedDeck); }
   }catch(e){ /* gate stays up */ }
+  try{ window.zSplashDone(); }catch(e){}
 })();
+if(!TOKEN){ try{ window.zSplashDone(); }catch(e){} }
 
 render();
 renderShortlist();
@@ -2916,6 +2947,14 @@ renderShortlist();
   }).observe(document.getElementById('password-gate'), {attributes:true, attributeFilter:['class']});
   who();
   showView('home');
+  let awayAt = 0;
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ awayAt = Date.now(); return; }
+    if(awayAt && Date.now() - awayAt > 30 * 60000 && document.getElementById('password-gate').classList.contains('unlocked')){
+      try{ window.zSplash(); }catch(e){} showView('home'); try{ window.zSplashDone(); }catch(e){}
+    }
+    awayAt = 0;
+  });
 })();
 </script>
 

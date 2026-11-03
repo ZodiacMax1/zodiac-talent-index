@@ -297,3 +297,9 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Needs Attention bar: deliverables overdue, deliverables due this week, campaigns ready to invoice; each opens the campaign.
 - Sidebar: count badges on Talent Index and Campaign Management; Home highlighted in burgundy.
 - API: campaign list now returns dueWeek, readyInv and toInvoice; talents return their added date. No database changes.
+
+## Update 64 · Opening screen
+- New opening screen using the Earth + Z artwork (public/zodiac-splash.jpg): "zodiac os." with the tagline and a loading line, then fades into Home.
+- Plays when the site opens with a saved sign-in (no more flash of the sign-in card), straight after signing in, and when you come back to the tab after 30+ minutes away (it then returns you to Home).
+- If the saved sign-in has expired, the sign-in card appears as before.
+- The Home hero now uses the same high-res artwork.
