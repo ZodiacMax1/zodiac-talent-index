@@ -401,6 +401,10 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 @media (max-width:760px){.rg4{grid-template-columns:1fr 1fr}.rg4>div:nth-child(2){border-right:0}.pg2,.pfoot{grid-template-columns:1fr}}
 
 .drawer h2.sh,.card.fin h2.sh{font:700 12.5px var(--body);letter-spacing:.14em;color:var(--fg)}
+/* Box and section headings: one style everywhere */
+.top .lbl,.card.fin .lbl,.sel-bar .lbl,.band .lbl,.prog .lbl,.mh,h2.sh,.drawer h2.sh,.card.fin h2.sh,.k2,.pbox .lbl,.terms .l{font:700 11.5px var(--body)!important;letter-spacing:.08em!important;text-transform:uppercase;color:var(--fg)!important}
+.m3 .small{color:var(--fg);font-weight:500}
+
 </style>
 </head>
 <body>
@@ -643,7 +647,7 @@ function deadlines(c){
 function viewCampaign(){
   if(!camp())return '<div class="ld">Loading campaign…</div>';
   var c=camp(),s=stats(c),w=won(c),h='',ng=c.cur!=='GBP';
-  h+='<div class="top"><div>'+(S.backv?'<button class="crumb" data-go="sales">← Sales</button>':S.backc?'<button class="crumb" data-client="'+esc(S.backc)+'">← '+esc(S.backc)+'</button>':'<button class="crumb" data-go="campaigns">← All campaigns</button>')+'<h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+(c.contactName?' · '+esc(c.contactName)+(c.contactRole?' ('+esc(c.contactRole)+')':''):'')+' · Owner '+esc(c.owner)+' · '+esc(c.dates)+'</div></div>'
+  h+='<div class="top"><div>'+(S.backv?'<button class="crumb" data-go="sales">← Sales</button>':S.backc?'<button class="crumb" data-client="'+esc(S.backc)+'">← '+esc(S.backc)+'</button>':'<button class="crumb" data-go="campaigns">← All campaigns</button>')+'<h1 style="margin-top:8px">'+esc(c.name)+'</h1><div class="sub"><button class="clientb" style="font-size:inherit" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>'+' · '+esc(c.dates)+'</div></div>'
    +'<div class="row" style="gap:10px 18px"><label class="row" style="gap:8px;flex-wrap:nowrap" for="mstage"><span class="lbl">Stage</span><select id="mstage" class="sel '+stcls(c.stage)+'">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="lbl">Currency</span><div class="seg">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div></span>'+(canEdit()&&!c.archived?'<button class="btn sm" data-act="carch">Archive</button>':'')+'</div></div>';
   if(c.archived)h+='<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:12px"><span><b>Archived</b> in “'+esc(c.archived.group)+'” · '+esc(c.archived.reason)+' · '+fd(c.archived.date)+(c.archived.note?' · '+esc(c.archived.note):'')+'</span>'+(canEdit()?'<button class="btn sm" data-act="crestore">Restore</button>':'')+'</div>';
   if(S.carch&&canEdit()){var gs={};CAMPS.forEach(function(x){if(x.archived&&x.archived.group)gs[x.archived.group]=1;});
@@ -1326,9 +1330,12 @@ function ratesOnFile(i,c){
   rows.sort(function(a,b){return (b.d||'')<(a.d||'')?-1:1;});
   if(!rows.length)return h+'<div class="pempty">No other rates on file for this creator yet. Rates from future campaigns and managed deals will show here automatically.</div></div>';
   h+='<table class="pt"><colgroup><col style="width:14%"><col style="width:36%"><col style="width:22%"><col style="width:14%"><col style="width:14%"></colgroup><thead><tr><th>Date</th><th>Campaign</th><th>Covered</th><th class="r">Rate</th><th>Outcome</th></tr></thead><tbody>';
-  rows.slice(0,12).forEach(function(x){var od=/complet|selected|agreed|won/i.test(x.out)?'ok':/declin|archiv|lost/i.test(x.out)?'bad':'neu';
+  var all=S.rofAll&&S.rofAll[i.tid],more=rows.length-5;
+  (all?rows:rows.slice(0,5)).forEach(function(x){var od=/complet|selected|agreed|won/i.test(x.out)?'ok':/declin|archiv|lost/i.test(x.out)?'bad':'neu';
     h+='<tr><td class="small">'+(x.d?new Date(x.d+'T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'–')+'</td><td><b style="font-weight:500">'+esc(x.name)+'</b> <span class="srct '+(x.src==='Managed'?'m':'c')+'">'+x.src+'</span>'+(x.sub?'<div class="small">'+esc(x.sub)+'</div>':'')+'</td><td class="small">'+esc(x.cov||'–')+'</td><td class="r"><b class="num">'+x.rate+'</b>'+(x.ask?'<div class="small">'+x.ask+'</div>':'')+'</td><td>'+(x.out?'<span class="pill '+od+'">'+esc(x.out)+'</span>':'')+'</td></tr>';});
-  return h+'</tbody></table></div>';
+  h+='</tbody></table>';
+  if(more>0)h+='<button class="lkb lk2" style="justify-self:start" data-rofall="'+esc(i.tid)+'">'+(all?'Show fewer':'Show all '+rows.length+' rates')+'</button>';
+  return h+'</div>';
 }
 function scopeText(sc){return (sc||[]).map(function(x){return x.qty+' × '+x.item;}).join(', ');}
 /* ---- campaign money (header cards and Financials) ---- */
@@ -1340,8 +1347,8 @@ function moneyState(c){
 }
 function moneyCards(c){
   var m=moneyState(c),b=m.bud||1,sp=m.spend||1,w1=Math.min(100,m.paid/b*100),w2=Math.min(100-w1,m.inv/b*100),w3=Math.min(100,m.out/sp*100);
-  return '<div class="mcards"><div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Client · money in</span><span class="small">of '+money(m.bud)+'</span></div><div class="mbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--ok-fg)"></i>Paid</span><b>'+money(m.paid)+'</b></div><div><span class="small"><i class="dot" style="background:#D9A93F"></i>Invoiced, unpaid</span><b>'+money(m.inv)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to invoice</span><b>'+money(m.left)+'</b></div></div></div>'
-   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span><span class="small">of '+money(m.spend)+' creator spend</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to spend</span><b>'+money(m.spendLeft)+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
+  return '<div class="mcards"><div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Client · money in</span></div><div class="mbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--ok-fg)"></i>Paid</span><b>'+money(m.paid)+'</b></div><div><span class="small"><i class="dot" style="background:#D9A93F"></i>Invoiced, unpaid</span><b>'+money(m.inv)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to invoice</span><b>'+money(m.left)+'</b></div></div></div>'
+   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to spend</span><b>'+money(m.spendLeft)+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
 }
 function covers(c,v){var n=0;selected(c).forEach(function(i){i.deliv.forEach(function(d){if(cinvFor(c,d)===v)n++;});});
   var per=v.start&&v.end?(v.start.slice(0,7)===v.end.slice(0,7)?MON[+v.start.slice(5,7)-1]:MON[+v.start.slice(5,7)-1]+'–'+MON[+v.end.slice(5,7)-1]):'All deliverables';
@@ -1991,7 +1998,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -2020,6 +2027,7 @@ document.addEventListener('click',function(e){
   else if(d.bkdec!==undefined||d.bkinc!==undefined){bulkSnap();var bl=S.bulk.lines[Number(d.bkdec!==undefined?d.bkdec:d.bkinc)];if(bl){bl.qty=Math.max(1,Math.min(999,bl.qty+(d.bkinc!==undefined?1:-1)));if(bl.set)bl.set=Math.min(bl.set,bl.qty);render();}}
   else if(d.bkrm!==undefined){bulkSnap();S.bulk.lines.splice(Number(d.bkrm),1);render();}
   else if(d.ciclr){var cl=d.ciclr.split('|'),cb={};cb[cl[1]]='';if(cl[1]==='invAt')cb.paidAt='';post(P('/cinv/'+cl[0]),'PATCH',cb,{msg:cl[1]==='invAt'?'Back to not invoiced':'Back to not paid'});}
+  else if(d.rofall){S.rofAll=S.rofAll||{};S.rofAll[d.rofall]=!S.rofAll[d.rofall];render();}
   else if(d.dsel){S.dsel=S.dsel||{};if(S.dsel[d.dsel])delete S.dsel[d.dsel];else S.dsel[d.dsel]=1;render();}
   else if(d.dsplit){var sp=d.dsplit.split('|'),si2=find(sp[0]),sd=si2&&si2.deliv.filter(function(z){return z.id===sp[1];})[0];S.splitD={key:d.dsplit,size:sd&&GROUPED.test(dItem(sd).item)?3:1};render();}
   else if(d.spx){S.splitD=null;render();}
