@@ -205,3 +205,9 @@ No new migration.
 
 ## Update 50 – Social media links on the creator panel
 No new migration. Creator panel in a campaign has a third tab, "Social media links": Instagram, TikTok and YouTube from their Talent Index profile, with handle, follower count, open link, Copy link and Copy all links. Edit them in the Talent Index ("Edit in Talent Index ↗").
+
+## Update 51 – Tabs, currency, tidy-up
+No new migration.
+- Campaign tabs are now Influencers, Campaign Overview, Deliverables, Content Calendar (Financials comes with the payments build). Campaign Overview = Brief & setup with Decks & links underneath. Archived creators sit at the bottom of the Influencers tab (collapsible) instead of their own tab.
+- Every amount shows its currency: £1,000 / $1,000 / AED 1,000 (AED now in front, matching the sales dashboard). Negatives read -£1,000 (was £-1,000). Quote history amounts and the monday import list show the currency too.
+- Fixes: "Open in monday ↗" now opens the deal (it did nothing); Sync only says imported when there is a monday deal; client agreement's first step reads "Drafted" once past it; campaigns spanning two years show both years; empty client-links box no longer duplicated; negative margins on the campaign list in red.
