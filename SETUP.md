@@ -258,3 +258,9 @@ No new migration. Campaign header shows client and dates only (no contact or own
 
 ## Update 57 – Next up
 No new migration. A slim "Next up" line under the campaign title lists what needs doing, worked out from what's already entered (hidden when there's nothing): overdue content, due in the next 2 days, client invoices to raise (final invoice once all content is live; quarterly/monthly a week before the period starts) or chase (invoiced 30+ days, unpaid), creators ready to pay, unsigned creator contracts, deliverables with no dates, and posts going live this week. Show ▾ opens the full list with one-click actions (Open, Mark invoiced, Mark paid, Schedule, Calendar).
+
+## Update 58 · Content Calendar toolbar, To schedule list and Auto-plan
+- One toolbar: view, ‹ › month, legend, creator filter, "To schedule" toggle, ⋯ (Download .ics, go to any month, months with content), + Add.
+- To schedule now sits beside the calendar (Month and Year), one line per creator with a count; click to open their chips, search box at the top. Drag or pick-and-click to place as before.
+- Auto-plan (button in the To schedule list): pick a go-live date range (defaults to the campaign dates), posting days, posts per creator per week, content-due lead time, max posts per day, spread evenly or as soon as possible, and which creators. Preview shows posts per week/month and anything that won't fit. Schedule writes the dates in one go. Nothing already dated is moved. It is plain arithmetic in the browser, so it uses no AI or console credits.
+- No database changes.
