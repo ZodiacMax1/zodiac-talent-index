@@ -370,6 +370,37 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .sel-bar .bsel{width:auto;min-height:32px;padding:4px 30px 4px 10px;font-size:13px;background-color:var(--bg);color:var(--fg)}
 .qty.setq{width:48px;border:1px solid var(--line2);border-radius:7px;padding:2px 4px;text-align:center}
 
+/* Creator panel → Rates */
+.psec{display:grid;gap:10px}
+.k2{font:700 11px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--fg)}
+.v2{font:600 22px var(--body);font-variant-numeric:tabular-nums}
+.rbox{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rg4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.rg4>div{padding:14px 16px;border-right:1px solid var(--line)}.rg4>div:last-child{border-right:0}
+.rprof{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;background:var(--ok-bg);color:var(--ok-fg);border-top:1px solid var(--line);flex-wrap:wrap}
+.rprof.neg{background:var(--bad-bg);color:var(--bad-fg)}
+.rprof .k2{color:inherit}
+.rbar{flex:1;height:8px;border-radius:999px;background:rgba(29,107,58,.18);overflow:hidden}.rbar i{display:block;height:8px;background:currentColor}
+.psum{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:12px;padding:11px 14px;font-size:13.5px}
+.lkb.lk2{color:var(--accent);font-weight:500;font-size:13px;white-space:nowrap}
+.lk3{color:var(--accent);text-decoration:none;font-size:13.5px}
+.pempty{border:1.5px dashed var(--line2);border-radius:12px;padding:14px;text-align:center;color:var(--muted);font-size:13px}
+.pg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcard{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;align-content:start}
+.pline{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;background:var(--soft);border-radius:10px}
+.pline .sel{width:auto}
+.pfoot{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.pact{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.btn.dango{border-color:#E8C4C4;color:var(--bad-fg)}.btn.dang{background:var(--bad-fg);border-color:var(--bad-fg);color:#fff}
+.srct{display:inline-block;border-radius:6px;padding:0 7px;font-size:11px;font-weight:600;vertical-align:1px}.srct.c{background:var(--accent-soft);color:var(--accent)}.srct.m{background:#E6EEF8;color:#1F4C7A}
+.pill.bad{background:var(--bad-bg);color:var(--bad-fg)}
+/* Financials creator payments */
+.fint tr.grp td{background:var(--soft);border-top:2px solid var(--line2)}
+.fint tbody tr.grp:first-child td{border-top:0}
+.dropc{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--accent);color:var(--accent);background:var(--accent-soft);border-radius:8px;padding:4px 10px;font-size:12.5px;font-weight:500;cursor:pointer}
+.fint tr.grp.fdrop td{background:var(--accent-soft)}
+@media (max-width:760px){.rg4{grid-template-columns:1fr 1fr}.rg4>div:nth-child(2){border-right:0}.pg2,.pfoot{grid-template-columns:1fr}}
+
+.drawer h2.sh,.card.fin h2.sh{font:700 12.5px var(--body);letter-spacing:.14em;color:var(--fg)}
 </style>
 </head>
 <body>
@@ -670,7 +701,7 @@ function tabInfl(c){
   h+='<div class="card sc"><table class="it'+(w?' itw':'')+'"><thead><tr>'+(ed?'<th style="width:34px"><input type="checkbox" data-iselall="1"'+(allOn?' checked':'')+' aria-label="Select all"></th>':'')+'<th>Influencer</th>'+(w?'':'<th>Approved</th>')+'<th>Stage</th><th>Deliverables</th><th class="r">Initial</th><th class="r">Negotiated</th><th class="r">Client rate</th><th class="r">Margin</th>'+(w?'<th>Contract</th><th>Invoicing</th><th></th>':'<th></th>')+'</tr></thead><tbody>';
   if(!list.length)h+='<tr><td colspan="12" class="small" style="padding:26px">Nobody here yet. Use “Add from Talent Index”.</td></tr>';
   list.forEach(function(i){
-    h+='<tr'+(S.isel&&S.isel[i.id]?' class="rsel"':'')+'>'+(canEdit()?'<td><input type="checkbox" data-isel="'+i.id+'"'+(S.isel&&S.isel[i.id]?' checked':'')+' aria-label="Select '+esc(ix(i.tid).name)+'"></td>':'')+'<td>'+nameCell(i)+'</td>'+(w?'':'<td>'+sel('approved',i.approved,APPROVED,i.id)+'</td>')+'<td>'+sel('stage',i.stage,w?STAGES.concat(['Archived']):STAGES,i.id)+'</td><td>'+scopeSum(i)+(w||i.deliv.length?dsum(i):'')+'</td>'
+    h+='<tr'+(S.isel&&S.isel[i.id]?' class="rsel"':'')+'>'+(canEdit()?'<td><input type="checkbox" data-isel="'+i.id+'"'+(S.isel&&S.isel[i.id]?' checked':'')+' aria-label="Select '+esc(ix(i.tid).name)+'"></td>':'')+'<td>'+nameCell(i)+'</td>'+(w?'':'<td>'+sel('approved',i.approved,APPROVED,i.id)+'</td>')+'<td>'+sel('stage',i.stage,w?STAGES.concat(['Archived']):STAGES,i.id)+'</td><td>'+scopeSum(i)+(i.approved==='Yes'&&!i.archived&&i.deliv.length?dsum(i):'')+'</td>'
      +'<td class="r"><input class="in dim" inputmode="numeric" data-f="initial" data-i="'+i.id+'" value="'+money(i.initial)+'" aria-label="Initial rate" title="Click to edit"></td>'
      +'<td class="r"><input class="in strong" inputmode="numeric" data-f="neg" data-i="'+i.id+'" value="'+(i.neg?money(i.neg):'')+'" placeholder="–" aria-label="Negotiated rate" title="Click to edit"></td>'
      +'<td class="r"><input class="in dim" inputmode="numeric" data-f="client" data-i="'+i.id+'" value="'+money(i.client)+'" aria-label="Client rate" title="Click to edit">'+(i.neg?'':'<div class="small" style="font-size:11px;padding-right:9px">from initial</div>')+'</td>'
@@ -768,7 +799,7 @@ function tabDeliv(c){
   var ed=canEdit();S.dsel=S.dsel||{};
   var sk=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]);return i&&i.deliv.some(function(d){return d.id===p[1];});});
   if(ed&&sk.length){var same=sk.every(function(k){return k.split('|')[0]===sk[0].split('|')[0];});
-    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+'<button class="btn ghost" data-act="dselclear">Clear</button></div>';}
+    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+(S.ddelAsk?'<span>Delete '+sk.length+'? They come off the quote too.</span><button class="btn light" style="color:var(--bad-fg)" data-act="ddelgo">Yes, delete</button><button class="btn ghost" data-act="ddelno">Keep</button>':'<button class="btn ghost" data-act="ddel">Delete</button>')+'<button class="btn ghost" data-act="dselclear">Clear</button></div>';}
   else h=bar;
   h+='<div class="card sc"><table><thead><tr>'+(ed?'<th style="width:34px"></th>':'')+'<th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
@@ -778,6 +809,17 @@ function tabDeliv(c){
 }
 
 /* Group several deliverables into one (e.g. 3 stories posted together) or split a group back into pieces */
+
+function delDeliverables(list,msg){ // list: [[iid,did],...]
+  var by={};list.forEach(function(x){(by[x[0]]=by[x[0]]||[]).push(x[1]);});
+  var pr=Promise.resolve();
+  Object.keys(by).forEach(function(iid){var i=find(iid);if(!i)return;var sc=(i.scope||[]).map(function(x){var o={item:x.item,qty:x.qty};if(x.rate!=null)o.rate=x.rate;return o;}),chg=false;
+    by[iid].forEach(function(did){var d=i.deliv.filter(function(z){return z.id===did;})[0];if(!d)return;var di=dItem(d),l=sc.filter(function(x){return x.item===di.item;})[0];if(l){l.qty-=di.qty;chg=true;}
+      pr=pr.then(function(){return api(P('/talents/'+iid+'/deliverables/'+did),{method:'DELETE'});});});
+    sc=sc.filter(function(x){return x.qty>0;});
+    if(chg)pr=pr.then(function(){return api(P('/talents/'+iid),{method:'PATCH',body:{scope:sc}});});});
+  return pr.then(function(){return loadOne();}).then(function(){toast(msg||'Deleted');}).catch(function(e){toast(e.message);loadOne();});
+}
 function dGroup(){
   var ks=Object.keys(S.dsel),iid=ks[0].split('|')[0],i=find(iid);if(!i)return;
   var ds=ks.map(function(k){return i.deliv.filter(function(d){return d.id===k.split('|')[1];})[0];}).filter(Boolean);
@@ -1240,6 +1282,55 @@ function crInvSave(){
     .catch(function(e){m.busy=false;m.err=e.message;render();});
 }
 
+
+/* ---------- Creator panel → Rates: what this creator costs (money is entered on Financials) ---------- */
+function panelRates(i,c,x,w,live,arch,profit){
+  var ed=canEdit(),b=base(i),pc=i.client>0?(i.client-b)/i.client*100:0,sav=i.neg&&i.initial&&i.neg<i.initial?i.initial-i.neg:0;
+  var h='<div class="psec"><div class="row" style="justify-content:space-between"><h2 class="sh" style="margin:0">Rates · '+c.cur+'</h2><span class="small">Edit rates and margin in the Influencers table</span></div>'
+    +'<div class="rbox"><div class="rg4"><div><div class="k2">Initial</div><div class="v2">'+money(i.initial)+'</div><div class="small">First ask</div></div>'
+    +'<div><div class="k2">Agreed</div><div class="v2">'+(i.neg?money(i.neg):money(i.initial))+'</div><div class="small"'+(sav?' style="color:var(--ok-fg)"':'')+'>'+(sav?'Saved '+money(sav)+' ('+Math.round(sav/i.initial*100)+'%)':i.neg?'No change from ask':'Not negotiated yet')+'</div></div>'
+    +'<div><div class="k2">Client rate</div><div class="v2">'+money(i.client)+'</div><div class="small">What the client pays</div></div>'
+    +'<div><div class="k2">Margin</div><div class="v2">'+(Math.round(pc*10)/10)+'%</div><div class="small">On this creator</div></div></div>'
+    +'<div class="rprof'+(profit<0?' neg':'')+'"><div class="row" style="gap:10px"><span class="k2">Profit</span><span class="v2" style="font-size:20px">'+money(profit)+'</span></div><div class="row" style="min-width:260px;flex:0 1 320px"><div class="rbar"><i style="width:'+Math.max(0,Math.min(100,pc))+'%"></i></div><b style="font-weight:600">'+(Math.round(pc*10)/10)+'%</b></div></div></div></div>';
+  h+=rateCard(i,c);
+  if(w&&live&&i.deliv.length){var t=crTotals(i),hold=i.deliv.filter(function(d){return d.crStatus==='Invoiced';}).length,inv=(i.crinv||[])[0];
+    var st=t.t&&t.p>=t.t?['ok','Paid']:t.p>0?['warn','Part paid']:hold?['warn','Invoiced']:['neu','Not paid'];
+    h+='<div class="psum"><span class="pill '+st[0]+'">'+st[1]+'</span><span style="flex:1">Paid <b style="font-weight:600">'+money(t.p)+'</b> of '+money(t.t)+(hold?' · '+hold+' deliverable'+(hold===1?'':'s')+' invoiced'+(inv?' ('+esc(inv.number||'invoice')+')':''):'')+'</span><button class="lkb lk2" data-tab="Financials">Financials →</button></div>';}
+  h+=ratesOnFile(i,c);
+  // contact + contract
+  var ct=ed&&S.editC?'<div class="kv" style="grid-template-columns:80px 1fr">'+cinput('Manager',i.tid,'mgr')+cinput('Email',i.tid,'email','email')+cinput('Phone',i.tid,'phone','tel')+'</div>'
+    :(x.mgr||x.email||x.phone?'<div class="row" style="flex-wrap:nowrap"><div class="cav" style="width:40px;height:40px">'+initials(x.mgr||'?')+'</div><div><div style="font-weight:500">'+esc(x.mgr||'Manager')+'</div><div class="small">Manager</div></div></div><div style="display:grid;gap:3px">'+(x.email?'<a class="lk3" href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'')+(x.phone?'<a class="lk3" href="tel:'+esc(String(x.phone).replace(/\s+/g,''))+'">'+esc(x.phone)+'</a>':'')+'</div>'
+      :'<div class="row" style="flex-wrap:nowrap"><div class="cav" style="width:40px;height:40px">?</div><div><div style="font-weight:500">No manager added</div><div class="small">Add a manager, email and phone</div></div></div>'+(ed?'<button class="btn sm" style="justify-self:start;color:var(--accent)" data-act="editc">+ Add contact</button>':''));
+  h+='<div class="pg2"><div class="pcard"><div class="row" style="justify-content:space-between"><h2 class="sh" style="margin:0">Contact</h2>'+(ed?'<button class="btn sm'+(S.editC?' pri':'')+'" data-act="editc">'+(S.editC?'Done':'Edit')+'</button>':'')+'</div>'+ct+'<div class="small">Saved to their Talent Index profile</div></div>';
+  h+='<div class="pcard"><h2 class="sh" style="margin:0">Contract &amp; invoicing</h2><div class="pline"><div><div class="k2">Creator contract</div><div class="small">'+(i.contract==='Signed'?'Signed':i.contract==='Sent'?'Sent, waiting to sign':'Not sent yet')+'</div></div>'+(ed?sel('contract',i.contract,CONTRACT,i.id):'<span class="pill neu">'+esc(i.contract)+'</span>')+'</div>'
+    +'<div class="pline"><div><div class="k2">Client invoicing</div>'+(w?'<button class="lkb lk2" data-tab="Financials">Set on Financials →</button>':'<span class="small">Once the campaign is won</span>')+'</div><span class="pill '+(i.invoice==='Paid'?'ok':i.invoice==='Not invoiced'?'neu':'warn')+'">'+esc(i.invoice)+'</span></div></div></div>';
+  // archive / remove
+  if(ed){
+    h+='<div class="pfoot">';
+    if(live&&w)h+='<div class="pact">'+(S.archiving?'<form id="arch-form" style="display:grid;gap:8px;width:100%"><b style="font-weight:500">Archive creator</b><select class="sel plain" id="ar-reason">'+REASONS.map(function(r){return '<option>'+r+'</option>';}).join('')+'</select><input class="fld" id="ar-note" placeholder="Note (what happened)" required><div class="row"><button class="btn sm pri" type="submit">Archive creator</button><button class="btn sm" type="button" data-act="archcancel">Cancel</button></div></form>'
+      :'<div><div style="font-weight:500">Archive creator</div><div class="small">Moves them to Archived creators with a reason. Rates and deliverables are kept.</div></div><button class="btn sm" data-act="archstart">Archive…</button>')+'</div>';
+    h+='<div class="pact">'+(S.rmi===i.id?'<div style="width:100%"><div style="font-weight:500;color:var(--bad-fg)">Remove '+esc(x.name)+'?</div><div class="small" style="margin-bottom:8px">Deletes their rates, comments, deliverables and creator invoices on this campaign. This can’t be undone.</div><div class="row"><button class="btn sm dang" data-act="rmigo">Yes, remove</button><button class="btn sm" data-act="rmicancel">Keep them</button></div></div>'
+      :'<div><div style="font-weight:500">Remove from campaign</div><div class="small">Deletes their rates, comments and deliverables here.</div></div><button class="btn sm dango" data-act="rmiask">Remove…</button>')+'</div></div>';
+  }
+  return h;
+}
+function ratesOnFile(i,c){
+  S.rof=S.rof||{};var r=S.rof[i.tid];
+  if(!r){S.rof[i.tid]='loading';Promise.all([api('/campaigns/talent-rates/'+encodeURIComponent(i.tid)).catch(function(){return {rates:[]};}),api('/talents/'+encodeURIComponent(i.tid)+'/deals').catch(function(){return {deals:[]};})])
+    .then(function(a){S.rof[i.tid]={rates:a[0].rates||[],deals:a[1].deals||[]};if(S.sel)render();});r='loading';}
+  var h='<div class="psec"><div class="row" style="justify-content:space-between"><h2 class="sh" style="margin:0">Rates on file</h2><span class="small">Every campaign here and their managed deals on monday</span></div>';
+  if(r==='loading')return h+'<div class="pempty">Loading…</div></div>';
+  var rows=[];
+  r.rates.forEach(function(x){if(x.campaign===c.name)return;var cc={cur:x.cur};rows.push({d:String(x.date||'').slice(0,10),name:x.campaign,sub:x.client||'',src:'Campaign',cov:scopeText(x.scope),rate:x.neg||x.initial?moneyIn(x.neg||x.initial,cc):'–',ask:x.neg&&x.initial&&x.neg!==x.initial?'asked '+moneyIn(x.initial,cc):'',out:x.outcome});});
+  r.deals.forEach(function(x){var cur=/aed/i.test(x.currency||'')?'AED':/usd|\$/i.test(x.currency||'')?'USD':/gbp|£/i.test(x.currency||'')?'GBP':'';rows.push({d:x.date||'',name:x.campaign||'Deal',sub:x.brand||'',src:'Managed',cov:'',rate:x.value!=null?(cur?moneyIn(x.value,{cur:cur}):Number(x.value).toLocaleString('en-GB')+' '+esc(x.currency||'')):'–',ask:'',out:x.status||''});});
+  rows.sort(function(a,b){return (b.d||'')<(a.d||'')?-1:1;});
+  if(!rows.length)return h+'<div class="pempty">No other rates on file for this creator yet. Rates from future campaigns and managed deals will show here automatically.</div></div>';
+  h+='<table class="pt"><colgroup><col style="width:14%"><col style="width:36%"><col style="width:22%"><col style="width:14%"><col style="width:14%"></colgroup><thead><tr><th>Date</th><th>Campaign</th><th>Covered</th><th class="r">Rate</th><th>Outcome</th></tr></thead><tbody>';
+  rows.slice(0,12).forEach(function(x){var od=/complet|selected|agreed|won/i.test(x.out)?'ok':/declin|archiv|lost/i.test(x.out)?'bad':'neu';
+    h+='<tr><td class="small">'+(x.d?new Date(x.d+'T00:00:00').toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'–')+'</td><td><b style="font-weight:500">'+esc(x.name)+'</b> <span class="srct '+(x.src==='Managed'?'m':'c')+'">'+x.src+'</span>'+(x.sub?'<div class="small">'+esc(x.sub)+'</div>':'')+'</td><td class="small">'+esc(x.cov||'–')+'</td><td class="r"><b class="num">'+x.rate+'</b>'+(x.ask?'<div class="small">'+x.ask+'</div>':'')+'</td><td>'+(x.out?'<span class="pill '+od+'">'+esc(x.out)+'</span>':'')+'</td></tr>';});
+  return h+'</tbody></table></div>';
+}
+function scopeText(sc){return (sc||[]).map(function(x){return x.qty+' × '+x.item;}).join(', ');}
 /* ---- campaign money (header cards and Financials) ---- */
 function moneyState(c){
   var v=c.cinv||[],paid=0,inv=0;v.forEach(function(x){if(x.paidAt)paid+=x.amount;else if(x.invAt)inv+=x.amount;});
@@ -1256,7 +1347,7 @@ function covers(c,v){var n=0;selected(c).forEach(function(i){i.deliv.forEach(fun
   var per=v.start&&v.end?(v.start.slice(0,7)===v.end.slice(0,7)?MON[+v.start.slice(5,7)-1]:MON[+v.start.slice(5,7)-1]+'–'+MON[+v.end.slice(5,7)-1]):'All deliverables';
   return per+' · '+n+' deliverable'+(n===1?'':'s');}
 function dateCell(v,key,lbl,show){
-  if(v[key])return canEdit()?'<input class="fld dt" type="date" data-cid="'+v.id+'|'+key+'" value="'+v[key]+'" aria-label="'+lbl+' date">':'<span>'+fd(v[key])+'</span>';
+  if(v[key])return canEdit()?'<span class="row" style="gap:4px;flex-wrap:nowrap"><input class="fld dt" type="date" data-cid="'+v.id+'|'+key+'" value="'+v[key]+'" aria-label="'+lbl+' date"><button class="x" data-ciclr="'+v.id+'|'+key+'" title="Undo: not '+lbl.toLowerCase()+'" aria-label="Undo '+lbl.toLowerCase()+'">×</button></span>':'<span>'+fd(v[key])+'</span>';
   if(!show)return '<span class="small">–</span>';
   return canEdit()?'<button class="btn sm ghostb" data-cimk="'+v.id+'|'+key+'">'+(key==='invAt'?'Mark invoiced':'Mark paid')+'</button>':'<span class="small">–</span>';
 }
@@ -1279,34 +1370,38 @@ function tabFin(c){
   if(pd.length){var last=pd[pd.length-1];h+='<div class="cichk ok" style="margin-top:12px"><span>'+esc(last.label)+' paid '+fd(last.paidAt)+': its deliverables show <b style="font-weight:500">Client payment: Paid</b>, and their creators can be paid.</span><span>✓</span></div>';}
   if(issued)h+='<div class="small" style="margin-top:8px">Billing can’t be switched once an invoice has been issued.</div>';
   h+='</div>';
-  // creators
-  var rows=selected(c),all=[],T={t:0,p:0,r:0};
-  h+='<div class="card fin"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 class="sh" style="margin:0">Creator payments</h2><span class="small">Only deliverables the client has paid for can be paid out</span></div>';
-  h+='<table class="pt"><colgroup><col style="width:24%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:11%"><col style="width:12%"></colgroup><thead><tr><th>Creator</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Ready to pay</th><th class="r">Left</th><th>Invoices</th><th>Progress</th></tr></thead><tbody>';
-  rows.forEach(function(i){var t=crTotals(i),rd=0;i.deliv.forEach(function(d){if(d.crStatus==='Invoiced'&&isPosted(d)&&cliSt(cinvFor(c,d))==='Paid')rd+=crRateOf(i,d)||0;});T.t+=t.t;T.p+=t.p;T.r+=rd;
-    (i.crinv||[]).forEach(function(v2){all.push([i,v2]);});
-    h+='<tr><td><button class="lkb strong" data-pick="'+i.id+'">'+esc(ix(i.tid).name)+'</button></td><td class="r num">'+money(t.t)+'</td><td class="r num" style="color:var(--ok-fg)">'+money(t.p)+'</td><td class="r num">'+(rd?'<b>'+money(rd)+'</b>':money(0))+'</td><td class="r num">'+money(t.t-t.p)+'</td><td>'+((i.crinv||[]).length?(i.crinv.length+' received'):'<span class="small">None</span>')+'</td><td><div class="mbar thin"><i style="width:'+(t.t?Math.min(100,t.p/t.t*100):0)+'%;background:var(--accent)"></i></div></td></tr>';});
-  h+='</tbody><tfoot><tr><td><b>Total</b></td><td class="r num"><b>'+money(T.t)+'</b></td><td class="r num"><b>'+money(T.p)+'</b></td><td class="r num"><b>'+money(T.r)+'</b></td><td class="r num"><b>'+money(T.t-T.p)+'</b></td><td colspan="2" class="small">'+all.length+' received</td></tr></tfoot></table>';
-  // creator invoices received
-  if(all.length){
-    var stOf=function(i,v2){var ds=i.deliv.filter(function(d){return d.crInv===v2.id;});if(v2.paidAt||(ds.length&&ds.every(function(d){return d.crStatus==='Paid';})))return 'Paid';return ds.every(function(d){return isPosted(d)&&cliSt(cinvFor(c,d))==='Paid';})?'Ready to pay':'On hold';};
-    var f=S.crf||'All',cnt={All:all.length,'On hold':0,'Ready to pay':0,Paid:0};all.forEach(function(a){cnt[stOf(a[0],a[1])]++;});
-    h+='<div class="row" style="justify-content:space-between;margin:20px 0 10px"><span class="mh">Creator invoices received</span><div class="row" style="gap:6px">'+['All','On hold','Ready to pay','Paid'].map(function(k){return '<button class="btn sm fb'+(f===k?' on':'')+'" data-crf="'+k+'">'+k+' '+cnt[k]+'</button>';}).join('')+'</div></div>';
-    h+='<table class="pt"><colgroup><col style="width:15%"><col style="width:17%"><col style="width:25%"><col style="width:12%"><col style="width:11%"><col style="width:20%"></colgroup><thead><tr><th>Invoice</th><th>Creator</th><th>Covers</th><th class="r">Amount</th><th>Received</th><th>Status</th></tr></thead><tbody>';
-    all.filter(function(a){return f==='All'||stOf(a[0],a[1])===f;}).forEach(function(a){var i=a[0],v2=a[1],st=stOf(i,v2),ds=i.deliv.filter(function(d){return d.crInv===v2.id;});
-      h+='<tr><td><button class="pdfb" data-crpdf="'+i.id+'|'+v2.id+'"'+(v2.file?'':' disabled')+'><span class="pdf">PDF</span>'+esc(v2.number||'Invoice')+'</button></td><td>'+esc(ix(i.tid).name)+'</td><td class="small">'+esc(ds.map(function(d){return d.name;}).join(', ')||'–')+'</td><td class="r num"><b>'+money(v2.amount)+'</b></td><td>'+(v2.date?fd(v2.date):'–')+'</td><td><span class="pill '+(st==='Paid'?'ok':st==='Ready to pay'?'acc':'warn')+'">'+st+'</span>'+(st==='Paid'&&v2.paidAt?'<span class="small"> '+fd(v2.paidAt)+'</span>':'')+(ed&&st==='Ready to pay'?' <button class="btn sm" data-crpay="'+i.id+'|'+v2.id+'">Mark paid</button>':'')+(st==='On hold'?'<div class="small">Waits for client payment</div>':'')+(ed?' <button class="x" data-crdel="'+i.id+'|'+v2.id+'" title="Delete this invoice" aria-label="Delete this invoice">×</button>':'')+'</td></tr>';});
-    h+='</tbody></table>';
-  }
+  // creators: every payment input lives here
+  var ed=canEdit(),rows=selected(c),f=S.crf||'All',T={t:0,p:0,r:0};
+  var stOf=function(i,d){var cs=cliSt(cinvFor(c,d));if(d.crStatus==='Paid')return 'Paid';if(d.crStatus==='Invoiced')return isPosted(d)&&cs==='Paid'?'Ready to pay':'On hold';return 'Not invoiced';};
+  var cnt={All:0,'Not invoiced':0,'On hold':0,'Ready to pay':0,Paid:0};rows.forEach(function(i){i.deliv.forEach(function(d){cnt.All++;cnt[stOf(i,d)]++;});});
+  h+='<div class="card fin"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 class="sh" style="margin:0">Creator payments</h2><div class="row" style="gap:6px">'+['All','Not invoiced','On hold','Ready to pay','Paid'].map(function(k){return '<button class="btn sm fb'+(f===k?' on':'')+'" data-crf="'+k+'">'+k+' '+cnt[k]+'</button>';}).join('')+'</div></div>';
+  h+='<table class="pt fint"><colgroup><col style="width:23%"><col style="width:11%"><col style="width:13%"><col style="width:15%"><col style="width:20%"><col style="width:18%"></colgroup><thead><tr><th>Creator · deliverable</th><th>Live</th><th class="r">Rate</th><th>Client payment</th><th>Creator invoice</th><th>Creator payment</th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="6" class="small" style="padding:20px">No selected creators yet.</td></tr>';
+  rows.forEach(function(i){var t=crTotals(i),inv={};(i.crinv||[]).forEach(function(v){inv[v.id]=v;});T.t+=t.t;T.p+=t.p;
+    var ds=i.deliv.slice().sort(function(a,b2){return (dDate(a)||'9')<(dDate(b2)||'9')?-1:1;}).filter(function(d){return f==='All'||stOf(i,d)===f;});
+    i.deliv.forEach(function(d){if(stOf(i,d)==='Ready to pay')T.r+=crRateOf(i,d)||0;});
+    if(f!=='All'&&!ds.length)return;
+    h+='<tr class="grp"'+(ed?' data-crdrop="'+i.id+'"':'')+'><td colspan="2"><button class="lkb strong" data-pick="'+i.id+'">'+esc(ix(i.tid).name)+'</button> <span class="small">· paid '+money(t.p)+' of '+money(t.t)+'</span></td><td class="r num"><b>'+money(t.t)+'</b></td><td colspan="3" class="r">'+(ed&&i.deliv.length?'<label class="dropc">↥ Drop creator invoice<input type="file" data-crfile="'+i.id+'" accept=".pdf,image/*,.doc,.docx" style="display:none"></label>':'')+'</td></tr>';
+    if(!i.deliv.length)h+='<tr><td colspan="6" class="small" style="padding-left:26px">No deliverables yet</td></tr>';
+    ds.forEach(function(d){var r=crRateOf(i,d),ci=cinvFor(c,d),cs=cliSt(ci),v=inv[d.crInv],st=stOf(i,d);
+      h+='<tr'+(ed?' data-crrow="'+i.id+'|'+d.id+'"':'')+'><td style="padding-left:26px"><button class="lkb" data-dd="'+i.id+'|'+d.id+'">'+esc(d.name)+'</button></td><td>'+liveCell(d)+'</td>'
+        +'<td class="r">'+(ed?'<input class="in rc" inputmode="decimal" data-crr="'+i.id+'|'+d.id+'" value="'+(r!=null?money(r):'')+'" placeholder="Set rate" title="'+(d.crRate!=null?'Set by hand. Clear it to use the rate card':'From the rate card')+'" aria-label="Creator rate">':'<span class="num">'+(r!=null?money(r):'–')+'</span>')+'</td>'
+        +'<td>'+payPill(cs)+'<div class="small">'+esc(ci?ci.label:'No invoice')+'</div></td>'
+        +'<td>'+(v?'<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="pdfb" data-crpdf="'+i.id+'|'+v.id+'"'+(v.file?'':' disabled')+'><span class="pdf">PDF</span>'+esc(v.number||'Invoice')+'</button>'+(ed?'<button class="x" data-crdel="'+i.id+'|'+v.id+'" title="Delete this creator invoice" aria-label="Delete this creator invoice">×</button>':'')+'</span><div class="small">'+(v.date?fd(v.date)+' · ':'')+money(v.amount)+'</div>':'<span class="small">No invoice yet</span>')+'</td>'
+        +'<td>'+(ed?'<button class="pillb" data-crst="'+i.id+'|'+d.id+'" title="Click to change">'+payPill(d.crStatus)+'</button>':payPill(d.crStatus))+'<div class="small"'+(st==='On hold'?' style="color:var(--warn-fg)"':st==='Ready to pay'?' style="color:var(--ok-fg)"':'')+'>'+(st==='On hold'?'On hold · '+(cs!=='Paid'?'waits for client':'not posted'):st==='Ready to pay'?'Ready to pay':st==='Paid'&&d.crPaidAt?'Paid '+fd(d.crPaidAt):'')+'</div>'+(ed&&v&&st==='Ready to pay'&&i.deliv.filter(function(z){return z.crInv===v.id;}).every(function(z){return stOf(i,z)==='Ready to pay'||stOf(i,z)==='Paid';})?'<button class="btn sm" style="margin-top:4px" data-crpay="'+i.id+'|'+v.id+'">Mark invoice paid</button>':'')+'</td></tr>';});
+  });
+  h+='</tbody><tfoot><tr><td colspan="2"><b>Total · '+rows.length+' creator'+(rows.length===1?'':'s')+'</b></td><td class="r num"><b>'+money(T.t)+'</b></td><td colspan="3" class="small">Paid '+money(T.p)+' · Ready to pay '+money(T.r)+' · Left '+money(T.t-T.p)+'</td></tr></tfoot></table>';
+  h+='<div class="small" style="margin-top:8px">Drop a creator invoice on a creator (or one of their deliverables) to record it. Click a creator payment to move it on; Paid unlocks once the content is live and the client has paid. × deletes a creator invoice and puts its deliverables back to Not due.</div>';
   return h+'</div>';
 }
 function ciUpload(iid,file){if(!file)return;if(file.size>4*1024*1024){toast(file.name+' is over 4MB. Compress it and try again.');return;}
   toast('Uploading…');b64(file).then(function(data){post(P('/cinv/'+iid),'PATCH',{file:{name:file.name,type:file.type||'application/pdf',data:data}},{msg:'Invoice attached'});});}
 
-document.addEventListener('dragover',function(e){if(S.calNew||S.calDrag)return;var t=e.target.closest&&e.target.closest('#crdrop,[data-crrow],[data-cirow]');if(!t||!e.dataTransfer||[].indexOf.call(e.dataTransfer.types||[],'Files')<0)return;e.preventDefault();document.querySelectorAll('.fdrop').forEach(function(x){if(x!==t)x.classList.remove('fdrop');});t.classList.add('fdrop');});
+document.addEventListener('dragover',function(e){if(S.calNew||S.calDrag)return;var t=e.target.closest&&e.target.closest('[data-crdrop],[data-crrow],[data-cirow]');if(!t||!e.dataTransfer||[].indexOf.call(e.dataTransfer.types||[],'Files')<0)return;e.preventDefault();document.querySelectorAll('.fdrop').forEach(function(x){if(x!==t)x.classList.remove('fdrop');});t.classList.add('fdrop');});
 document.addEventListener('dragleave',function(e){var t=e.target.closest&&e.target.closest('.fdrop');if(t&&!t.contains(e.relatedTarget))t.classList.remove('fdrop');});
-document.addEventListener('drop',function(e){var t=e.target.closest&&e.target.closest('#crdrop,[data-crrow],[data-cirow]');if(!t||!e.dataTransfer||!e.dataTransfer.files||!e.dataTransfer.files.length)return;e.preventDefault();t.classList.remove('fdrop');if(!canEdit())return;var f=e.dataTransfer.files[0];
+document.addEventListener('drop',function(e){var t=e.target.closest&&e.target.closest('[data-crdrop],[data-crrow],[data-cirow]');if(!t||!e.dataTransfer||!e.dataTransfer.files||!e.dataTransfer.files.length)return;e.preventDefault();t.classList.remove('fdrop');if(!canEdit())return;var f=e.dataTransfer.files[0];
   if(t.hasAttribute('data-cirow'))return ciUpload(t.getAttribute('data-cirow'),f);
-  if(t.id==='crdrop')return crInvOpen(t.getAttribute('data-crct'),f);
+  if(t.hasAttribute('data-crdrop'))return crInvOpen(t.getAttribute('data-crdrop'),f);
   var pr=t.getAttribute('data-crrow').split('|');crInvOpen(pr[0],f,pr[1]);});
 function calDayModal(){
   if(!FULL)return '';var day=S.calDay,list=calFiltered(FULL).filter(function(e){return e.date===day;});
@@ -1368,7 +1463,7 @@ function drawer(){
   h+='<div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div class="who2"><div class="ini" style="width:48px;height:48px;font-size:16px">'+initials(x.name)+'</div><div><div style="font:500 24px var(--display);letter-spacing:.02em;text-transform:uppercase">'+esc(x.name)+'</div><div class="small">'+esc(sub(i.tid))+' · '+esc(x.niche)+' · <span style="color:var(--gold)">● In Talent Index</span></div></div></div><button class="btn sm" data-act="close" aria-label="Close">✕</button></div>';
   if(arch)h+='<div class="banner" style="background:var(--bad-bg);color:var(--bad-fg);margin:0"><b>Archived · '+esc(arch.reason)+'</b> ('+esc(arch.date)+')<div style="margin-top:2px">'+esc(arch.note)+'</div><button class="btn sm" style="margin-top:8px" data-restore="'+i.id+'">Restore to campaign</button></div>';
   h+='<div class="row"><span class="lbl">Stage</span>'+sel('stage',i.stage,STAGES,i.id)+'<span class="lbl">Approved</span>'+sel('approved',i.approved,APPROVED,i.id)+(i.stage!=='Confirmed'&&!w?'<button class="btn pri sm" data-book="'+i.id+'" style="margin-left:auto">Move to Confirmed</button>':'')+'</div>';
-  h+='<div class="dtabs"><button class="'+(S.dtab==='Overview'?'on':'')+'" data-dtab="Overview">Overview</button><button class="'+(S.dtab==='Details'?'on':'')+'" data-dtab="Details">Rates &amp; payments</button><button class="'+(S.dtab==='Social'?'on':'')+'" data-dtab="Social">Social media links</button></div>';
+  h+='<div class="dtabs"><button class="'+(S.dtab==='Overview'?'on':'')+'" data-dtab="Overview">Overview</button><button class="'+(S.dtab==='Details'?'on':'')+'" data-dtab="Details">Rates</button><button class="'+(S.dtab==='Social'?'on':'')+'" data-dtab="Social">Social media links</button></div>';
   if(S.dtab==='Overview'){
     if(live){
       var dl2=i.deliv.slice().sort(function(a,b){return (a.recv||a.live||'9')<(b.recv||b.live||'9')?-1:1;});
@@ -1383,16 +1478,7 @@ function drawer(){
     h+='<div><h2 class="sh">Comments</h2><form id="tc-form" style="display:grid;gap:8px;margin-bottom:14px"><textarea class="fld" id="tc-t" placeholder="Add a comment" style="min-height:64px" required></textarea><div class="row" style="flex-wrap:nowrap"><input class="fld" id="tc-l" type="url" placeholder="Link (optional)" style="flex:1">'+(tags.length?'<select class="sel plain" id="tc-g" style="width:auto;max-width:42%"><option value="">General</option>'+tags.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select>':'')+'<button class="btn pri" type="submit">Post</button></div></form>'+thread(i.comments,'No comments yet.')+'</div>';
   }else if(S.dtab==='Social'){h+=socialTab(i);
   }else{
-    h+=rateCard(i,c)+payTable(i,c);
-    h+='<div><h2 class="sh">Rates · '+c.cur+'</h2><div class="kv"><span class="k">Initial</span><span class="num">'+money(i.initial)+'</span><span class="k">Negotiated</span><b class="num">'+(i.neg?money(i.neg):'–')+'</b><span class="k">Margin</span><span class="num">'+(Math.round(i.margin*10)/10)+'%</span><span class="k">Client rate</span><b class="num">'+money(i.client)+(c.cur!=='GBP'?' <span class="small">≈ '+gbpIn(i.client,c)+'</span>':'')+'</b><span class="k">Profit</span><span class="num">'+money(profit)+(c.cur!=='GBP'?' <span class="small">≈ '+gbpIn(profit,c)+'</span>':'')+'</span></div><div class="small" style="margin-top:6px">Change rates and margin in the table.</div></div>';
-    h+='<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Quote history</h2><button class="btn sm" data-act="addq">'+(S.addQ?'Cancel':'+ Log quote')+'</button></div>'+(i.quotes.length?i.quotes.map(function(q){return '<div style="padding:3px 0">'+esc(/^[\d,.\s]+$/.test(q.a)&&isFinite(num(q.a))?money(num(q.a)):q.a)+' <span class="small">· '+esc(q.d)+' · '+esc(q.n)+'</span></div>';}).join(''):'<div class="small">No quotes logged yet.</div>')+(S.addQ?'<form class="row" id="quote-form" style="margin-top:10px;flex-wrap:nowrap"><input class="fld" id="q-amt" placeholder="e.g. 24,000 AED" required><button class="btn" type="submit">Save</button></form>':'')+'</div>';
-    if(S.editC)h+='<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Contact</h2><button class="btn sm pri" data-act="editc">Done</button></div><div class="kv">'+cinput('Manager',i.tid,'mgr')+cinput('Email',i.tid,'email','email')+cinput('Phone',i.tid,'phone','tel')+'</div><div class="small" style="margin-top:6px">Saves to the Talent Index profile too.</div></div>';
-    else h+='<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Contact</h2><button class="btn sm" data-act="editc">Edit</button></div><div class="kv"><span class="k">Manager</span><span>'+esc(x.mgr||'–')+'</span><span class="k">Email</span><span>'+esc(x.email||'–')+'</span><span class="k">Phone</span><span>'+esc(x.phone||'–')+'</span></div></div>';
-    if(live){
-      h+='<div><h2 class="sh">Contract and invoicing</h2><div class="kv"><span class="k">Contract</span><span>'+sel('contract',i.contract,CONTRACT,i.id)+'</span><span class="k">Client invoicing</span><span><span class="pill '+(i.invoice==='Paid'?'ok':i.invoice==='Not invoiced'?'neu':'warn')+'">'+esc(i.invoice)+'</span> <span class="small">from Financials</span></span></div></div>';
-      h+='<div><h2 class="sh">Archive</h2>'+(S.archiving?'<form id="arch-form" style="display:grid;gap:8px"><select class="sel plain" id="ar-reason">'+REASONS.map(function(r){return '<option>'+r+'</option>';}).join('')+'</select><input class="fld" id="ar-note" placeholder="Note (what happened)" required><div class="row"><button class="btn pri" type="submit">Archive creator</button><button class="btn" type="button" data-act="archcancel">Cancel</button></div></form>':'<button class="btn" data-act="archstart">Archive creator…</button>')+'</div>';
-    }
-    if(canEdit())h+='<div><h2 class="sh">Remove</h2>'+(S.rmi===i.id?'<div class="banner" style="background:var(--bad-bg);color:var(--bad-fg);margin:0">Remove '+esc(x.name)+' from this campaign, with their rates, comments and deliverables? This cannot be undone.<div class="row" style="margin-top:10px"><button class="btn pri" data-act="rmigo">Yes, remove</button><button class="btn" data-act="rmicancel">Keep them</button></div></div>':'<button class="btn" data-act="rmiask">Remove from campaign…</button>')+'</div>';
+    h+=panelRates(i,c,x,w,live,arch,profit);
   }
   return h+'</aside>';
 }
@@ -1749,7 +1835,7 @@ document.addEventListener('change',function(e){var t=e.target;if(t.id==='sd-per'
 function render(){
   CUR=S.view==='campaign'?camp():null;
   var m=document.getElementById('main');
-  if(S.view==='campaign'&&S.tab==='Deliverables'&&FULL&&CUR&&canEdit()){S.af=S.af||{};if(!S.af[FULL.id]){S.af[FULL.id]=1;setTimeout(function(){if(FULL&&S.tab==='Deliverables')scFill(FULL);},0);}}
+  // deliverables are only made from the quote when asked (button on the Deliverables tab)
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
   document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'')+(S.view==='campaign'&&S.crInv&&FULL?crInvModal():'')+(S.view==='campaign'&&S.bulk&&FULL?bulkModal():'')+(S.view==='campaign'&&S.splitD&&FULL?splitModal():'');
@@ -1845,7 +1931,7 @@ document.addEventListener('change',function(e){
   if(t.hasAttribute&&t.hasAttribute('data-cia')){var an=num(t.value);if(!(an>=0)){toast('Enter an amount');render();return;}post(P('/cinv/'+t.getAttribute('data-cia')),'PATCH',{amount:an},{msg:'Amount saved'});return;}
   if(t.hasAttribute&&t.hasAttribute('data-cid')){var dk=t.getAttribute('data-cid').split('|'),db={};db[dk[1]]=t.value||'';post(P('/cinv/'+dk[0]),'PATCH',db,{msg:t.value?'Date saved':'Date cleared'});return;}
   if(t.hasAttribute&&t.hasAttribute('data-ciup')){ciUpload(t.getAttribute('data-ciup'),t.files&&t.files[0]);return;}
-  if(t.id==='crfile'){crInvOpen(t.getAttribute('data-crct'),t.files&&t.files[0]);return;}
+  if(t.hasAttribute&&t.hasAttribute('data-crfile')){crInvOpen(t.getAttribute('data-crfile'),t.files&&t.files[0]);t.value='';return;}
   if(t.hasAttribute&&t.hasAttribute('data-crid')){crInvSnap();var ck=t.getAttribute('data-crid');if(t.checked)S.crInv.dids[ck]=1;else delete S.crInv.dids[ck];render();return;}
   if(t.id==='cri-amt'){crInvSnap();render();return;}
   if(t.id==='bulk-approved'){bulkSet('approved',t.value);return;}
@@ -1905,12 +1991,12 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.crInv=null;S.crf='All';S.isel={};S.dsel={};S.bulk=null;S.splitD=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.crInv=null;S.crf='All';S.ddelAsk=false;S.isel={};S.dsel={};S.bulk=null;S.splitD=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Campaign Overview')loadShares();}
   else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;S.calPick=d.calm;render();}}
   else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
@@ -1933,6 +2019,7 @@ document.addEventListener('click',function(e){
   else if(d.bkx){S.bulk=null;render();}
   else if(d.bkdec!==undefined||d.bkinc!==undefined){bulkSnap();var bl=S.bulk.lines[Number(d.bkdec!==undefined?d.bkdec:d.bkinc)];if(bl){bl.qty=Math.max(1,Math.min(999,bl.qty+(d.bkinc!==undefined?1:-1)));if(bl.set)bl.set=Math.min(bl.set,bl.qty);render();}}
   else if(d.bkrm!==undefined){bulkSnap();S.bulk.lines.splice(Number(d.bkrm),1);render();}
+  else if(d.ciclr){var cl=d.ciclr.split('|'),cb={};cb[cl[1]]='';if(cl[1]==='invAt')cb.paidAt='';post(P('/cinv/'+cl[0]),'PATCH',cb,{msg:cl[1]==='invAt'?'Back to not invoiced':'Back to not paid'});}
   else if(d.dsel){S.dsel=S.dsel||{};if(S.dsel[d.dsel])delete S.dsel[d.dsel];else S.dsel[d.dsel]=1;render();}
   else if(d.dsplit){var sp=d.dsplit.split('|'),si2=find(sp[0]),sd=si2&&si2.deliv.filter(function(z){return z.id===sp[1];})[0];S.splitD={key:d.dsplit,size:sd&&GROUPED.test(dItem(sd).item)?3:1};render();}
   else if(d.spx){S.splitD=null;render();}
@@ -1991,7 +2078,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='insedit'){S.editI=!S.editI;render();}
   else if(d.act==='rmask'){S.rmd=S.dd.did;render();}
   else if(d.act==='rmcancel'){S.rmd=null;render();}
-  else if(d.act==='rmgo'){var did=S.dd.did,iid=S.dd.iid;S.dd=null;S.rmd=null;post(P('/talents/'+iid+'/deliverables/'+did),'DELETE',undefined,{msg:'Deliverable removed'});}
+  else if(d.act==='rmgo'){var did=S.dd.did,iid=S.dd.iid;S.dd=null;S.rmd=null;delDeliverables([[iid,did]],'Deliverable deleted, and taken off the quote');}
   else if(d.act==='addq'){S.addQ=!S.addQ;render();}
   else if(d.act==='archstart'){S.archiving=true;render();}
   else if(d.act==='rmiask'){S.rmi=S.sel;render();}
@@ -2020,6 +2107,9 @@ document.addEventListener('click',function(e){
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='rcsplit'){var si=find(S.sel);if(si){var pcs=0;(si.scope||[]).forEach(function(x){pcs+=x.qty;});var each=r2(base(si)/pcs);saveRateCard(si,si.scope.map(function(x){return {item:x.item,qty:x.qty,rate:each};}));}}
   else if(d.act==='dgroup'){dGroup();}
+  else if(d.act==='ddel'){var bad=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]),z=i&&i.deliv.filter(function(y){return y.id===p[1];})[0];return z&&z.crStatus==='Paid';});if(bad.length){toast('One of these has been paid to the creator. Change that on Financials first.');return;}S.ddelAsk=true;render();}
+  else if(d.act==='ddelno'){S.ddelAsk=false;render();}
+  else if(d.act==='ddelgo'){var dl=Object.keys(S.dsel).map(function(k){return k.split('|');});S.dsel={};S.ddelAsk=false;delDeliverables(dl,dl.length+' deliverable'+(dl.length===1?'':'s')+' deleted');}
   else if(d.act==='bulkdel'){S.bulk={lines:[],other:false,recv:'',live:'',err:''};render();setTimeout(function(){var f=document.getElementById('bk-add');if(f)f.focus();},30);}
   else if(d.act==='bkgo'){if(!S.bulk.busy)bulkGo();}
   else if(d.act==='iselclear'){S.isel={};render();}

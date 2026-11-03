@@ -244,3 +244,11 @@ No new migration.
 - Influencers tab: tick creators (or tick-all in the header). A bar appears:
   - + Add deliverables: the same deliverable editor, applied to every ticked creator (e.g. 1 × IG Reel, 6 × IG Story in sets of 3). Added to each creator's quote and Index rate quote; for selected (Approved: Yes) creators the deliverables are created too, with optional content due / go-live dates.
   - Approved… and Stage… set the value for every ticked creator in one go (Approved only shows before the campaign is won).
+
+## Update 55 – One place for each input, and everything reversible
+No new migration.
+- **Creator panel → Rates** (was Rates & payments): Rates card (Initial, Agreed, Client rate, Margin, Profit), the rate card, a one-line payment summary linking to Financials, **Rates on file** (every rate on other campaigns here plus their managed deals from monday, filled automatically; replaces Quote history), Contact and Contract & invoicing cards, then Archive / Remove. No strike-throughs anywhere.
+- **Financials is the only place money is entered**: Creator payments is one table grouped by creator. Drop a creator invoice on a creator (or a deliverable row), click a creator payment to move it on, change a deliverable's rate, delete a creator invoice (×). The separate "invoices received" list is merged into it; filters: Not invoiced / On hold / Ready to pay / Paid.
+- **Undo**: client invoice Invoiced / Paid dates have × to undo; creator invoices can be deleted; Deliverables tab has Delete for ticked deliverables.
+- Deleting a deliverable takes it off the creator's quote too, and the Deliverables tab no longer re-creates deliverables from the quote by itself (use "Add N from scope"). This was why a deleted dummy came back.
+- Influencers table only shows "x of y posted" for selected creators, matching the Deliverables tab and calendar.
