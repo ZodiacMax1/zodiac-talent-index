@@ -167,3 +167,10 @@ No new migration. New "Content calendar" tab on every campaign, built from the e
 - Filter by creator, or toggle each type on/off in the legend. Click a day number or "n more" for that day's full list. Click any item to open the creator's deliverable.
 - Editors can drag an item to another day to move its date. Content due can't move past go-live, and go-live can't move before content due.
 - Download .ics adds the dates (as filtered) to Outlook or Google Calendar.
+
+## Update 45 – Calendar views
+Month / Year / Agenda switcher at the top of the Content calendar.
+- **Month**: as before.
+- **Year**: creator per row, month per column (first to last month with content, empty months shaded), one item per deliverable in the month it goes live with the day number, totals per creator and "Posts this month". Hover for the content due date.
+- **Agenda**: chronological list grouped by week – Overdue first, then This week, Next week and on. Earlier items hidden behind "Show earlier".
+- Creator filter, type toggles and Download .ics work in every view. Fix: Download .ics now downloads.
