@@ -301,6 +301,11 @@ input.ynote:hover{border-color:var(--line2)}input.ynote:focus{border-color:var(-
 .tch.add{cursor:pointer;border-style:dashed;background:transparent;min-width:30px;justify-content:center;color:var(--accent);font-weight:700}
 .yv:not(.arm) td[data-ycell]:not(.on):hover{background:#F8EEEE;cursor:pointer}
 
+.yv tr.armrow td{background:#FBF1F1}.yv tr.armrow td.yc{box-shadow:inset 4px 0 0 #4D1A21}
+.yv tr.armrow td[data-ycell]:hover{background:#F3DFDF;box-shadow:inset 0 0 0 2px #4D1A21}
+.yv tr.armdim td{opacity:.6}
+.cadd .srow .lbl{margin:0}
+
 </style>
 </head>
 <body>
@@ -712,7 +717,8 @@ function tabCal(c){
   var t=S.calT||{},nd=0,nl=0;ev.forEach(function(e){if(e.type==='live')nl++;else nd++;});
   var V=S.calV||'Month';
   var seg='<div class="calseg" role="tablist">'+['Month','Year','Agenda'].map(function(v){return '<button class="'+(V===v?'on':'')+'" data-calv="'+v+'" role="tab" aria-selected="'+(V===v)+'">'+v+'</button>';}).join('')+'</div>';
-  var nav=V==='Month'?'<button class="calarr" data-calm="'+(months[mi-1]||'')+'"'+(mi>0?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(months[mi+1]||'')+'"'+(mi>=0&&mi<months.length-1?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>'+(canEdit()?'<label class="cpick" title="Go to any month"><input type="month" id="calpick" value="'+esc(ym||cm)+'"><span>Any month ▾</span></label>':''):'';
+  var pm=canEdit()?addDays(ym+'-01',-1).slice(0,7):months[mi-1],nm=canEdit()?addDays(ym+'-01',31).slice(0,7):months[mi+1];
+  var nav=V==='Month'?'<button class="calarr" data-calm="'+(pm||'')+'"'+(pm?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(nm||'')+'"'+(nm?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>'+(canEdit()?'<label class="cpick" title="Go to any month"><input type="month" id="calpick" value="'+esc(ym||cm)+'"><span>Any month ▾</span></label>':''):'';
   var h='<div class="calbar"><div class="calnav">'+seg+nav+'</div>'
     +'<div class="row" style="gap:12px"><div class="callg">'+['due','live','film'].map(function(k){return '<button class="'+(t[k]?'off':'')+'" data-calt="'+k+'"><i style="background:var(--c'+k+'-bg);'+(k==='due'?'box-shadow:inset 3px 0 0 var(--cdue-bd)':'')+'"></i>'+CALT[k]+'</button>';}).join('')+'</div>'
     +'<select id="calwho" class="sel plain" style="width:auto"><option value="All">All creators</option>'+people.map(function(i){return '<option value="'+esc(i.id)+'"'+(S.calWho===i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</select>'
@@ -761,9 +767,10 @@ function calYear(c,un){
     +'<div class="calseg sm">'+[['Post','Post numbers'],['Name','Deliverable names']].map(function(o){return '<button class="'+(lab===o[0]?'on':'')+'" data-callab="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
   h+='<div class="card sc yvw"><table class="yv'+(S.calArm?' arm':'')+'"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x,k){return '<th>'+MON[k]+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
   rows.forEach(function(i){var mine=yit.filter(function(x){return x.iid===i.id;});if(!mine.length&&!unI[i.id]&&!canEdit())return;
-    h+='<tr><td class="yc">'+esc(ix(i.tid).name)+'</td>';
+    var armI=S.calArm&&S.calU&&S.calU[S.calArm]&&S.calU[S.calArm].iid;
+    h+='<tr'+(armI?(armI===i.id?' class="armrow"':' class="armdim"'):'')+'><td class="yc">'+esc(ix(i.tid).name)+'</td>';
     ms.forEach(function(x){var cell=mine.filter(function(e){return e.m===x;});
-      h+='<td class="'+(!colN[x]?'emp':cell.length?'on'+(cell.some(function(e){return e.type==='film';})&&cell.every(function(e){return e.type==='film';})?' fl':''):'')+(x===TODAY.slice(0,7)?' now':'')+'" data-ycell="'+i.id+'|'+x+'">'+cell.map(function(e){var tx=e.type==='film'?'Filming':lab==='Name'?e.what:'Post '+e.n;
+      h+='<td class="'+(!colN[x]&&yit.length?'emp':cell.length?'on'+(cell.some(function(e){return e.type==='film';})&&cell.every(function(e){return e.type==='film';})?' fl':''):'')+(x===TODAY.slice(0,7)?' now':'')+'" data-ycell="'+i.id+'|'+x+'">'+cell.map(function(e){var tx=e.type==='film'?'Filming':lab==='Name'?e.what:'Post '+e.n;
         return '<button class="ycl'+(e.done?' done':'')+(e.late?' late':'')+(e.type==='due'?' due':'')+'" data-dd="'+e.iid+'|'+e.did+'" title="'+esc(e.what+' · '+CALT[e.type]+' '+fd(e.date)+(e.due?' · content due '+fd(e.due):'')+(e.done?' · done':e.late?' · overdue':''))+'">'+(e.done?'✓ ':e.late?'! ':'')+esc(tx)+'</button>';}).join('')+'</td>';});
     h+='<td class="tot">'+mine.length+'</td></tr>';});
   h+='</tbody><tfoot><tr><td class="yc">Posts this month</td>'+ms.map(function(x){return '<td>'+(colN[x]||0)+'</td>';}).join('')+'<td>'+yit.length+'</td></tr></tfoot></table></div>';
@@ -804,9 +811,9 @@ function calTray(un,V){
   var arm=S.calArm&&S.calU[S.calArm];
   var by=[],g={};un.forEach(function(u){if(!g[u.iid]){g[u.iid]=[];by.push(u.iid);}g[u.iid].push(u);});
   var h='<div class="tray'+(S.calTrayOff?' shut':'')+'"><div class="trh"><button class="trt" data-caltray="1"><b>To schedule</b><span class="trc">'+un.length+'</span><span class="chev">'+(S.calTrayOff?'▸':'▾')+'</span></button>'
-    +(arm?'<span class="trarm">Placing <b>'+esc(arm.name)+'</b> for '+esc(arm.who)+'. '+(V==='Year'?'Click a month on their row (sets the last day of the month).':'Click a day.')+' <button class="cmore" data-calarm="">Cancel</button></span>'
-      :'<span class="small">'+(V==='Year'?'Drag onto a month on the creator’s row to set the last day of that month, or click one then click the month.':'Drag onto a day, or click one then click the day.')+'</span>')+'</div>';
-  if(!S.calTrayOff)h+='<div class="trg">'+by.map(function(iid){return '<div class="trr"><span class="trn">'+esc(g[iid][0].who)+'</span>'+(function(){return '<button class="tch add" data-act="caladd" data-caiid="'+iid+'" title="Add a deliverable for '+esc(g[iid][0].who)+'">+</button>';})()+g[iid].map(function(u){return '<button class="tch'+(u.noPost?' film':'')+(u.kind==='s'?' scope':'')+(S.calArm===u.key?' on':'')+'" draggable="true" data-cnew="'+esc(u.key)+'" title="'+esc(u.name+(u.plat?' · '+u.plat:'')+(u.kind==='s'?' · from the quoted scope':'')+(u.noPost?' · filming day':''))+'">'+(u.noPost?'<em>Film</em>':'')+esc(u.name)+(u.plat?'<span>'+esc(u.plat)+'</span>':'')+'</button>';}).join('')+'</div>';}).join('')+'</div>';
+    +(arm?'<span class="trarm">Placing <b>'+esc(arm.name)+'</b> for '+esc(arm.who)+'. '+(V==='Year'?'Now click the month. It goes live on the last day of that month.':'Now click a day. Use ‹ › to change month.')+' <button class="cmore" data-calarm="">Cancel</button></span>'
+      :'<span class="small">'+(V==='Year'?'Click a deliverable, then click the month.':'Drag onto a day, or click one, then click the day (use ‹ › to change month).')+'</span>')+'</div>';
+  if(!S.calTrayOff)h+='<div class="trg">'+by.map(function(iid){return '<div class="trr"><span class="trn">'+esc(g[iid][0].who)+'</span>'+(function(){return '<button class="tch add" data-act="caladd" data-caiid="'+iid+'" title="Add a deliverable for '+esc(g[iid][0].who)+'">+</button>';})()+g[iid].map(function(u){return '<button class="tch'+(u.noPost?' film':'')+(u.kind==='s'?' scope':'')+(S.calArm===u.key?' on':'')+'"'+(V==='Year'?'':' draggable="true"')+' data-cnew="'+esc(u.key)+'" title="'+esc(u.name+(u.plat?' · '+u.plat:'')+(u.kind==='s'?' · from the quoted scope':'')+(u.noPost?' · filming day':''))+'">'+(u.noPost?'<em>Film</em>':'')+esc(u.name)+(u.plat?'<span>'+esc(u.plat)+'</span>':'')+'</button>';}).join('')+'</div>';}).join('')+'</div>';
   return h+'</div>';
 }
 function lastDay(ym){return addDays(addDays(ym+'-01',31).slice(0,7)+'-01',-1);}
@@ -834,64 +841,78 @@ document.addEventListener('drop',function(e){if(!S.calNew)return;var c=e.target.
   else{var pr=c.getAttribute('data-ycell').split('|');calPlace(key,lastDay(pr[1]),pr[0]);}});
 
 /* Add creator / deliverable from the calendar */
-var CAQ=['IG Reel','IG Story','IG Post','TikTok','YouTube video','UGC video'];
 function calAddOpen(iid,date){
   var c=FULL;if(!c||!canEdit())return;S.calDay=null;S.calArm=null;
-  var film=false;
-  S.calAdd={who:iid?'ct:'+iid:(selected(c)[0]?'ct:'+selected(c)[0].id:'__ix'),tid:'',name:'',plat:'',film:film,recv:'',live:date||'',rate:'',err:''};
-  render();setTimeout(function(){var f=document.getElementById(S.calAdd&&S.calAdd.who==='__ix'?'ca-q':'ca-name');if(f)f.focus();},30);
+  S.calAdd={who:iid?'ct:'+iid:(selected(c)[0]?'ct:'+selected(c)[0].id:'__ix'),tid:'',lines:[],other:false,recv:'',live:date||'',err:''};
+  render();setTimeout(function(){var f=document.getElementById(S.calAdd&&S.calAdd.who==='__ix'?'ca-q':'ca-add');if(f)f.focus();},30);
 }
-function calAddSnap(){var a=S.calAdd;if(!a)return;var g=function(id){var e=document.getElementById(id);return e?e:null;};
-  if(g('ca-who'))a.who=g('ca-who').value;if(g('ca-name'))a.name=g('ca-name').value;if(g('ca-plat'))a.plat=g('ca-plat').value;
-  if(g('ca-film'))a.film=g('ca-film').checked;if(g('ca-recv'))a.recv=g('ca-recv').value;if(g('ca-live'))a.live=g('ca-live').value;if(g('ca-rate'))a.rate=g('ca-rate').value;
-  var r=document.querySelector('input[name="ca-tid"]:checked');if(r)a.tid=r.value;}
+function calAddSnap(){var a=S.calAdd;if(!a)return;var g=function(id){return document.getElementById(id);};
+  if(g('ca-who'))a.who=g('ca-who').value;if(g('ca-recv'))a.recv=g('ca-recv').value;if(g('ca-live'))a.live=g('ca-live').value;
+  var r=document.querySelector('input[name="ca-tid"]:checked');if(r)a.tid=r.value;
+  document.querySelectorAll('[data-caqty]').forEach(function(x){var k=Number(x.getAttribute('data-caqty')),v=Math.round(Number(x.value));if(a.lines[k]&&v>=1&&v<=999)a.lines[k].qty=v;});}
+var CA_NOPOST=['Filming day','Event / attendance'],CA_NODATE=['Usage rights'];
 function calAddModal(){
   var a=S.calAdd,c=FULL;if(!c)return '';
   var sel=selected(c),other=c.infl.filter(function(i){return !(i.approved==='Yes'&&!i.archived);}),inC={};c.infl.forEach(function(i){inC[i.tid]=1;});
-  var ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null,needsRate=a.who==='__ix'||(ct&&!(ct.approved==='Yes'&&!ct.archived));
-  var h='<div class="ov" data-cax="1"></div><div class="smod cadd" role="dialog" aria-label="Add to calendar"><div class="row" style="justify-content:space-between;margin-bottom:10px"><div style="font:500 20px var(--display);text-transform:uppercase;letter-spacing:.02em">Add to calendar</div><button class="btn sm" data-cax="1">Close</button></div>';
-  h+='<label class="cfl"><span class="lbl">Creator</span><select id="ca-who" class="sel plain">'
+  var ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null,isNew=a.who==='__ix'||(ct&&!(ct.approved==='Yes'&&!ct.archived));
+  var h='<div class="ov" data-cax="1"></div><div class="smod cadd" role="dialog" aria-label="Add to calendar"><div class="row" style="justify-content:space-between;margin-bottom:4px"><div><div class="lbl">Add to calendar</div><div style="font:500 20px var(--display);text-transform:uppercase;letter-spacing:.02em">'+(ct?esc(ix(ct.tid).name):a.who==='__ix'&&a.tid?esc((TAL.filter(function(t){return t.id===a.tid;})[0]||{}).name||'New creator'):'Choose a creator')+'</div></div><button class="btn sm" data-cax="1">Close</button></div>';
+  h+='<div class="srow"><span class="lbl" style="flex:none;width:70px">Creator</span><select id="ca-who" class="sel plain" style="flex:1">'
     +(sel.length?'<optgroup label="Selected for this campaign">'+sel.map(function(i){return '<option value="ct:'+i.id+'"'+(a.who==='ct:'+i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</optgroup>':'')
     +(other.length?'<optgroup label="On this campaign, not selected yet">'+other.map(function(i){return '<option value="ct:'+i.id+'"'+(a.who==='ct:'+i.id?' selected':'')+'>'+esc(ix(i.tid).name)+' ('+esc(i.archived?'archived':i.approved)+')</option>';}).join('')+'</optgroup>':'')
-    +'<option value="__ix"'+(a.who==='__ix'?' selected':'')+'>Someone else from the Talent Index…</option></select></label>';
-  if(ct&&needsRate)h+='<div class="small" style="margin:-4px 0 10px">They’ll be marked as selected (Approved: Yes) on the Influencers tab.</div>';
+    +'<option value="__ix"'+(a.who==='__ix'?' selected':'')+'>Someone else from the Talent Index…</option></select></div>';
   if(a.who==='__ix'){
     var list=TAL.filter(function(t){return !inC[t.id];}).sort(function(x,y){return x.name<y.name?-1:1;});
-    h+='<input id="ca-q" class="fld" placeholder="Search the Talent Index ('+list.length+')" autocomplete="off"><div class="calist" id="ca-list">'+list.map(function(t){return '<label data-caname="'+esc((t.name+' '+t.niche+' '+t.region).toLowerCase())+'"><input type="radio" name="ca-tid" value="'+esc(t.id)+'"'+(a.tid===t.id?' checked':'')+'><b>'+esc(t.name)+'</b><span>'+esc([t.plat,t.region,t.niche].filter(Boolean).join(' · '))+'</span></label>';}).join('')+'</div>'
-      +'<div class="row" style="justify-content:space-between;margin:6px 0 12px"><span class="small">They’ll be added to Influencers as selected and stay linked to their Index profile.</span><button class="cmore" data-act="canewtal">Not in the Index? Add new talent</button></div>';
+    h+='<input id="ca-q" class="fld" style="margin-top:8px" placeholder="Search the Talent Index ('+list.length+')" autocomplete="off"><div class="calist" id="ca-list">'+list.map(function(t){return '<label data-caname="'+esc((t.name+' '+t.niche+' '+t.region).toLowerCase())+'"><input type="radio" name="ca-tid" value="'+esc(t.id)+'"'+(a.tid===t.id?' checked':'')+'><b>'+esc(t.name)+'</b><span>'+esc([t.plat,t.region,t.niche].filter(Boolean).join(' · '))+'</span></label>';}).join('')+'</div>'
+      +'<div style="text-align:right;margin-top:4px"><button class="cmore" data-act="canewtal">Not in the Index? Add new talent</button></div>';
   }
-  if(needsRate)h+='<label class="cfl"><span class="lbl">Creator rate ('+c.cur+', optional)</span><input id="ca-rate" class="fld" type="number" min="0" step="any" value="'+esc(a.rate)+'" placeholder="Blank uses their Talent Index typical rate"></label>';
-  h+='<div class="lbl" style="margin:4px 0 6px">Deliverable</div><div class="row" style="gap:6px;margin-bottom:8px">'+CAQ.map(function(q){return '<button class="tch" data-caq="'+q+'">'+q+'</button>';}).join('')+'</div>';
-  h+='<div class="row" style="gap:8px;flex-wrap:nowrap"><input id="ca-name" class="fld" style="flex:1" placeholder="e.g. IG Reel" value="'+esc(a.name)+'"><select id="ca-plat" class="sel plain" style="width:auto">'+['','Instagram','TikTok','YouTube','Snapchat','Other'].map(function(o){return '<option value="'+o+'"'+((a.plat||scPlat(a.name))===o?' selected':'')+'>'+(o||'Platform')+'</option>';}).join('')+'</select></div>';
-  h+='<label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="ca-film"'+(a.film?' checked':'')+'><span>Filming or attendance day (no posting)</span></label>';
-  h+='<div class="g2" style="gap:10px">'+(a.film?'<label class="cfl"><span class="lbl">Filming date</span><input id="ca-live" class="fld" type="date" value="'+esc(a.live)+'"></label>'
-    :'<label class="cfl"><span class="lbl">Content due</span><input id="ca-recv" class="fld" type="date" value="'+esc(a.recv)+'"></label><label class="cfl"><span class="lbl">Goes live</span><input id="ca-live" class="fld" type="date" value="'+esc(a.live)+'"></label>')+'</div>';
-  if(a.err)h+='<div class="pill bad" style="margin-top:10px;white-space:normal">'+esc(a.err)+'</div>';
-  h+='<div class="row" style="justify-content:space-between;margin-top:16px"><span class="small">Dates can be left blank – it’ll sit in To schedule.</span><div class="row"><button class="btn" data-act="cago" data-another="1"'+(a.busy?' disabled':'')+'>Add &amp; another</button><button class="btn pri" data-act="cago"'+(a.busy?' disabled':'')+'>'+(a.busy?'Saving…':'Add')+'</button></div></div></div>';
+  if(isNew)h+='<div class="small" style="margin:6px 0 2px">They’ll be added to Influencers as selected, linked to their Talent Index profile. Rates are added on the Influencers tab as usual.</div>';
+  h+='<div class="lbl" style="margin:14px 0 2px">Deliverables</div>';
+  if(!a.lines.length)h+='<div class="small" style="padding:10px 0;border-top:1px solid var(--line)">Nothing added yet.</div>';
+  a.lines.forEach(function(x,k){h+='<div class="srow"><span>'+esc(x.item)+'</span><div class="qs"><button data-cadec="'+k+'" aria-label="Fewer">−</button><input class="qty" type="number" min="1" max="999" data-caqty="'+k+'" value="'+x.qty+'" aria-label="Quantity"><button data-cainc="'+k+'" aria-label="More">+</button></div><button class="x" data-carm="'+k+'" title="Remove" aria-label="Remove">×</button></div>';});
+  var have={};a.lines.forEach(function(x){have[x.item]=1;});
+  h+='<div class="row" style="margin-top:12px;gap:8px">'+(a.other?'<input class="fld" style="flex:1" id="ca-other" placeholder="e.g. Podcast mention, then press Enter">'
+    :'<select class="sel plain" style="flex:1" id="ca-add" aria-label="Add a deliverable"><option value="">+ Add a deliverable…</option>'+SCOPE_ITEMS.filter(function(x){return !have[x];}).map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'<option value="__other">Other…</option></select>')+'</div>';
+  var onlyFilm=a.lines.length&&a.lines.every(function(x){return CA_NOPOST.indexOf(x.item)>=0;});
+  h+='<div class="g2" style="gap:10px;margin-top:14px">'+(onlyFilm?'':'<label class="cfl"><span class="lbl">Content due</span><input id="ca-recv" class="fld" type="date" value="'+esc(a.recv)+'"></label>')+'<label class="cfl"><span class="lbl">'+(onlyFilm?'Date':'Goes live')+'</span><input id="ca-live" class="fld" type="date" value="'+esc(a.live)+'"></label></div>';
+  if(a.err)h+='<div class="pill bad" style="margin-top:6px;white-space:normal">'+esc(a.err)+'</div>';
+  h+='<div class="row" style="justify-content:space-between;margin-top:14px"><span class="small" style="max-width:250px">Leave the dates blank to drop them into To schedule.</span><div class="row"><button class="btn" data-act="cago" data-another="1"'+(a.busy?' disabled':'')+'>Add &amp; another</button><button class="btn pri" data-act="cago"'+(a.busy?' disabled':'')+'>'+(a.busy?'Saving…':'Add')+'</button></div></div></div>';
   return h;
 }
 function calAddGo(another){
-  calAddSnap();var a=S.calAdd,c=FULL;a.err='';
-  var name=a.name.trim(),ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null;
+  calAddSnap();var a=S.calAdd;a.err='';
+  var ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null;
   if(a.who==='__ix'&&!a.tid){a.err='Pick someone from the Talent Index.';render();return;}
-  if(!name&&ct&&ct.approved==='Yes'&&!ct.archived){a.err='Name the deliverable.';render();return;}
-  if(!a.film&&a.recv&&a.live&&a.recv>a.live){a.err='Content due can’t be after the go-live date.';render();return;}
-  if(a.rate!==''&&!(Number(a.rate)>0)){a.err='The rate needs to be above 0, or leave it blank.';render();return;}
+  var isNew=!ct||!(ct.approved==='Yes'&&!ct.archived);
+  if(!a.lines.length&&!isNew){a.err='Add at least one deliverable.';render();return;}
+  if(a.recv&&a.live&&a.recv>a.live){a.err='Content due can’t be after the go-live date.';render();return;}
   a.busy=true;render();
-  var ctId=ct?ct.id:null,who=ct?ix(ct.tid).name:(TAL.filter(function(t){return t.id===a.tid;})[0]||{}).name||'Creator',isNew=!ct||!(ct.approved==='Yes'&&!ct.archived);
-  var p=Promise.resolve(),last=null;
-  var go=function(path,method,body){return api(path,{method:method,body:body}).then(function(j){if(j.campaign){last=j.campaign;FULL=hydrate(j.campaign);}return j;});};
+  var ctId=ct?ct.id:null,who=ct?ix(ct.tid).name:(TAL.filter(function(t){return t.id===a.tid;})[0]||{}).name||'Creator';
+  var go=function(path,method,body){return api(path,{method:method,body:body}).then(function(j){if(j.campaign)FULL=hydrate(j.campaign);return j;});};
+  var p=Promise.resolve();
   if(!ct)p=p.then(function(){return go(P('/talents'),'POST',{talent_id:a.tid});}).then(function(){var n=FULL.infl.filter(function(i){return i.tid===a.tid;})[0];if(!n)throw new Error('Could not add them');ctId=n.id;});
   p=p.then(function(){if(isNew)return go(P('/talents/'+ctId),'PATCH',ct&&ct.archived?{approved:'Yes',archived:null}:{approved:'Yes'});});
-  p=p.then(function(){if(a.rate!=='')return go(P('/talents/'+ctId),'PATCH',{initial:Number(a.rate)});});
-  p=p.then(function(){if(name)return go(P('/talents/'+ctId+'/deliverables'),'POST',a.film?{name:name,platform:a.plat||scPlat(name),noPost:true,recv:a.live}:{name:name,platform:a.plat||scPlat(name),recv:a.recv,live:a.live});});
+  p=p.then(function(){
+    if(!a.lines.length)return;
+    var i=find(ctId),sc=(i.scope||[]).map(function(x){return {item:x.item,qty:x.qty};}),pend=i.deliv.length?[]:sc.slice();
+    a.lines.forEach(function(l){var f=sc.filter(function(x){return x.item===l.item;})[0];if(f)f.qty+=l.qty;else sc.push({item:l.item,qty:l.qty});});
+    var q=go(P('/talents/'+ctId),'PATCH',{scope:sc});
+    // creator had quoted scope but no deliverables yet: create those (undated) so they stay in To schedule
+    pend.forEach(function(x){if(CA_NODATE.indexOf(x.item)>=0)return;q=q.then(function(){var np=CA_NOPOST.indexOf(x.item)>=0;return go(P('/talents/'+ctId+'/deliverables'),'POST',{name:x.qty+' × '+x.item,platform:scPlat(x.item),noPost:np});});});
+    a.lines.forEach(function(l){if(CA_NODATE.indexOf(l.item)>=0)return;var np=CA_NOPOST.indexOf(l.item)>=0;
+      q=q.then(function(){return go(P('/talents/'+ctId+'/deliverables'),'POST',np?{name:l.qty+' × '+l.item,platform:scPlat(l.item),noPost:true,recv:a.live}:{name:l.qty+' × '+l.item,platform:scPlat(l.item),recv:a.recv,live:a.live});});});
+    return q;
+  });
   p.then(function(){
-    toast((isNew?who+' added to Influencers':who)+(name?(isNew?' with ':': ')+name+(a.live?(a.film?' filming ':' going live ')+fd(a.live):' (to schedule)'):''));
-    if(another)S.calAdd={who:'ct:'+ctId,tid:'',name:'',plat:'',film:false,recv:'',live:a.live,rate:'',err:''};else S.calAdd=null;
-    if(a.live&&S.calV!=='Year')S.calM=a.live.slice(0,7),S.calPick=a.live.slice(0,7);
-    render();if(another)setTimeout(function(){var f=document.getElementById('ca-name');if(f)f.focus();},30);
+    var what=a.lines.map(function(l){return l.qty+' × '+l.item;}).join(', ');
+    toast((isNew?who+' added to Influencers':who)+(what?(isNew?' with ':': ')+what+(a.live?' · '+fd(a.live):' (to schedule)'):''));
+    var lv=a.live;S.calAdd=another?{who:'ct:'+ctId,tid:'',lines:[],other:false,recv:'',live:lv,err:''}:null;
+    if(lv&&S.calV!=='Year'){S.calM=lv.slice(0,7);S.calPick=lv.slice(0,7);}
+    render();
   }).catch(function(er){if(S.calAdd){S.calAdd.busy=false;S.calAdd.err=er.message||'Something went wrong';}render();loadOne(true);});
 }
+document.addEventListener('keydown',function(e){if(e.target.id!=='ca-other')return;
+  if(e.key==='Enter'){e.preventDefault();var v=e.target.value.trim().slice(0,60);calAddSnap();S.calAdd.other=false;if(v)S.calAdd.lines.push({item:v,qty:1});render();}
+  else if(e.key==='Escape'){e.stopPropagation();S.calAdd.other=false;render();}});
 document.addEventListener('input',function(e){if(e.target.id!=='ca-q')return;var q=e.target.value.toLowerCase().trim();
   document.querySelectorAll('#ca-list label').forEach(function(l){l.style.display=!q||l.getAttribute('data-caname').indexOf(q)>=0?'':'none';});});
 function calDayModal(){
@@ -1424,8 +1445,9 @@ document.addEventListener('change',function(e){
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
   if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
-  if(t.id==='ca-who'||t.id==='ca-film'){calAddSnap();if(t.id==='ca-who')S.calAdd.err='';render();return;}
-  if(t.id==='ca-name'){calAddSnap();var pe=document.getElementById('ca-plat');if(pe&&!pe.value)pe.value=scPlat(t.value);return;}
+  if(t.id==='ca-who'){calAddSnap();S.calAdd.err='';render();return;}
+  if(t.id==='ca-add'){calAddSnap();var av=t.value;if(av==='__other'){S.calAdd.other=true;render();setTimeout(function(){var o=document.getElementById('ca-other');if(o)o.focus();},20);}else if(av){S.calAdd.lines.push({item:av,qty:1});render();}return;}
+  if(t.getAttribute&&t.hasAttribute('data-caqty')){calAddSnap();return;}
   if(t.id==='calpick'){if(t.value){S.calPick=t.value;S.calM=t.value;render();}return;}
   if(t.id==='calnote'){var cv=t.value.trim();FULL.calNote=cv;post(P(''),'PATCH',{calNote:cv},{quiet:true,msg:'Note saved'});return;}
   if(t.id==='lshare'){if(t.value)post(P('/links'),'POST',{code:t.value},{msg:'Link added to this campaign'});return;}
@@ -1475,14 +1497,14 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-caq]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
   else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Decks & links')loadShares();}
-  else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;render();}}
+  else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;S.calPick=d.calm;render();}}
   else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
   else if(d.calmore){S.calDay=d.calmore;render();}
   else if(d.calx){S.calDay=null;render();}
@@ -1494,9 +1516,10 @@ document.addEventListener('click',function(e){
   else if(d.calarm!==undefined){S.calArm=null;render();}
   else if(d.caltray){S.calTrayOff=!S.calTrayOff;render();}
   else if(d.cday){if(S.calArm)calPlace(S.calArm,d.cday);}
-  else if(d.ycell){var yp=d.ycell.split('|');if(S.calArm)calPlace(S.calArm,lastDay(yp[1]),yp[0]);else if(canEdit())calAddOpen(yp[0],lastDay(yp[1]));}
+  else if(d.ycell){var yp=d.ycell.split('|');if(S.calArm)calPlace(S.calArm,lastDay(yp[1]));else if(canEdit())calAddOpen(yp[0],lastDay(yp[1]));}
   else if(d.cax){S.calAdd=null;render();}
-  else if(d.caq){calAddSnap();S.calAdd.name=d.caq;S.calAdd.plat=scPlat(d.caq);render();}
+  else if(d.cadec!==undefined||d.cainc!==undefined){calAddSnap();var cl=S.calAdd.lines[Number(d.cadec!==undefined?d.cadec:d.cainc)];if(cl){cl.qty=Math.max(1,Math.min(999,cl.qty+(d.cainc!==undefined?1:-1)));render();}}
+  else if(d.carm!==undefined){calAddSnap();S.calAdd.lines.splice(Number(d.carm),1);render();}
   else if(d.rmrow){S.rmrow=d.rmrow;render();}
   else if(d.rmrowno){S.rmrow=null;render();}
   else if(d.rmrowgo){var rg=d.rmrowgo;S.rmrow=null;S.sel=null;post(P('/talents/'+rg),'DELETE',undefined,{msg:'Removed from the campaign'});}
