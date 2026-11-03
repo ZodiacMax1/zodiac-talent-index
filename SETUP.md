@@ -196,3 +196,12 @@ No new migration. Adding from the Influencers tab works exactly as before; this 
 - Optional creator rate for anyone new to the selection. Blank uses their Index typical rate, as when added from Influencers; entering one saves it to the Index like any campaign rate.
 - Deliverable: quick picks (IG Reel, IG Story, IG Post, TikTok, YouTube video, UGC video) or type one, platform, filming day, content due and go-live. Dates can be blank and it goes to To schedule. "Add & another" keeps the creator and date.
 - Rows in the Year view now show every selected creator for editors, so new ones can be scheduled straight away.
+
+## Update 49 – Calendar fixes
+No new migration.
+- Year view: no dragging. Click a deliverable in To schedule, then click the month (any row works; it always goes to that deliverable's creator, whose row is highlighted). It goes live on the last day of the month.
+- Month view: editors' ‹ › now step one month at a time, including empty months, so you can drag or click-place into any month. A clicked deliverable stays selected while you change month.
+- Add to calendar pop-up: creator rate removed (rates are added on Influencers as usual). Deliverables use the same editor as Influencers (+ Add a deliverable…, quantity steppers, Other…). They are saved to the creator's quoted deliverables and created as "2 × IG Reel" etc. with the dates given. Filming day / Event take the date as the filming date; Usage rights is saved to the quote only.
+
+## Update 50 – Social media links on the creator panel
+No new migration. Creator panel in a campaign has a third tab, "Social media links": Instagram, TikTok and YouTube from their Talent Index profile, with handle, follower count, open link, Copy link and Copy all links. Edit them in the Talent Index ("Edit in Talent Index ↗").
