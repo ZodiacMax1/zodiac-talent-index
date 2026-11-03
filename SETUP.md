@@ -180,3 +180,11 @@ Month / Year / Agenda switcher at the top of the Content calendar.
 - Year view is now a fixed Jan–Dec grid for one year (‹ › to change year, only years with content). Creator rows, pink "Post 1, Post 2…" cells numbered in go-live order per creator, months with no posting shaded grey, Total column and "Posts this month" row.
 - Toggle "Post numbers / Deliverable names". Click any cell to open the deliverable; hover for dates. ✓ = done, ! = overdue.
 - Note line under the table (editors type straight into it, e.g. "No posting in Feb (Ramadan, c. 8 Feb to 9 Mar, provisional), Jul or Aug (summer pause).").
+
+## Update 47 – Schedule deliverables from the calendar
+No new migration.
+- "To schedule" tray above the Month and Year views (editors only), grouped by creator. It lists every deliverable of approved creators with no date yet, plus quoted scope lines that haven't been turned into deliverables. Anything that already has a date isn't listed.
+- Year view: drag an item onto a month on that creator's row and it goes live on the last day of that month. Month view: drag onto a day for the exact date. Or click an item, then click the month/day.
+- Filming days set the filming date; everything else sets the go-live date.
+- Placing a scope line creates that deliverable (and the creator's other scope lines, undated, so they stay in the tray).
+- Month view has an "Any month" picker so you can go to a month that has nothing in it yet.
