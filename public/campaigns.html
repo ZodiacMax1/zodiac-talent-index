@@ -356,6 +356,20 @@ input.ynote:hover{border-color:var(--line2)}input.ynote:focus{border-color:var(-
 @media (max-width:760px){.mcards{grid-template-columns:1fr}.pt{display:block;overflow-x:auto}.g3{grid-template-columns:1fr}}
 
 .drawer.wide{width:min(800px,100%)}
+/* Table headings: bold and black everywhere */
+th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!important;text-transform:uppercase;color:var(--fg)!important}
+.calh div{font-weight:700;color:var(--fg)}
+.yv th{font:700 15px Arial,Helvetica,sans-serif!important;color:#fff!important;letter-spacing:0!important;text-transform:none}
+.sel-bar{display:flex;align-items:center;gap:10px;background:var(--fg);color:var(--bg);border-radius:12px;padding:9px 14px;margin-bottom:12px;font-size:13.5px}
+.sel-bar .btn{min-height:32px;padding:5px 12px;font-size:13px}
+.sel-bar .btn.light{background:var(--bg);color:var(--fg);border-color:var(--bg)}
+.sel-bar .btn.ghost{background:transparent;color:var(--bg);border-color:rgba(255,255,255,.35)}
+.qtag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:1px 7px;font:500 11px var(--mono);margin-left:6px}
+
+.it tr.rsel td{background:var(--accent-soft)}
+.sel-bar .bsel{width:auto;min-height:32px;padding:4px 30px 4px 10px;font-size:13px;background-color:var(--bg);color:var(--fg)}
+.qty.setq{width:48px;border:1px solid var(--line2);border-radius:7px;padding:2px 4px;text-align:center}
+
 </style>
 </head>
 <body>
@@ -509,7 +523,7 @@ function fillSub(c,s){
   if(S.fillc&&canEdit())return 'Set every creator to '+f.m.toFixed(1)+'%? <button class="btn sm" data-act="fillgo">Yes</button> <button class="btn sm" data-act="fillno">No</button>';
   return 'Budget fully used = <b>'+f.m.toFixed(1)+'% margin</b>'+(canEdit()?' · <button class="scbtn" style="color:var(--accent);padding:0" data-act="fillask">Apply</button>':'');
 }
-function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' '+hl:'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(g?'<span style="color:var(--gold)">≈ '+g+'</span> · ':'')+s+'</div></div>';}
+function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' '+hl:'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div></div>';}
 function toast(m){var t=document.getElementById('toast');t.innerHTML='<div class="toast">'+esc(m)+'</div>';setTimeout(function(){t.innerHTML='';},2600);}
 
 function mondayImport(){
@@ -651,10 +665,12 @@ function tabInfl(c){
   var list=w?base0:c.infl.filter(function(i){
     if(S.filter==='All')return i.approved!=='Declined';if(S.filter==='Approved')return i.approved==='Yes';
     if(S.filter==='Not approved')return i.approved!=='Yes'&&i.approved!=='Declined';return i.approved==='Declined';});
-  h+='<div class="card sc"><table class="it'+(w?' itw':'')+'"><thead><tr><th>Influencer</th>'+(w?'':'<th>Approved</th>')+'<th>Stage</th><th>Deliverables</th><th class="r">Initial</th><th class="r">Negotiated</th><th class="r">Client rate</th><th class="r">Margin</th>'+(w?'<th>Contract</th><th>Invoicing</th><th></th>':'<th></th>')+'</tr></thead><tbody>';
+  h+=bulkBar(c,w);
+  var ed=canEdit(),ks0=iselKeys(c),allOn=list.length&&list.every(function(i){return S.isel[i.id];});
+  h+='<div class="card sc"><table class="it'+(w?' itw':'')+'"><thead><tr>'+(ed?'<th style="width:34px"><input type="checkbox" data-iselall="1"'+(allOn?' checked':'')+' aria-label="Select all"></th>':'')+'<th>Influencer</th>'+(w?'':'<th>Approved</th>')+'<th>Stage</th><th>Deliverables</th><th class="r">Initial</th><th class="r">Negotiated</th><th class="r">Client rate</th><th class="r">Margin</th>'+(w?'<th>Contract</th><th>Invoicing</th><th></th>':'<th></th>')+'</tr></thead><tbody>';
   if(!list.length)h+='<tr><td colspan="12" class="small" style="padding:26px">Nobody here yet. Use “Add from Talent Index”.</td></tr>';
   list.forEach(function(i){
-    h+='<tr><td>'+nameCell(i)+'</td>'+(w?'':'<td>'+sel('approved',i.approved,APPROVED,i.id)+'</td>')+'<td>'+sel('stage',i.stage,w?STAGES.concat(['Archived']):STAGES,i.id)+'</td><td>'+scopeSum(i)+(w||i.deliv.length?dsum(i):'')+'</td>'
+    h+='<tr'+(S.isel&&S.isel[i.id]?' class="rsel"':'')+'>'+(canEdit()?'<td><input type="checkbox" data-isel="'+i.id+'"'+(S.isel&&S.isel[i.id]?' checked':'')+' aria-label="Select '+esc(ix(i.tid).name)+'"></td>':'')+'<td>'+nameCell(i)+'</td>'+(w?'':'<td>'+sel('approved',i.approved,APPROVED,i.id)+'</td>')+'<td>'+sel('stage',i.stage,w?STAGES.concat(['Archived']):STAGES,i.id)+'</td><td>'+scopeSum(i)+(w||i.deliv.length?dsum(i):'')+'</td>'
      +'<td class="r"><input class="in dim" inputmode="numeric" data-f="initial" data-i="'+i.id+'" value="'+money(i.initial)+'" aria-label="Initial rate" title="Click to edit"></td>'
      +'<td class="r"><input class="in strong" inputmode="numeric" data-f="neg" data-i="'+i.id+'" value="'+(i.neg?money(i.neg):'')+'" placeholder="–" aria-label="Negotiated rate" title="Click to edit"></td>'
      +'<td class="r"><input class="in dim" inputmode="numeric" data-f="client" data-i="'+i.id+'" value="'+money(i.client)+'" aria-label="Client rate" title="Click to edit">'+(i.neg?'':'<div class="small" style="font-size:11px;padding-right:9px">from initial</div>')+'</td>'
@@ -664,7 +680,7 @@ function tabInfl(c){
   h+='</tbody>';
   var sl=selected(c),ti=0,tn=0,tc=0;sl.forEach(function(i){ti+=i.initial;if(i.neg)tn+=i.neg;tc+=i.client;});
   if(sl.length){var st=stats(c);
-    h+='<tfoot><tr><td><b>Total · '+sl.length+' selected</b></td>'+(w?'':'<td></td>')+'<td></td><td></td><td class="r num">'+money(ti)+'</td><td class="r num">'+(tn?money(tn):'–')+'</td><td class="r num">'+money(tc)+'</td><td class="r num">'+(st.price?st.pc.toFixed(1)+'%':'–')+'</td>'+(w?'<td></td><td></td><td></td>':'<td></td>')+'</tr></tfoot>';}
+    h+='<tfoot><tr>'+(canEdit()?'<td></td>':'')+'<td><b>Total · '+sl.length+' selected</b></td>'+(w?'':'<td></td>')+'<td></td><td></td><td class="r num">'+money(ti)+'</td><td class="r num">'+(tn?money(tn):'–')+'</td><td class="r num">'+money(tc)+'</td><td class="r num">'+(st.price?st.pc.toFixed(1)+'%':'–')+'</td>'+(w?'<td></td><td></td><td></td>':'<td></td>')+'</tr></tfoot>';}
   return h+'</table></div>';
 }
 function tabArchive(c){
@@ -717,11 +733,29 @@ function dcell(d,kind){
   if(!dl)return '<span class="small">No date</span>';
   return '<span class="dtx'+(m.k==='bad'?' late':'')+'">'+fd(dl)+'</span> <span class="pill '+m.k+'">'+esc(m.sub)+'</span>';
 }
+
+/* Deliverables from a quote: one per piece (IG Reel 1, IG Reel 2…); stories stay together as one (3 × IG Story) */
+var GROUPED=/stor(y|ies)/i;
+function dItem(d){if(d.item)return {item:d.item,qty:d.qty||1};var m=String(d.name).match(/^\s*(\d+)\s*[×x]\s*(.+?)\s*$/);return m?{item:m[2],qty:+m[1]}:{item:String(d.name).replace(/\s+\d+$/,''),qty:1};}
+function usedMap(i){var u={};(i?i.deliv:[]).forEach(function(d){var it=dItem(d).item;u[it]=(u[it]||0)+1;var m=String(d.name).match(/·\s*Set\s+(\d+)\s*$/);if(m)u['set:'+it]=Math.max(u['set:'+it]||0,+m[1]);});return u;}
+function splitScope(item,qty,used,total,set){
+  var noPost=['Filming day','Event / attendance'].indexOf(item)>=0;if(item==='Usage rights')return [];
+  var plat=scPlat(item);
+  if(GROUPED.test(item)){var sz=Math.max(1,Math.min(qty,Math.round(set)||qty)),n=Math.ceil(qty/sz),o2=[];
+    if(n===1)return [{name:qty>1?qty+' × '+item:item,item:item,qty:qty,plat:plat,noPost:noPost}];
+    var u2=used['set:'+item]||0;for(var k2=0;k2<n;k2++){var q2=k2<n-1?sz:qty-sz*(n-1);o2.push({name:q2+' × '+item+' · Set '+(u2+k2+1),item:item,qty:q2,plat:plat,noPost:noPost});}
+    used['set:'+item]=u2+n;return o2;}
+  var u=used[item]||0,all=total!=null?total:u+qty,out=[];
+  for(var k=0;k<qty;k++)out.push({name:all>1?item+' '+(u+k+1):item,item:item,qty:1,plat:plat,noPost:noPost});
+  used[item]=u+qty;return out;
+}
+function delBody(x,extra){var b={name:x.name,platform:x.plat,item:x.item,qty:x.qty,noPost:!!x.noPost};for(var k in (extra||{}))b[k]=extra[k];return b;}
+
 function scPlat(x){return /^IG/.test(x)?'Instagram':/TikTok/.test(x)?'TikTok':/YouTube/.test(x)?'YouTube':'';}
-function scPending(c){var a=[];selected(c).forEach(function(i){if(i.deliv.length)return;(i.scope||[]).forEach(function(x){a.push({iid:i.id,name:x.qty+' × '+x.item,plat:scPlat(x.item)});});});return a;}
+function scPending(c){var a=[];selected(c).forEach(function(i){if(i.deliv.length)return;var u={};(i.scope||[]).forEach(function(x){splitScope(x.item,x.qty,u).forEach(function(y){y.iid=i.id;a.push(y);});});});return a;}
 function scFill(c,quiet){var a=scPending(c);if(!a.length||S.filling)return;S.filling=true;var n=0,id=c.id;
   (function nx(){var x=a[n++];if(!x){S.filling=false;toast('Added '+a.length+' deliverable'+(a.length===1?'':'s')+' from the scope');render();return;}
-    post('/campaigns/'+id+'/talents/'+x.iid+'/deliverables','POST',{name:x.name,platform:x.plat},{quiet:true}).then(nx).catch(function(e){S.filling=false;toast(e.message);});})();}
+    post('/campaigns/'+id+'/talents/'+x.iid+'/deliverables','POST',delBody(x),{quiet:true}).then(nx).catch(function(e){S.filling=false;toast(e.message);});})();}
 function tabDeliv(c){
   var rows=[];selected(c).forEach(function(i){i.deliv.forEach(function(d){rows.push([i,d]);});});
   rows.sort(function(a,b){var ka=dinfo(a[1]),kb=dinfo(b[1]);if(ka.done!==kb.done)return ka.done?1:-1;return (ka.key||'9')<(kb.key||'9')?-1:1;});
@@ -731,10 +765,122 @@ function tabDeliv(c){
   rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg);});
   var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div>';
   var pend=scPending(c).length;if(pend&&canEdit())bar='<div class="row" style="margin-bottom:12px"><button class="btn sm pri" data-act="scfill">Add '+pend+' deliverable'+(pend===1?'':'s')+' from scope</button></div>'+bar;
-  var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="5" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
-  rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td></tr>';});
+  var ed=canEdit();S.dsel=S.dsel||{};
+  var sk=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]);return i&&i.deliv.some(function(d){return d.id===p[1];});});
+  if(ed&&sk.length){var same=sk.every(function(k){return k.split('|')[0]===sk[0].split('|')[0];});
+    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+'<button class="btn ghost" data-act="dselclear">Clear</button></div>';}
+  else h=bar;
+  h+='<div class="card sc"><table><thead><tr>'+(ed?'<th style="width:34px"></th>':'')+'<th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
+  rows.forEach(function(r){var d=r[1],key=r[0].id+'|'+d.id,q=dItem(d).qty;
+    h+='<tr class="clk" data-dd="'+key+'">'+(ed?'<td><input type="checkbox" data-dsel="'+key+'"'+(S.dsel[key]?' checked':'')+' aria-label="Select '+esc(d.name)+'"></td>':'')+'<td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b>'+(q>1?'<span class="qtag">'+q+' pieces</span>':'')+'<div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td>'+(ed?'<td class="r">'+(q>1?'<button class="btn sm" data-dsplit="'+key+'" title="Make each piece its own deliverable">Split into '+q+'</button>':'')+'</td>':'')+'</tr>';});
   return h+'</tbody></table></div>';
+}
+
+/* Group several deliverables into one (e.g. 3 stories posted together) or split a group back into pieces */
+function dGroup(){
+  var ks=Object.keys(S.dsel),iid=ks[0].split('|')[0],i=find(iid);if(!i)return;
+  var ds=ks.map(function(k){return i.deliv.filter(function(d){return d.id===k.split('|')[1];})[0];}).filter(Boolean);
+  if(ds.some(function(d){return d.crInv||d.crStatus!=='Not due';})){toast('One of these has a creator invoice or payment against it. Remove that first.');return;}
+  ds.sort(function(a,b){return (dDate(a)||'9')<(dDate(b)||'9')?-1:1;});
+  var its=ds.map(dItem),one=its.every(function(x){return x.item===its[0].item;}),qty=its.reduce(function(a,x){return a+x.qty;},0);
+  var b={name:one?qty+' × '+its[0].item:its.map(function(x){return x.qty+' × '+x.item;}).join(' + '),item:one?its[0].item:'',qty:one?qty:1};
+  if(!one){var tr=0,ok=true;ds.forEach(function(d){var r=crRateOf(i,d);if(r==null)ok=false;else tr+=r;});if(ok)b.crRate=tr;}
+  var keep=ds[0],path=P('/talents/'+iid+'/deliverables/');
+  var pr=api(path+keep.id,{method:'PATCH',body:b});
+  ds.slice(1).forEach(function(d){pr=pr.then(function(){return api(path+d.id,{method:'DELETE'});});});
+  pr.then(function(){S.dsel={};return loadOne();}).then(function(){toast('Grouped into '+b.name);}).catch(function(e){toast(e.message);loadOne();});
+}
+function dSplit(key,size){
+  var p=key.split('|'),i=find(p[0]),d=i&&i.deliv.filter(function(z){return z.id===p[1];})[0];if(!d)return;
+  if(d.crInv||d.crStatus!=='Not due'){toast('This has a creator invoice or payment against it. Remove that first.');return;}
+  var di=dItem(d),used=usedMap(i);used[di.item]=Math.max(0,(used[di.item]||1)-1);
+  size=Math.max(1,Math.min(di.qty,size||1));var nP=Math.ceil(di.qty/size),parts=[];for(var k=0;k<nP;k++)parts.push(k<nP-1?size:di.qty-size*(nP-1));
+  var tot=(used[di.item]||0)+di.qty,u=used[di.item]||0;
+  var names=parts.map(function(x,k){return size===1?di.item+(tot>1?' '+(u+k+1):''):x+' × '+di.item+' · Set '+(k+1);});
+  var path=P('/talents/'+p[0]+'/deliverables'),base0={platform:d.plat||scPlat(di.item),item:di.item,qty:1,noPost:d.noPost,recv:d.recv,live:d.live};
+  var pr=api(path+'/'+d.id,{method:'PATCH',body:{name:names[0],item:di.item,qty:parts[0],crRate:null}});
+  names.slice(1).forEach(function(nm,k){pr=pr.then(function(){var b={name:nm};for(var kk in base0)b[kk]=base0[kk];b.qty=parts[k+1];return api(path,{method:'POST',body:b});});});
+  S.splitD=null;pr.then(function(){return loadOne();}).then(function(){toast('Split into '+nP+' deliverable'+(nP===1?'':'s'));}).catch(function(e){toast(e.message);loadOne();});
+}
+
+/* ---- Bulk: tick creators on the Influencers tab, then add deliverables or change approved / stage for all of them ---- */
+function iselKeys(c){S.isel=S.isel||{};return Object.keys(S.isel).filter(function(k){return c.infl.some(function(i){return i.id===k;});});}
+function bulkBar(c,w){
+  var ks=iselKeys(c);if(!canEdit()||!ks.length)return '';
+  return '<div class="sel-bar"><b style="font-weight:500">'+ks.length+' creator'+(ks.length===1?'':'s')+' selected</b><span style="flex:1"></span>'
+    +'<button class="btn light" data-act="bulkdel">+ Add deliverables</button>'
+    +(w?'':'<select class="sel plain bsel" id="bulk-approved" aria-label="Set approved"><option value="">Approved…</option>'+APPROVED.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>')
+    +'<select class="sel plain bsel" id="bulk-stage" aria-label="Set stage"><option value="">Stage…</option>'+STAGES.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>'
+    +'<button class="btn ghost" data-act="iselclear">Clear</button></div>';
+}
+function bulkSet(field,val){
+  var c=FULL,ks=iselKeys(c);if(!val||!ks.length)return;
+  var todo=ks.filter(function(k){var i=find(k);return i&&i[field]!==val;});
+  if(!todo.length){toast('Already '+val);render();return;}
+  toast('Updating '+todo.length+' creator'+(todo.length===1?'':'s')+'…');
+  var b={};b[field]=val;
+  todo.reduce(function(pr,k){return pr.then(function(){return api(P('/talents/'+k),{method:'PATCH',body:b});});},Promise.resolve())
+    .then(function(){return loadOne();}).then(function(){toast((field==='approved'?'Approved: ':'Stage: ')+val+' for '+todo.length+' creator'+(todo.length===1?'':'s'));}).catch(function(e){toast(e.message);loadOne();});
+}
+// Adds deliverables to one creator's quote, and (once they're selected) creates the deliverables themselves
+function addLines(iid,lines,dates){
+  var i=find(iid);if(!i)return Promise.resolve();
+  var sc=(i.scope||[]).map(function(x){var o={item:x.item,qty:x.qty};if(x.rate!=null)o.rate=x.rate;return o;});
+  var live=i.approved==='Yes'&&!i.archived,pend=live&&!i.deliv.length?sc.map(function(x){return {item:x.item,qty:x.qty};}):[];
+  lines.forEach(function(l){var f=sc.filter(function(x){return x.item===l.item;})[0];if(f)f.qty+=l.qty;else sc.push({item:l.item,qty:l.qty});});
+  var used=usedMap(i),tot={},mk=[];
+  pend.concat(lines).forEach(function(x){tot[x.item]=(tot[x.item]!=null?tot[x.item]:(used[x.item]||0))+x.qty;});
+  if(live){
+    pend.forEach(function(x){splitScope(x.item,x.qty,used,tot[x.item]).forEach(function(y){mk.push(delBody(y));});});
+    lines.forEach(function(l){splitScope(l.item,l.qty,used,tot[l.item],l.set).forEach(function(y){mk.push(delBody(y,y.noPost?{recv:dates.live||''}:{recv:dates.recv||'',live:dates.live||''}));});});
+  }
+  var q=api(P('/talents/'+iid),{method:'PATCH',body:{scope:sc}});
+  mk.forEach(function(b){q=q.then(function(){return api(P('/talents/'+iid+'/deliverables'),{method:'POST',body:b});});});
+  return q;
+}
+function lineEditor(a,pre){
+  var h='';
+  if(!a.lines.length)h+='<div class="small" style="padding:10px 0;border-top:1px solid var(--line)">Nothing added yet.</div>';
+  a.lines.forEach(function(x,k){h+='<div class="srow"><span>'+esc(x.item)+(GROUPED.test(x.item)&&x.qty>1?' <label class="small" style="margin-left:8px">in sets of <input class="qty setq" type="number" min="1" max="'+x.qty+'" data-'+pre+'set="'+k+'" value="'+(x.set||x.qty)+'" aria-label="Stories per deliverable"></label>':'')+'</span><div class="qs"><button data-'+pre+'dec="'+k+'" aria-label="Fewer">−</button><input class="qty" type="number" min="1" max="999" data-'+pre+'qty="'+k+'" value="'+x.qty+'" aria-label="Quantity"><button data-'+pre+'inc="'+k+'" aria-label="More">+</button></div><button class="x" data-'+pre+'rm="'+k+'" title="Remove" aria-label="Remove">×</button></div>';});
+  var have={};a.lines.forEach(function(x){have[x.item]=1;});
+  h+='<div class="row" style="margin-top:12px;gap:8px">'+(a.other?'<input class="fld" style="flex:1" id="'+pre+'-other" placeholder="e.g. Podcast mention, then press Enter">'
+    :'<select class="sel plain" style="flex:1" id="'+pre+'-add" aria-label="Add a deliverable"><option value="">+ Add a deliverable…</option>'+SCOPE_ITEMS.filter(function(x){return !have[x];}).map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'<option value="__other">Other…</option></select>')+'</div>';
+  return h;
+}
+function bulkModal(){
+  var a=S.bulk,c=FULL;if(!c)return '';var ks=iselKeys(c),live=ks.filter(function(k){var i=find(k);return i&&i.approved==='Yes'&&!i.archived;}).length;
+  var h='<div class="ov" data-bkx="1"></div><div class="smod cadd" role="dialog" aria-label="Add deliverables"><div class="row" style="justify-content:space-between;margin-bottom:4px"><div><div class="lbl">Add deliverables</div><div style="font:500 20px var(--display);text-transform:uppercase;letter-spacing:.02em">'+ks.length+' creator'+(ks.length===1?'':'s')+'</div></div><button class="btn sm" data-bkx="1">Close</button></div>';
+  h+='<div class="small" style="margin-bottom:10px">'+esc(ks.slice(0,6).map(function(k){return ix(find(k).tid).name;}).join(', ')+(ks.length>6?' and '+(ks.length-6)+' more':''))+'</div>';
+  h+='<div class="lbl" style="margin:6px 0 2px">Each creator gets</div>'+lineEditor(a,'bk');
+  h+='<div class="g2" style="gap:10px;margin-top:14px"><label class="cfl"><span class="lbl">Content due (optional)</span><input id="bk-recv" class="fld" type="date" value="'+esc(a.recv)+'"></label><label class="cfl"><span class="lbl">Goes live (optional)</span><input id="bk-live" class="fld" type="date" value="'+esc(a.live)+'"></label></div>';
+  h+='<div class="small">Added to each creator’s quoted deliverables (and their Index rate quote). '+(live?live+' of them '+(live===1?'is':'are')+' selected, so the deliverables are created too'+(live<ks.length?'; the rest get them once selected.':'.'):'Deliverables are created once they’re selected.')+'</div>';
+  if(a.err)h+='<div class="pill bad" style="margin-top:8px;white-space:normal">'+esc(a.err)+'</div>';
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-bkx="1">Cancel</button><button class="btn pri" data-act="bkgo"'+(a.busy?' disabled':'')+'>'+(a.busy?'Adding…':'Add to '+ks.length+' creator'+(ks.length===1?'':'s'))+'</button></div></div>';
+  return h;
+}
+function bulkSnap(){var a=S.bulk;if(!a)return;var g=function(x){return document.getElementById(x);};if(g('bk-recv'))a.recv=g('bk-recv').value;if(g('bk-live'))a.live=g('bk-live').value;
+  document.querySelectorAll('[data-bkqty]').forEach(function(x){var k=+x.getAttribute('data-bkqty'),v=Math.round(Number(x.value));if(a.lines[k]&&v>=1&&v<=999)a.lines[k].qty=v;});
+  document.querySelectorAll('[data-bkset]').forEach(function(x){var k=+x.getAttribute('data-bkset'),v=Math.round(Number(x.value));if(a.lines[k]&&v>=1)a.lines[k].set=Math.min(v,a.lines[k].qty);});}
+function bulkGo(){
+  bulkSnap();var a=S.bulk,ks=iselKeys(FULL);a.err='';
+  if(!a.lines.length){a.err='Add at least one deliverable.';render();return;}
+  if(a.recv&&a.live&&a.recv>a.live){a.err='Content due can’t be after the go-live date.';render();return;}
+  a.busy=true;render();var n=0;
+  ks.reduce(function(pr,k){return pr.then(function(){n++;toast('Adding to creator '+n+' of '+ks.length+'…');return addLines(k,a.lines,{recv:a.recv,live:a.live});});},Promise.resolve())
+    .then(function(){return loadOne();}).then(function(){S.bulk=null;S.isel={};toast('Added '+a.lines.map(function(l){return l.qty+' × '+l.item;}).join(', ')+' to '+ks.length+' creator'+(ks.length===1?'':'s'));render();})
+    .catch(function(e){if(S.bulk){S.bulk.busy=false;S.bulk.err=e.message;}loadOne();});
+}
+/* Split a group: one each, or in sets (12 stories -> 4 sets of 3) */
+function splitModal(){
+  var p=S.splitD.key.split('|'),i=find(p[0]),d=i&&i.deliv.filter(function(z){return z.id===p[1];})[0];if(!d)return '';
+  var di=dItem(d),sz=Math.max(1,Math.min(di.qty,S.splitD.size||1)),n=Math.ceil(di.qty/sz),last=di.qty-sz*(n-1);
+  var opts=[1];for(var k=2;k<di.qty;k++)if(di.qty%k===0)opts.push(k);
+  var h='<div class="ov" data-spx="1"></div><div class="smod" role="dialog" aria-label="Split"><div class="row" style="justify-content:space-between;margin-bottom:10px"><div><div class="lbl">Split</div><div style="font:500 20px var(--display);text-transform:uppercase;letter-spacing:.02em">'+esc(d.name)+'</div></div><button class="btn sm" data-spx="1">Cancel</button></div>';
+  h+='<div class="lbl" style="margin-bottom:6px">'+esc(di.item)+' per deliverable</div><div class="row" style="gap:6px;margin-bottom:10px">'+opts.map(function(o){return '<button class="btn sm'+(sz===o?' on':'')+'" data-spsz="'+o+'">'+(o===1?'1 each':o)+'</button>';}).join('')+'<input class="fld" type="number" min="1" max="'+di.qty+'" id="sp-size" value="'+sz+'" style="width:80px" aria-label="Pieces per deliverable"></div>';
+  h+='<div class="cichk ok"><span><b style="font-weight:500">'+n+' deliverable'+(n===1?'':'s')+'</b> of '+sz+(last!==sz?' (last one '+last+')':'')+' · keeps the dates</span></div>';
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-spx="1">Cancel</button><button class="btn pri" data-act="spgo"'+(n<2?' disabled':'')+'>Split into '+n+'</button></div></div>';
+  return h;
 }
 
 /* ---------- Content calendar ---------- */
@@ -855,7 +1001,7 @@ function calUnsched(c,ignoreWho){
   var w=ignoreWho?'All':(S.calWho||'All'),out=[];
   selected(c).forEach(function(i){if(w!=='All'&&i.id!==w)return;var who=ix(i.tid).name;
     i.deliv.forEach(function(d){if(d.noPost?d.recv:(d.recv||d.live))return;out.push({key:'d~'+i.id+'~'+d.id,kind:'d',iid:i.id,did:d.id,who:who,name:d.name,plat:d.plat,noPost:d.noPost});});});
-  var sp={};scPending(c).forEach(function(x){if(w!=='All'&&x.iid!==w)return;sp[x.iid]=(sp[x.iid]||0)+1;out.push({key:'s~'+x.iid+'~'+sp[x.iid],kind:'s',iid:x.iid,who:ix(find(x.iid).tid).name,name:x.name,plat:x.plat,noPost:false});});
+  var sp={};scPending(c).forEach(function(x){if(w!=='All'&&x.iid!==w)return;sp[x.iid]=(sp[x.iid]||0)+1;out.push({key:'s~'+x.iid+'~'+sp[x.iid],kind:'s',iid:x.iid,who:ix(find(x.iid).tid).name,name:x.name,plat:x.plat,item:x.item,qty:x.qty,noPost:!!x.noPost});});
   S.calU={};out.forEach(function(u){S.calU[u.key]=u;});
   return out;
 }
@@ -879,8 +1025,8 @@ function calPlace(key,date,rowIid){
     // creating the first deliverable hides the rest of that creator's scope, so create the others too (undated, they stay in the tray)
     var rest=[];for(var k in S.calU){var o=S.calU[k];if(o.kind==='s'&&o.iid===u.iid&&k!==key)rest.push(o);}
     var path=P('/talents/'+u.iid+'/deliverables');
-    var chain=rest.reduce(function(pr,o){return pr.then(function(){return api(path,{method:'POST',body:{name:o.name,platform:o.plat}});});},Promise.resolve());
-    chain.then(function(){return post(path,'POST',{name:u.name,platform:u.plat,live:date},{msg:msg});}).catch(function(er){toast(er.message);loadOne();});
+    var chain=rest.reduce(function(pr,o){return pr.then(function(){return api(path,{method:'POST',body:delBody(o)});});},Promise.resolve());
+    chain.then(function(){return post(path,'POST',delBody(u,u.noPost?{recv:date}:{live:date}),{msg:msg});}).catch(function(er){toast(er.message);loadOne();});
   }
 }
 document.addEventListener('dragstart',function(e){var t=e.target.closest&&e.target.closest('[data-cnew]');if(!t)return;S.calNew=t.getAttribute('data-cnew');e.dataTransfer.effectAllowed='copy';try{e.dataTransfer.setData('text/plain',S.calNew);}catch(er){}});
@@ -946,13 +1092,14 @@ function calAddGo(another){
   p=p.then(function(){if(isNew)return go(P('/talents/'+ctId),'PATCH',ct&&ct.archived?{approved:'Yes',archived:null}:{approved:'Yes'});});
   p=p.then(function(){
     if(!a.lines.length)return;
-    var i=find(ctId),sc=(i.scope||[]).map(function(x){return {item:x.item,qty:x.qty};}),pend=i.deliv.length?[]:sc.slice();
+    var i=find(ctId),sc=(i.scope||[]).map(function(x){var o={item:x.item,qty:x.qty};if(x.rate!=null)o.rate=x.rate;return o;}),pend=i.deliv.length?[]:sc.map(function(x){return {item:x.item,qty:x.qty};}),used=usedMap(i),mk=[];
     a.lines.forEach(function(l){var f=sc.filter(function(x){return x.item===l.item;})[0];if(f)f.qty+=l.qty;else sc.push({item:l.item,qty:l.qty});});
     var q=go(P('/talents/'+ctId),'PATCH',{scope:sc});
     // creator had quoted scope but no deliverables yet: create those (undated) so they stay in To schedule
-    pend.forEach(function(x){if(CA_NODATE.indexOf(x.item)>=0)return;q=q.then(function(){var np=CA_NOPOST.indexOf(x.item)>=0;return go(P('/talents/'+ctId+'/deliverables'),'POST',{name:x.qty+' × '+x.item,platform:scPlat(x.item),noPost:np});});});
-    a.lines.forEach(function(l){if(CA_NODATE.indexOf(l.item)>=0)return;var np=CA_NOPOST.indexOf(l.item)>=0;
-      q=q.then(function(){return go(P('/talents/'+ctId+'/deliverables'),'POST',np?{name:l.qty+' × '+l.item,platform:scPlat(l.item),noPost:true,recv:a.live}:{name:l.qty+' × '+l.item,platform:scPlat(l.item),recv:a.recv,live:a.live});});});
+    var tot={};pend.concat(a.lines).forEach(function(x){tot[x.item]=(tot[x.item]||used[x.item]||0)+x.qty;});
+    pend.forEach(function(x){splitScope(x.item,x.qty,used,tot[x.item]).forEach(function(y){mk.push(delBody(y));});});
+    a.lines.forEach(function(l){splitScope(l.item,l.qty,used,tot[l.item]).forEach(function(y){mk.push(delBody(y,y.noPost?{recv:a.live}:{recv:a.recv,live:a.live}));});});
+    mk.forEach(function(b){q=q.then(function(){return go(P('/talents/'+ctId+'/deliverables'),'POST',b);});});
     return q;
   });
   p.then(function(){
@@ -963,6 +1110,9 @@ function calAddGo(another){
     render();
   }).catch(function(er){if(S.calAdd){S.calAdd.busy=false;S.calAdd.err=er.message||'Something went wrong';}render();loadOne(true);});
 }
+document.addEventListener('keydown',function(e){if(e.target.id!=='bk-other')return;
+  if(e.key==='Enter'){e.preventDefault();var v=e.target.value.trim().slice(0,60);bulkSnap();S.bulk.other=false;if(v)S.bulk.lines.push({item:v,qty:1});render();}
+  else if(e.key==='Escape'){e.stopPropagation();S.bulk.other=false;render();}});
 document.addEventListener('keydown',function(e){if(e.target.id!=='ca-other')return;
   if(e.key==='Enter'){e.preventDefault();var v=e.target.value.trim().slice(0,60);calAddSnap();S.calAdd.other=false;if(v)S.calAdd.lines.push({item:v,qty:1});render();}
   else if(e.key==='Escape'){e.stopPropagation();S.calAdd.other=false;render();}});
@@ -994,8 +1144,7 @@ var PST={'Paid':'ok','Invoiced':'warn','Not due':'neu'};
 function r2(n){return Math.round(n*100)/100;}
 function crRateOf(i,d){
   if(d.crRate!=null)return d.crRate;
-  var sc=i.scope||[],m=String(d.name).match(/^\s*(\d+)\s*[×x]\s*(.+?)\s*$/),q=1,it=d.name;
-  if(m){q=Number(m[1]);it=m[2];}
+  var sc=i.scope||[],di=dItem(d),q=di.qty,it=di.item;
   var l=sc.filter(function(x){return x.item===it;})[0];
   return l&&l.rate!=null?r2(q*l.rate):null;
 }
@@ -1603,7 +1752,7 @@ function render(){
   if(S.view==='campaign'&&S.tab==='Deliverables'&&FULL&&CUR&&canEdit()){S.af=S.af||{};if(!S.af[FULL.id]){S.af[FULL.id]=1;setTimeout(function(){if(FULL&&S.tab==='Deliverables')scFill(FULL);},0);}}
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
-  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'')+(S.view==='campaign'&&S.crInv&&FULL?crInvModal():'');
+  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'')+(S.view==='campaign'&&S.crInv&&FULL?crInvModal():'')+(S.view==='campaign'&&S.bulk&&FULL?bulkModal():'')+(S.view==='campaign'&&S.splitD&&FULL?splitModal():'');
   var so=document.querySelector('[data-sother]');if(so)so.focus();
   var lq=document.getElementById('lq');if(lq&&S.lqFocus){lq.focus();lq.setSelectionRange(lq.value.length,lq.value.length);}
   var pq=document.getElementById('pq');if(pq&&S.pqFocus){pq.focus();pq.setSelectionRange(pq.value.length,pq.value.length);}
@@ -1699,6 +1848,11 @@ document.addEventListener('change',function(e){
   if(t.id==='crfile'){crInvOpen(t.getAttribute('data-crct'),t.files&&t.files[0]);return;}
   if(t.hasAttribute&&t.hasAttribute('data-crid')){crInvSnap();var ck=t.getAttribute('data-crid');if(t.checked)S.crInv.dids[ck]=1;else delete S.crInv.dids[ck];render();return;}
   if(t.id==='cri-amt'){crInvSnap();render();return;}
+  if(t.id==='bulk-approved'){bulkSet('approved',t.value);return;}
+  if(t.id==='bulk-stage'){bulkSet('stage',t.value);return;}
+  if(t.id==='sp-size'){S.splitD.size=Math.round(Number(t.value))||1;render();return;}
+  if(t.id==='bk-add'){bulkSnap();var bv=t.value;if(bv==='__other'){S.bulk.other=true;render();setTimeout(function(){var o=document.getElementById('bk-other');if(o)o.focus();},20);}else if(bv){S.bulk.lines.push({item:bv,qty:1});render();}return;}
+  if(t.hasAttribute&&(t.hasAttribute('data-bkqty')||t.hasAttribute('data-bkset'))){bulkSnap();render();return;}
   if(t.id==='ca-who'){calAddSnap();S.calAdd.err='';render();return;}
   if(t.id==='ca-add'){calAddSnap();var av=t.value;if(av==='__other'){S.calAdd.other=true;render();setTimeout(function(){var o=document.getElementById('ca-other');if(o)o.focus();},20);}else if(av){S.calAdd.lines.push({item:av,qty:1});render();}return;}
   if(t.getAttribute&&t.hasAttribute('data-caqty')){calAddSnap();return;}
@@ -1751,12 +1905,12 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.crInv=null;S.crf='All';S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.crInv=null;S.crf='All';S.isel={};S.dsel={};S.bulk=null;S.splitD=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Campaign Overview')loadShares();}
   else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;S.calPick=d.calm;render();}}
   else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
@@ -1773,6 +1927,16 @@ document.addEventListener('click',function(e){
   else if(d.ycell){var yp=d.ycell.split('|');if(S.calArm)calPlace(S.calArm,lastDay(yp[1]));else if(canEdit())calAddOpen(yp[0],lastDay(yp[1]));}
   else if(d.cax){S.calAdd=null;render();}
   else if(d.crx){S.crInv=null;render();}
+  else if(d.isel){S.isel=S.isel||{};if(S.isel[d.isel])delete S.isel[d.isel];else S.isel[d.isel]=1;render();}
+  else if(d.iselall){var ic=FULL,iw=won(ic),il=iw?selected(ic):ic.infl.filter(function(i){if(S.filter==='All')return i.approved!=='Declined';if(S.filter==='Approved')return i.approved==='Yes';if(S.filter==='Not approved')return i.approved!=='Yes'&&i.approved!=='Declined';return i.approved==='Declined';});
+    S.isel=S.isel||{};var on=il.length&&il.every(function(i){return S.isel[i.id];});il.forEach(function(i){if(on)delete S.isel[i.id];else S.isel[i.id]=1;});render();}
+  else if(d.bkx){S.bulk=null;render();}
+  else if(d.bkdec!==undefined||d.bkinc!==undefined){bulkSnap();var bl=S.bulk.lines[Number(d.bkdec!==undefined?d.bkdec:d.bkinc)];if(bl){bl.qty=Math.max(1,Math.min(999,bl.qty+(d.bkinc!==undefined?1:-1)));if(bl.set)bl.set=Math.min(bl.set,bl.qty);render();}}
+  else if(d.bkrm!==undefined){bulkSnap();S.bulk.lines.splice(Number(d.bkrm),1);render();}
+  else if(d.dsel){S.dsel=S.dsel||{};if(S.dsel[d.dsel])delete S.dsel[d.dsel];else S.dsel[d.dsel]=1;render();}
+  else if(d.dsplit){var sp=d.dsplit.split('|'),si2=find(sp[0]),sd=si2&&si2.deliv.filter(function(z){return z.id===sp[1];})[0];S.splitD={key:d.dsplit,size:sd&&GROUPED.test(dItem(sd).item)?3:1};render();}
+  else if(d.spx){S.splitD=null;render();}
+  else if(d.spsz){S.splitD.size=+d.spsz;render();}
   else if(d.crf){S.crf=d.crf;render();}
   else if(d.crst){var cp=d.crst.split('|'),ci2=find(cp[0]),cd=ci2&&ci2.deliv.filter(function(z){return z.id===cp[1];})[0];if(cd){var nx={'Not due':'Invoiced','Invoiced':'Paid','Paid':'Not due'}[cd.crStatus]||'Not due';
       if(nx==='Paid'&&!isPosted(cd)){toast('Not posted yet. Creators are paid once the content is live.');return;}
@@ -1855,6 +2019,12 @@ document.addEventListener('click',function(e){
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='rcsplit'){var si=find(S.sel);if(si){var pcs=0;(si.scope||[]).forEach(function(x){pcs+=x.qty;});var each=r2(base(si)/pcs);saveRateCard(si,si.scope.map(function(x){return {item:x.item,qty:x.qty,rate:each};}));}}
+  else if(d.act==='dgroup'){dGroup();}
+  else if(d.act==='bulkdel'){S.bulk={lines:[],other:false,recv:'',live:'',err:''};render();setTimeout(function(){var f=document.getElementById('bk-add');if(f)f.focus();},30);}
+  else if(d.act==='bkgo'){if(!S.bulk.busy)bulkGo();}
+  else if(d.act==='iselclear'){S.isel={};render();}
+  else if(d.act==='spgo'){var sz=document.getElementById('sp-size');dSplit(S.splitD.key,sz?Math.round(Number(sz.value)):S.splitD.size);}
+  else if(d.act==='dselclear'){S.dsel={};render();}
   else if(d.act==='crsave'){if(S.crInv&&!S.crInv.busy)crInvSave();}
   else if(d.act==='ciadd'){post(P('/cinv'),'POST',{label:'Invoice '+(((FULL.cinv||[]).length)+1),amount:0},{msg:'Invoice added'});}
   else if(d.act==='arctog'){S.showArc=!S.showArc;render();}

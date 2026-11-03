@@ -228,3 +228,19 @@ The rule throughout: a creator is only paid for a deliverable once it's live **a
   - Creator payments per creator (total, paid, ready to pay, left, invoices) and every creator invoice received, filterable On hold / Ready to pay / Paid, with Mark paid.
 - The influencer Invoicing field is now set from the client invoices (read-only), so the sales dashboard and weekly reports keep working. Older won campaigns keep their hand-set statuses until an invoice is issued here; if every creator was already invoiced or paid, the Final invoice starts that way.
 - Changing the campaign currency converts invoice amounts and rates too.
+
+## Update 53 – One deliverable per piece, clearer headings
+New migration `19_deliverable_item_qty.sql` (runs automatically on deploy).
+- Quoted deliverables now become one deliverable per piece: 4 × IG Reel → IG Reel 1, IG Reel 2, IG Reel 3, IG Reel 4. Stories stay together (3 × IG Story is one deliverable). Applies everywhere deliverables are made from a quote: Deliverables tab, Content Calendar tray and Add.
+- Deliverables tab: tick deliverables from one creator and "Group into one" (e.g. 3 stories posted together), or "Split into N" on any grouped one (also fixes older "4 × IG Reel" deliverables). Grouping/splitting is blocked once a creator invoice or payment is against them.
+- Each deliverable stores what it is and how many pieces, so its creator rate comes from the rate card (qty × rate).
+- Stat boxes at the top show the figure only (the ≈ £ line and descriptions are gone; use the currency switch).
+- All table headings are bold and black.
+- Fix: adding deliverables from the calendar no longer clears the rate card.
+
+## Update 54 – Story sets and bulk creator actions
+No new migration.
+- Stories in sets: "Split into N" now asks how many per deliverable (1 each, or sets, e.g. 12 × IG Story → 4 × "3 × IG Story · Set 1–4"). Dates carry over. Set numbers continue after existing sets.
+- Influencers tab: tick creators (or tick-all in the header). A bar appears:
+  - + Add deliverables: the same deliverable editor, applied to every ticked creator (e.g. 1 × IG Reel, 6 × IG Story in sets of 3). Added to each creator's quote and Index rate quote; for selected (Approved: Yes) creators the deliverables are created too, with optional content due / go-live dates.
+  - Approved… and Stage… set the value for every ticked creator in one go (Approved only shows before the campaign is won).
