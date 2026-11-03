@@ -154,7 +154,7 @@ async function loadFull(id) {
     mgr: x.manager_name || '', email: x.manager_email || '', phone: x.manager_phone || '',
     social: { instagram: x.instagram || '', tiktok: x.tiktok || '', youtube: x.youtube || '', ig_followers: x.ig_followers == null ? null : Number(x.ig_followers), tt_followers: x.tt_followers == null ? null : Number(x.tt_followers), yt_followers: x.yt_followers == null ? null : Number(x.yt_followers) },
     approved: x.approved, stage: x.stage, initial: Number(x.initial), neg: x.neg == null ? null : Number(x.neg), margin: Number(x.margin), client: Number(x.client_rate),
-    scope: x.scope || [], contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
+    scope: x.scope || [], contract: x.contract, contractSigned: x.contract_signed ? new Date(x.contract_signed).toISOString().slice(0, 10) : '', invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
       id: d.id, name: d.name, plat: d.platform || '', stage: d.stage, recv: d.recv_by || '', recvAt: d.recv_at || '', live: d.live_by || '', liveAt: d.live_at || '',
       noPost: !!d.no_post, crRate: d.cr_rate == null ? null : Number(d.cr_rate), crStatus: d.cr_status || 'Not due', crInv: d.cr_invoice || '', crPaidAt: d.cr_paid_at || '', item: d.item || '', qty: Number(d.qty) || 1, links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
@@ -167,8 +167,8 @@ async function loadFull(id) {
   out.cinv = pay.cinv;
   out.infl.forEach((x) => { x.crinv = pay.crinv.filter((v) => v.ct === x.id); });
   out.links = links;
-  out.docs = (await query(`SELECT id, name, kind, mime, size, url, created_by, created_at FROM campaign_docs WHERE campaign_id = $1 ORDER BY created_at DESC`, [id]))
-    .map((d) => ({ id: d.id, name: d.name, kind: d.kind, type: d.mime || '', size: d.size || 0, url: d.url || '', by: d.created_by || '', at: d.created_at }));
+  out.docs = (await query(`SELECT id, name, kind, mime, size, url, created_by, created_at, ct_id FROM campaign_docs WHERE campaign_id = $1 ORDER BY created_at DESC`, [id]))
+    .map((d) => ({ id: d.id, ct: d.ct_id || '', name: d.name, kind: d.kind, type: d.mime || '', size: d.size || 0, url: d.url || '', by: d.created_by || '', at: d.created_at }));
   return out;
 }
 
@@ -413,6 +413,12 @@ export async function handleCampaigns(ctx) {
       const b = await body();
       const kind = text(b.kind, 40) || 'Client deck';
       const did = newId('d');
+      let ctLink = null;
+      if (b.ct) {
+        const [ok] = await query('SELECT id, contract FROM campaign_talents WHERE id = $1 AND campaign_id = $2', [String(b.ct), id]);
+        if (!ok) return bad('That creator is not on this campaign');
+        ctLink = ok.id;
+      }
       if (b.url) {
         const u = String(b.url).trim();
         if (!/^https?:\/\//i.test(u)) return bad('The link has to start with https://');
@@ -421,8 +427,10 @@ export async function handleCampaigns(ctx) {
         const buf = Buffer.from(String(b.data || '').replace(/^data:[^,]*,/, ''), 'base64');
         if (!buf.length) return bad('No file received');
         if (buf.length > MAX_FILE) return bad('That file is over 4MB. Add it as a link instead (Drive, Dropbox, Canva), or compress it.');
-        await query('INSERT INTO campaign_docs (id, campaign_id, name, kind, mime, size, data, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [did, id, text(b.name, 200) || 'document', kind, text(b.type, 100) || 'application/octet-stream', buf.length, buf, actor]);
+        await query('INSERT INTO campaign_docs (id, campaign_id, name, kind, mime, size, data, created_by, ct_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)', [did, id, text(b.name, 200) || 'document', kind, text(b.type, 100) || 'application/octet-stream', buf.length, buf, actor, ctLink]);
       }
+      // a signed creator contract dropped in marks that creator Signed (today, unless a date is already set)
+      if (ctLink) await query("UPDATE campaign_talents SET contract = 'Signed', contract_signed = COALESCE(contract_signed, CURRENT_DATE) WHERE id = $1", [ctLink]);
       await touch();
       await logAct('campaign.doc', id, exists.name, { doc: text(b.name, 200) });
       return json({ campaign: await loadFull(id) });
@@ -536,7 +544,8 @@ export async function handleCampaigns(ctx) {
       const upd = {};
       if ('approved' in b) { if (!APPROVED.includes(b.approved)) return bad('Invalid value'); upd.approved = b.approved; }
       if ('stage' in b) { if (!CT_STAGES.includes(b.stage)) return bad('Invalid stage'); upd.stage = b.stage; }
-      if ('contract' in b) { if (!CONTRACT.includes(b.contract)) return bad('Invalid contract status'); upd.contract = b.contract; }
+      if ('contract' in b) { if (!CONTRACT.includes(b.contract)) return bad('Invalid contract status'); upd.contract = b.contract; if (b.contract === 'Signed' && !ct.contract_signed && !('contractSigned' in b)) upd.contract_signed = today(); if (b.contract !== 'Signed') upd.contract_signed = null; }
+      if ('contractSigned' in b) upd.contract_signed = dateOrNull(b.contractSigned);
       if ('invoice' in b) { if (!INVOICE.includes(b.invoice)) return bad('Invalid invoice status'); upd.invoice = b.invoice; upd.invoiced_at = b.invoice === 'Not invoiced' ? null : (ct.invoiced_at ? new Date(ct.invoiced_at).toISOString().slice(0, 10) : today()); }
       if ('invoicedAt' in b) upd.invoiced_at = dateOrNull(b.invoicedAt);
       if ('next' in b) upd.next_action = text(b.next, 500);
