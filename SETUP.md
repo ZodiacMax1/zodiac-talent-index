@@ -284,3 +284,8 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Sidebar: Home, Talent Index, Campaign Management, Sales dashboard. The logo also goes Home.
 - Search on the home page opens the ⌘K search.
 - New files: public/fonts/aileron-*.woff2, public/zodiac-mark.png. No database changes.
+
+## Update 62 · Home clock and sign-in
+- Home has a live clock (ticks every second): Dubai time with date, plus London time.
+- Tagline is larger with a burgundy rule.
+- Signing in (or reopening the site) always lands on Home.

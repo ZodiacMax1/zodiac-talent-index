@@ -502,11 +502,22 @@
   .zh-grain{position:absolute;inset:0;opacity:.16;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
   .zh{position:relative;z-index:2;min-height:100%;display:flex;flex-direction:column;padding:56px 64px 44px;max-width:1500px}
   .zh-top{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
-  .zh-date{font:500 12px Oswald,sans-serif;letter-spacing:.22em;text-transform:uppercase;color:rgba(228,226,221,.55)}
+  .zh-clock{display:flex;align-items:stretch;gap:0;border:1px solid rgba(228,226,221,.12);border-radius:18px;background:rgba(228,226,221,.04);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden}
+  .zh-ck{display:flex;align-items:center;gap:14px;padding:14px 22px}
+  .zh-ck+.zh-ck{border-left:1px solid rgba(228,226,221,.1)}
+  .zh-t{font:500 46px/1 Oswald,sans-serif;letter-spacing:.01em;color:#E4E2DD;font-variant-numeric:tabular-nums;display:flex;align-items:baseline}
+  .zh-t .col{animation:zblink 1s steps(1) infinite;margin:0 1px}
+  @keyframes zblink{50%{opacity:.25}}
+  .zh-t small{font:500 15px Oswald,sans-serif;color:rgba(228,226,221,.45);margin-left:6px;width:20px}
+  .zh-ckl{display:flex;flex-direction:column;gap:3px}
+  .zh-ckl b{font:700 15px Aileron,'DM Sans',sans-serif;color:#E4E2DD;letter-spacing:-.01em}
+  .zh-ckl span{font:500 11px Oswald,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:rgba(228,226,221,.5);display:flex;align-items:center;gap:7px}
+  .zh-ckl span i{width:6px;height:6px;border-radius:50%;background:#3FA56B;box-shadow:0 0 8px #3FA56B}
+  .zh-ck.sm .zh-t{font-size:30px;color:rgba(228,226,221,.75)}.zh-ck.sm .zh-t .col{animation:none}
   .zh-srch{display:flex;align-items:center;gap:10px;width:min(380px,100%);padding:12px 16px;border-radius:12px;background:rgba(228,226,221,.06);border:1px solid rgba(228,226,221,.14);color:rgba(228,226,221,.55);font:inherit;font-size:14px;cursor:pointer;text-align:left}
   .zh-srch:hover{background:rgba(228,226,221,.1)}.zh-srch kbd{margin-left:auto;font:500 11px Oswald,sans-serif;border:1px solid rgba(228,226,221,.22);border-radius:6px;padding:2px 6px}
   .zh-hero{margin:clamp(40px,8vh,96px) 0 clamp(28px,5vh,56px)}
-  .zh-eye{font:500 12px Oswald,sans-serif;letter-spacing:.32em;text-transform:uppercase;color:rgba(228,226,221,.6);margin-bottom:20px}
+  .zh-eye{display:flex;align-items:center;gap:14px;font:500 15px Oswald,sans-serif;letter-spacing:.34em;text-transform:uppercase;color:rgba(228,226,221,.72);margin-bottom:22px}.zh-eye span{width:44px;height:1px;background:linear-gradient(90deg,#4d0011,#E4E2DD)}
   .zh-h1{font:800 clamp(92px,12vw,176px)/.82 Aileron,'DM Sans',sans-serif;letter-spacing:-.075em;margin:0;color:#E4E2DD}
   .zh-h1,.zh-c h2,.zside .zbrand b{text-transform:none!important}
   .zh-h1 em{font-style:normal;color:transparent;-webkit-text-stroke:2px #E4E2DD}.zh-h1 i{font-style:normal;color:#4d0011;text-shadow:0 0 30px rgba(140,16,40,.9)}
@@ -559,8 +570,8 @@
   <img class="zh-mark" src="/zodiac-mark.png" alt="">
   <div class="zh-grain"></div>
   <div class="zh">
-    <div class="zh-top"><span class="zh-date" id="zh-date"></span><button class="zh-srch" id="zh-search">⌕ Search campaigns, clients, talent<kbd>⌘K</kbd></button></div>
-    <div class="zh-hero"><div class="zh-eye">Built for creators. Trusted by brands.</div><h1 class="zh-h1">zodiac<br><em>os</em><i>.</i></h1><div class="zh-hi" id="zh-hi">Welcome back.</div></div>
+    <div class="zh-top"><div class="zh-clock" id="zh-clock"></div><button class="zh-srch" id="zh-search">⌕ Search campaigns, clients, talent<kbd>⌘K</kbd></button></div>
+    <div class="zh-hero"><div class="zh-eye"><span></span>Built for creators. Trusted by brands.</div><h1 class="zh-h1">zodiac<br><em>os</em><i>.</i></h1><div class="zh-hi" id="zh-hi">Welcome back.</div></div>
     <div class="zh-cards">
       <button class="zh-c" data-view="talent"><span class="zh-go">→</span><span class="zh-n">01</span><h2>talent index<i>.</i></h2><p>Search the roster, match a brief, build and send a deck.</p><div class="zh-st" id="zh-tstats"></div></button>
       <button class="zh-c hot" data-view="campaigns"><span class="zh-go">→</span><span class="zh-n">02</span><h2>campaign management<i>.</i></h2><p>Creators, deliverables, calendars and money for every campaign.</p><div class="zh-st" id="zh-cstats"></div></button>
@@ -2776,7 +2787,7 @@ renderShortlist();
   window.__zhome = () => renderHome();
   function renderHome(){
     const d = dubaiNow(), h = d.getHours();
-    document.getElementById('zh-date').textContent = d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long', year:'numeric'}) + ' · Dubai ' + String(h).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    tickClock();
     const first = ((typeof ME !== 'undefined' && ME && ME.name) || '').split(/\s+/)[0];
     document.getElementById('zh-hi').textContent = (h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (first ? ', ' + first : '') + '. Here’s where everything stands.';
     const n = (typeof DATA !== 'undefined' && DATA) ? DATA.length : 0;
@@ -2806,8 +2817,14 @@ renderShortlist();
   }
   document.getElementById('zh-tick').addEventListener('click', e => { const b = e.target.closest('[data-cid]'); if(b) showView('campaigns', b.dataset.cid || null); });
   document.getElementById('zh-search').addEventListener('click', () => { const fresh = !frame.dataset.loaded; showView('campaigns'); setTimeout(() => { try{ frame.contentWindow.postMessage({type:'zodiac-palette'}, location.origin); }catch(x){} }, fresh ? 1500 : 30); });
-  setInterval(() => { if(!home.hidden) document.getElementById('zh-date') && renderHomeClock(); }, 30000);
-  function renderHomeClock(){ const d = dubaiNow(); const el = document.getElementById('zh-date'); el.textContent = el.textContent.replace(/\d{2}:\d{2}$/, String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0')); }
+  function zoneNow(tz){ const p = new Intl.DateTimeFormat('en-GB',{timeZone:tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, weekday:'long', day:'numeric', month:'long'}).formatToParts(new Date()); const o = {}; p.forEach(x => o[x.type] = x.value); return o; }
+  function tickClock(){
+    const el = document.getElementById('zh-clock'); if(!el) return;
+    const d = zoneNow('Asia/Dubai'), l = zoneNow('Europe/London');
+    el.innerHTML = '<div class="zh-ck"><div class="zh-t">' + d.hour + '<span class="col">:</span>' + d.minute + '<small>' + d.second + '</small></div><div class="zh-ckl"><b>' + d.weekday + ' ' + d.day + ' ' + d.month + '</b><span><i></i>Dubai</span></div></div>'
+      + '<div class="zh-ck sm"><div class="zh-t">' + l.hour + ':' + l.minute + '</div><div class="zh-ckl"><b>London</b><span>' + (l.weekday !== d.weekday ? l.weekday.slice(0,3) + ' · ' : '') + 'UK</span></div></div>';
+  }
+  setInterval(() => { if(!home.hidden) tickClock(); }, 1000);
   window.addEventListener('message', e => {
     const m = e.data;
     if(e.origin !== location.origin || !m || m.type !== 'zodiac-nav') return;
@@ -2858,13 +2875,10 @@ renderShortlist();
     who();
     // if someone signs out and back in, make sure the embedded page picks up the new session
     if(!open){ frame.src = 'about:blank'; delete frame.dataset.loaded; }
-    else if((location.hash === '#campaigns' || location.hash === '#sales') && !frame.dataset.loaded) showView(location.hash.slice(1));
-    else if(location.hash !== '#talent' && !location.hash.startsWith('#campaigns') && !location.hash.startsWith('#sales')) showView('home');
+    else showView('home');
   }).observe(document.getElementById('password-gate'), {attributes:true, attributeFilter:['class']});
   who();
-  if(location.hash === '#campaigns' || location.hash === '#sales') showView(location.hash.slice(1));
-  else if(location.hash === '#talent') showView('talent');
-  else showView('home');
+  showView('home');
 })();
 </script>
 
