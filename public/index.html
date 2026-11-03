@@ -2159,15 +2159,19 @@ async function loadState(){
   renderSavedDecksList();
 }
 
+let lastActive = Date.now();
+['mousemove','keydown','click','scroll','touchstart'].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, {passive:true}));
 async function poll(){
-  if(!TOKEN || modalOpen() || document.hidden) return;
+  // only check for changes while someone is actually using the page, so an open-but-idle tab lets the database sleep
+  if(!TOKEN || modalOpen() || document.hidden || Date.now() - lastActive > 5 * 60000) return;
   try{
     const j = await api('/version');
     if(j.version !== lastVersion) await loadState();
   }catch(e){}
 }
-setInterval(poll, 20000);
-document.addEventListener('visibilitychange', () => { if(!document.hidden) poll(); });
+setInterval(poll, 60000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden){ lastActive = Date.now(); poll(); } });
+window.addEventListener('focus', () => { lastActive = Date.now(); poll(); });
 
 /* ---------- add / edit talent ---------- */
 function distinct(field){
