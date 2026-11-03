@@ -188,3 +188,11 @@ No new migration.
 - Filming days set the filming date; everything else sets the go-live date.
 - Placing a scope line creates that deliverable (and the creator's other scope lines, undated, so they stay in the tray).
 - Month view has an "Any month" picker so you can go to a month that has nothing in it yet.
+
+## Update 48 – Add creators and deliverables from the calendar
+No new migration. Adding from the Influencers tab works exactly as before; this is a second way in (editors only).
+- "+ Add" on the calendar toolbar, "+ Add … on this day" in a day's pop-up (Month view), clicking an empty month cell in the Year view (pre-fills that creator and the last day of the month), or "+" next to a creator in To schedule.
+- Pick a selected creator, one already on the campaign but not selected (they become Approved: Yes), or anyone else from the Talent Index (added to Influencers as selected, linked to their Index profile). "Not in the Index? Add new talent" opens the usual Talent Index Add Talent form and drops them straight back in.
+- Optional creator rate for anyone new to the selection. Blank uses their Index typical rate, as when added from Influencers; entering one saves it to the Index like any campaign rate.
+- Deliverable: quick picks (IG Reel, IG Story, IG Post, TikTok, YouTube video, UGC video) or type one, platform, filming day, content due and go-live. Dates can be blank and it goes to To schedule. "Add & another" keeps the creator and date.
+- Rows in the Year view now show every selected creator for editors, so new ones can be scheduled straight away.
