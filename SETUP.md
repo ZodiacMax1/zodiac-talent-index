@@ -180,3 +180,19 @@ Month / Year / Agenda switcher at the top of the Content calendar.
 - Year view is now a fixed Jan–Dec grid for one year (‹ › to change year, only years with content). Creator rows, pink "Post 1, Post 2…" cells numbered in go-live order per creator, months with no posting shaded grey, Total column and "Posts this month" row.
 - Toggle "Post numbers / Deliverable names". Click any cell to open the deliverable; hover for dates. ✓ = done, ! = overdue.
 - Note line under the table (editors type straight into it, e.g. "No posting in Feb (Ramadan, c. 8 Feb to 9 Mar, provisional), Jul or Aug (summer pause).").
+
+## Update 47 – Schedule deliverables from the calendar
+No new migration.
+- "To schedule" tray above the Month and Year views (editors only), grouped by creator. It lists every deliverable of approved creators with no date yet, plus quoted scope lines that haven't been turned into deliverables. Anything that already has a date isn't listed.
+- Year view: drag an item onto a month on that creator's row and it goes live on the last day of that month. Month view: drag onto a day for the exact date. Or click an item, then click the month/day.
+- Filming days set the filming date; everything else sets the go-live date.
+- Placing a scope line creates that deliverable (and the creator's other scope lines, undated, so they stay in the tray).
+- Month view has an "Any month" picker so you can go to a month that has nothing in it yet.
+
+## Update 48 – Add creators and deliverables from the calendar
+No new migration. Adding from the Influencers tab works exactly as before; this is a second way in (editors only).
+- "+ Add" on the calendar toolbar, "+ Add … on this day" in a day's pop-up (Month view), clicking an empty month cell in the Year view (pre-fills that creator and the last day of the month), or "+" next to a creator in To schedule.
+- Pick a selected creator, one already on the campaign but not selected (they become Approved: Yes), or anyone else from the Talent Index (added to Influencers as selected, linked to their Index profile). "Not in the Index? Add new talent" opens the usual Talent Index Add Talent form and drops them straight back in.
+- Optional creator rate for anyone new to the selection. Blank uses their Index typical rate, as when added from Influencers; entering one saves it to the Index like any campaign rate.
+- Deliverable: quick picks (IG Reel, IG Story, IG Post, TikTok, YouTube video, UGC video) or type one, platform, filming day, content due and go-live. Dates can be blank and it goes to To schedule. "Add & another" keeps the creator and date.
+- Rows in the Year view now show every selected creator for editors, so new ones can be scheduled straight away.

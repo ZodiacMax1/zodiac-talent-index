@@ -269,6 +269,38 @@ input.ynote:hover{border-color:var(--line2)}input.ynote:focus{border-color:var(-
 .ag tr.agd{opacity:.55}
 @media (max-width:760px){.calseg button{padding:6px 10px}.ag td:nth-child(5){display:none}}
 
+.tray{background:var(--surface);border:1px dashed var(--line2);border-radius:12px;padding:10px 14px;margin-bottom:12px}
+.trh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+.trt{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:2px 0;cursor:pointer}
+.trt b{font:500 12px var(--display);letter-spacing:.14em;text-transform:uppercase}
+.trc{background:var(--accent);color:var(--accent-fg);border-radius:999px;font:500 11px var(--mono);padding:1px 8px}
+.chev{color:var(--muted);font-size:11px}
+.trarm{font-size:13px;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:4px 10px}
+.trg{display:grid;gap:6px;margin-top:10px;max-height:220px;overflow:auto}
+.trr{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.trn{font-weight:500;font-size:13px;min-width:150px}
+.tch{border:1px solid var(--line2);background:var(--soft);border-radius:7px;padding:4px 10px;font-size:12.5px;font-weight:500;cursor:grab;display:inline-flex;align-items:center;gap:6px}
+.tch span{color:var(--muted);font-size:11px;font-weight:400}
+.tch em{font-style:normal;font:500 10px var(--mono);text-transform:uppercase;background:var(--cfilm-bg);color:var(--cfilm-fg);border-radius:4px;padding:1px 5px}
+.tch.scope{border-style:dashed}
+.tch:hover{border-color:var(--accent)}
+.tch.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}.tch.on span{color:inherit;opacity:.75}
+.cal.arm .cday{cursor:copy}.cal.arm .cday:hover{background:var(--accent-soft)}
+.yv.arm td[data-ycell]{cursor:copy}.yv.arm td[data-ycell]:hover{box-shadow:inset 0 0 0 2px #4D1A21}
+.yv td.drop{box-shadow:inset 0 0 0 2px #4D1A21;background:#F3DFDF}
+.cpick{position:relative;display:inline-flex;align-items:center;border:1px solid var(--line2);border-radius:8px;padding:4px 10px;font-size:12.5px;color:var(--muted);cursor:pointer;background:var(--surface)}
+.cpick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+@media (max-width:760px){.trn{min-width:0;width:100%}}
+
+.cadd{width:min(560px,94vw)}
+.cfl{display:block;margin-bottom:10px}.cfl .lbl{display:block;margin-bottom:5px}
+.calist{max-height:210px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:8px}
+.calist label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+.calist label:hover{background:var(--soft)}.calist label span{color:var(--muted);font-size:12px;margin-left:auto;text-align:right}
+.calist label:has(input:checked){background:var(--accent-soft)}
+.tch.add{cursor:pointer;border-style:dashed;background:transparent;min-width:30px;justify-content:center;color:var(--accent);font-weight:700}
+.yv:not(.arm) td[data-ycell]:not(.on):hover{background:#F8EEEE;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -660,36 +692,40 @@ function calEvents(c){
   return ev.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.type==='due'?0:1)-(b.type==='due'?0:1);});
 }
 function calFiltered(c){var t=S.calT||{},w=S.calWho||'All';return calEvents(c).filter(function(e){return !t[e.type]&&(w==='All'||e.iid===w);});}
-function mlabel(ym,short){var d=new Date(ym+'-01T00:00:00');return d.toLocaleDateString('en-GB',short?{month:'short',year:'numeric'}:{month:'long',year:'numeric'});}
+function mlabel(ym,short){var d=new Date(ym+'-01T00:00:00');return short?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear():d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});}
 function addDays(iso,n){var d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
 function cevBtn(e,full){
   var drag=canEdit()&&!e.done&&!full;
   return '<button class="cev '+e.type+(e.done?' done':'')+(e.late?' late':'')+'" data-dd="'+e.iid+'|'+e.did+'"'+(drag?' draggable="true" data-cdrag="'+e.iid+'|'+e.did+'|'+e.type+'"':'')+' title="'+esc(CALT[e.type]+' · '+e.who+' · '+e.what+(e.done?' · done':e.late?' · overdue':''))+'"><em>'+(e.done?'✓ ':e.late?'! ':'')+(e.type==='due'?'Due':e.type==='live'?'Live':'Film')+'</em>'+esc(e.who)+(full?' · '+esc(e.what)+(e.plat?' <span style="opacity:.7">('+esc(e.plat)+')</span>':''):' · '+esc(e.what))+'</button>';
 }
 function tabCal(c){
-  var all=calEvents(c),ev=calFiltered(c);
-  if(!all.length)return '<div class="card" style="padding:26px">No dated content yet. Add content due and go-live dates on the Deliverables tab and they will appear here.</div>';
+  var all=calEvents(c),ev=calFiltered(c),un=calUnsched(c);
+  if(!all.length&&!calUnsched(c,true).length&&!canEdit())return '<div class="card" style="padding:26px">No deliverables yet. Mark creators as approved on the Influencers tab and add their deliverables, and they will appear here to schedule.</div>';
   var months=[];ev.forEach(function(e){var m=e.date.slice(0,7);if(months.indexOf(m)<0)months.push(m);});
   var cm=TODAY.slice(0,7);
+  if(S.calPick&&months.indexOf(S.calPick)<0)months.push(S.calPick);
+  if(!months.length)months.push(cm);
+  months.sort();
   if(months.indexOf(S.calM)<0){S.calM=months.indexOf(cm)>=0?cm:(months.filter(function(m){return m>cm;})[0]||months[months.length-1]);}
   var mi=months.indexOf(S.calM),ym=S.calM;
-  var people=selected(c).filter(function(i){return i.deliv.some(function(d){return d.recv||d.live;});});
+  var people=selected(c);
   var t=S.calT||{},nd=0,nl=0;ev.forEach(function(e){if(e.type==='live')nl++;else nd++;});
   var V=S.calV||'Month';
   var seg='<div class="calseg" role="tablist">'+['Month','Year','Agenda'].map(function(v){return '<button class="'+(V===v?'on':'')+'" data-calv="'+v+'" role="tab" aria-selected="'+(V===v)+'">'+v+'</button>';}).join('')+'</div>';
-  var nav=V==='Month'?'<button class="calarr" data-calm="'+(months[mi-1]||'')+'"'+(mi>0?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(months[mi+1]||'')+'"'+(mi>=0&&mi<months.length-1?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>':'';
+  var nav=V==='Month'?'<button class="calarr" data-calm="'+(months[mi-1]||'')+'"'+(mi>0?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(months[mi+1]||'')+'"'+(mi>=0&&mi<months.length-1?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>'+(canEdit()?'<label class="cpick" title="Go to any month"><input type="month" id="calpick" value="'+esc(ym||cm)+'"><span>Any month ▾</span></label>':''):'';
   var h='<div class="calbar"><div class="calnav">'+seg+nav+'</div>'
     +'<div class="row" style="gap:12px"><div class="callg">'+['due','live','film'].map(function(k){return '<button class="'+(t[k]?'off':'')+'" data-calt="'+k+'"><i style="background:var(--c'+k+'-bg);'+(k==='due'?'box-shadow:inset 3px 0 0 var(--cdue-bd)':'')+'"></i>'+CALT[k]+'</button>';}).join('')+'</div>'
     +'<select id="calwho" class="sel plain" style="width:auto"><option value="All">All creators</option>'+people.map(function(i){return '<option value="'+esc(i.id)+'"'+(S.calWho===i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</select>'
-    +'<button class="btn sm" data-act="calics" title="Add these dates to Outlook or Google Calendar">Download .ics</button></div></div>';
-  if(V==='Year')return h+calYear(c);
+    +'<button class="btn sm" data-act="calics" title="Add these dates to Outlook or Google Calendar">Download .ics</button>'+(canEdit()?'<button class="btn sm pri" data-act="caladd">+ Add</button>':'')+'</div></div>';
   if(V==='Agenda')return h+calAgenda(ev);
+  h+=calTray(un,V);
+  if(V==='Year')return h+calYear(c,un);
   if(months.length>1)h+='<div class="calms">'+months.map(function(m){var me=ev.filter(function(e){return e.date.slice(0,7)===m;}),lt=me.some(function(e){return e.late;});return '<button class="calm'+(m===ym?' on':'')+(lt&&m!==ym?' late':'')+'" data-calm="'+m+'"><b>'+mlabel(m,true)+'</b><span>'+me.length+'</span></button>';}).join('')+'</div>';
   if(!ym)return h+'<div class="card" style="padding:26px">Nothing matches these filters.</div>';
   var first=ym+'-01',d0=new Date(first+'T00:00:00'),start=addDays(first,-((d0.getDay()+6)%7));
   var nextM=addDays(addDays(first,31).slice(0,7)+'-01',0),endD=addDays(nextM,-1),de=new Date(endD+'T00:00:00'),end=addDays(endD,(7-de.getDay())%7);
   var by={};ev.forEach(function(e){(by[e.date]=by[e.date]||[]).push(e);});
-  h+='<div class="cal"><div class="calh">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return '<div>'+x+'</div>';}).join('')+'</div>';
+  h+='<div class="cal'+(S.calArm?' arm':'')+'"><div class="calh">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return '<div>'+x+'</div>';}).join('')+'</div>';
   for(var wk=start;wk<=end;wk=addDays(wk,7)){
     h+='<div class="calw">';
     for(var k=0;k<7;k++){var day=addDays(wk,k),out=day.slice(0,7)!==ym,list=by[day]||[],dn=Number(day.slice(8));
@@ -705,9 +741,9 @@ function tabCal(c){
 }
 
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-function calYear(c){
-  var w=S.calWho||'All',t=S.calT||{};
-  var rows=selected(c).filter(function(i){return (w==='All'||i.id===w)&&i.deliv.some(function(d){return d.recv||d.live;});});
+function calYear(c,un){
+  un=un||[];var w=S.calWho||'All',t=S.calT||{},unI={};un.forEach(function(u){unI[u.iid]=1;});
+  var rows=selected(c).filter(function(i){return (w==='All'||i.id===w)&&(i.deliv.some(function(d){return d.recv||d.live;})||unI[i.id]||canEdit());});
   var items=[];
   rows.forEach(function(i){var n=0,mine=[];
     i.deliv.forEach(function(d){var type=d.noPost?'film':d.live?'live':'due',date=d.noPost?d.recv:(d.live||d.recv);if(!date)return;
@@ -715,19 +751,19 @@ function calYear(c){
       mine.push({iid:i.id,did:d.id,type:type,date:date,m:date.slice(0,7),y:date.slice(0,4),what:d.name,due:d.noPost?'':d.recv,done:done,late:!done&&date<TODAY});});
     mine.sort(function(x,y){return x.date<y.date?-1:x.date>y.date?1:0;});
     mine.forEach(function(e){if(e.type!=='film')e.n=++n;if(!t[e.type])items.push(e);});});
-  if(!items.length)return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
-  var years=[];items.forEach(function(e){if(years.indexOf(e.y)<0)years.push(e.y);});years.sort();
-  var ty=TODAY.slice(0,4);if(years.indexOf(S.calY)<0)S.calY=years.indexOf(ty)>=0?ty:(years.filter(function(y){return y>ty;})[0]||years[years.length-1]);
+  if(!items.length&&!un.length&&!(canEdit()&&rows.length))return '<div class="card" style="padding:26px">Nothing matches these filters.</div>';
+  var years=[],ty=TODAY.slice(0,4);items.forEach(function(e){if(years.indexOf(e.y)<0)years.push(e.y);});
+  if(un.length||!years.length||canEdit()){[ty,String(Number(ty)+1)].forEach(function(y){if(years.indexOf(y)<0)years.push(y);});}years.sort();if(years.indexOf(S.calY)<0)S.calY=years.indexOf(ty)>=0?ty:(years.filter(function(y){return y>ty;})[0]||years[years.length-1]);
   var Y=S.calY,yi=years.indexOf(Y),yit=items.filter(function(e){return e.y===Y;}),lab=S.calLab||'Post';
   var ms=[];for(var k=1;k<=12;k++)ms.push(Y+'-'+p2(k));
   var colN={};yit.forEach(function(e){colN[e.m]=(colN[e.m]||0)+1;});
   var h='<div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="calnav"><button class="calarr" data-caly="'+(years[yi-1]||'')+'"'+(yi>0?'':' disabled')+' aria-label="Previous year">‹</button><button class="calarr" data-caly="'+(years[yi+1]||'')+'"'+(yi<years.length-1?'':' disabled')+' aria-label="Next year">›</button><h2>'+Y+'</h2></div>'
     +'<div class="calseg sm">'+[['Post','Post numbers'],['Name','Deliverable names']].map(function(o){return '<button class="'+(lab===o[0]?'on':'')+'" data-callab="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div></div>';
-  h+='<div class="card sc yvw"><table class="yv"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x,k){return '<th>'+MON[k]+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
-  rows.forEach(function(i){var mine=yit.filter(function(x){return x.iid===i.id;});if(!mine.length)return;
+  h+='<div class="card sc yvw"><table class="yv'+(S.calArm?' arm':'')+'"><thead><tr><th class="yc">Creator</th>'+ms.map(function(x,k){return '<th>'+MON[k]+'</th>';}).join('')+'<th>Total</th></tr></thead><tbody>';
+  rows.forEach(function(i){var mine=yit.filter(function(x){return x.iid===i.id;});if(!mine.length&&!unI[i.id]&&!canEdit())return;
     h+='<tr><td class="yc">'+esc(ix(i.tid).name)+'</td>';
     ms.forEach(function(x){var cell=mine.filter(function(e){return e.m===x;});
-      h+='<td class="'+(!colN[x]?'emp':cell.length?'on'+(cell.some(function(e){return e.type==='film';})&&cell.every(function(e){return e.type==='film';})?' fl':''):'')+(x===TODAY.slice(0,7)?' now':'')+'">'+cell.map(function(e){var tx=e.type==='film'?'Filming':lab==='Name'?e.what:'Post '+e.n;
+      h+='<td class="'+(!colN[x]?'emp':cell.length?'on'+(cell.some(function(e){return e.type==='film';})&&cell.every(function(e){return e.type==='film';})?' fl':''):'')+(x===TODAY.slice(0,7)?' now':'')+'" data-ycell="'+i.id+'|'+x+'">'+cell.map(function(e){var tx=e.type==='film'?'Filming':lab==='Name'?e.what:'Post '+e.n;
         return '<button class="ycl'+(e.done?' done':'')+(e.late?' late':'')+(e.type==='due'?' due':'')+'" data-dd="'+e.iid+'|'+e.did+'" title="'+esc(e.what+' · '+CALT[e.type]+' '+fd(e.date)+(e.due?' · content due '+fd(e.due):'')+(e.done?' · done':e.late?' · overdue':''))+'">'+(e.done?'✓ ':e.late?'! ':'')+esc(tx)+'</button>';}).join('')+'</td>';});
     h+='<td class="tot">'+mine.length+'</td></tr>';});
   h+='</tbody><tfoot><tr><td class="yc">Posts this month</td>'+ms.map(function(x){return '<td>'+(colN[x]||0)+'</td>';}).join('')+'<td>'+yit.length+'</td></tr></tfoot></table></div>';
@@ -753,10 +789,115 @@ function calAgenda(ev){
   if(past.length)h+='<tr class="agw"><td colspan="6"><button class="cmore" data-calpast="1" style="padding:0">'+(S.calPast?'Hide':'Show')+' earlier ('+past.length+')</button></td></tr>'+(S.calPast?group(past):'');
   return h+'</tbody></table></div>';
 }
+
+/* Unscheduled deliverables tray */
+function calUnsched(c,ignoreWho){
+  var w=ignoreWho?'All':(S.calWho||'All'),out=[];
+  selected(c).forEach(function(i){if(w!=='All'&&i.id!==w)return;var who=ix(i.tid).name;
+    i.deliv.forEach(function(d){if(d.noPost?d.recv:(d.recv||d.live))return;out.push({key:'d~'+i.id+'~'+d.id,kind:'d',iid:i.id,did:d.id,who:who,name:d.name,plat:d.plat,noPost:d.noPost});});});
+  var sp={};scPending(c).forEach(function(x){if(w!=='All'&&x.iid!==w)return;sp[x.iid]=(sp[x.iid]||0)+1;out.push({key:'s~'+x.iid+'~'+sp[x.iid],kind:'s',iid:x.iid,who:ix(find(x.iid).tid).name,name:x.name,plat:x.plat,noPost:false});});
+  S.calU={};out.forEach(function(u){S.calU[u.key]=u;});
+  return out;
+}
+function calTray(un,V){
+  if(!canEdit()||!un.length)return '';
+  var arm=S.calArm&&S.calU[S.calArm];
+  var by=[],g={};un.forEach(function(u){if(!g[u.iid]){g[u.iid]=[];by.push(u.iid);}g[u.iid].push(u);});
+  var h='<div class="tray'+(S.calTrayOff?' shut':'')+'"><div class="trh"><button class="trt" data-caltray="1"><b>To schedule</b><span class="trc">'+un.length+'</span><span class="chev">'+(S.calTrayOff?'▸':'▾')+'</span></button>'
+    +(arm?'<span class="trarm">Placing <b>'+esc(arm.name)+'</b> for '+esc(arm.who)+'. '+(V==='Year'?'Click a month on their row (sets the last day of the month).':'Click a day.')+' <button class="cmore" data-calarm="">Cancel</button></span>'
+      :'<span class="small">'+(V==='Year'?'Drag onto a month on the creator’s row to set the last day of that month, or click one then click the month.':'Drag onto a day, or click one then click the day.')+'</span>')+'</div>';
+  if(!S.calTrayOff)h+='<div class="trg">'+by.map(function(iid){return '<div class="trr"><span class="trn">'+esc(g[iid][0].who)+'</span>'+(function(){return '<button class="tch add" data-act="caladd" data-caiid="'+iid+'" title="Add a deliverable for '+esc(g[iid][0].who)+'">+</button>';})()+g[iid].map(function(u){return '<button class="tch'+(u.noPost?' film':'')+(u.kind==='s'?' scope':'')+(S.calArm===u.key?' on':'')+'" draggable="true" data-cnew="'+esc(u.key)+'" title="'+esc(u.name+(u.plat?' · '+u.plat:'')+(u.kind==='s'?' · from the quoted scope':'')+(u.noPost?' · filming day':''))+'">'+(u.noPost?'<em>Film</em>':'')+esc(u.name)+(u.plat?'<span>'+esc(u.plat)+'</span>':'')+'</button>';}).join('')+'</div>';}).join('')+'</div>';
+  return h+'</div>';
+}
+function lastDay(ym){return addDays(addDays(ym+'-01',31).slice(0,7)+'-01',-1);}
+function calPlace(key,date,rowIid){
+  var u=S.calU&&S.calU[key];if(!u||!FULL)return;
+  if(rowIid&&rowIid!==u.iid){toast('That’s '+u.who+'’s deliverable. Drop it on their row.');return;}
+  S.calArm=null;var msg=u.who+': '+u.name+(u.noPost?' filming ':' goes live ')+fd(date);
+  if(u.kind==='d'){var b=u.noPost?{recv:date}:{live:date};post(P('/talents/'+u.iid+'/deliverables/'+u.did),'PATCH',b,{msg:msg});}
+  else{
+    // creating the first deliverable hides the rest of that creator's scope, so create the others too (undated, they stay in the tray)
+    var rest=[];for(var k in S.calU){var o=S.calU[k];if(o.kind==='s'&&o.iid===u.iid&&k!==key)rest.push(o);}
+    var path=P('/talents/'+u.iid+'/deliverables');
+    var chain=rest.reduce(function(pr,o){return pr.then(function(){return api(path,{method:'POST',body:{name:o.name,platform:o.plat}});});},Promise.resolve());
+    chain.then(function(){return post(path,'POST',{name:u.name,platform:u.plat,live:date},{msg:msg});}).catch(function(er){toast(er.message);loadOne();});
+  }
+}
+document.addEventListener('dragstart',function(e){var t=e.target.closest&&e.target.closest('[data-cnew]');if(!t)return;S.calNew=t.getAttribute('data-cnew');e.dataTransfer.effectAllowed='copy';try{e.dataTransfer.setData('text/plain',S.calNew);}catch(er){}});
+document.addEventListener('dragend',function(){S.calNew=null;document.querySelectorAll('.drop').forEach(function(x){x.classList.remove('drop');});});
+document.addEventListener('dragover',function(e){if(!S.calNew)return;var c=e.target.closest&&e.target.closest('[data-cday],[data-ycell]');if(!c)return;
+  if(c.hasAttribute('data-ycell')){var u=S.calU[S.calNew];if(u&&c.getAttribute('data-ycell').split('|')[0]!==u.iid)return;}
+  e.preventDefault();document.querySelectorAll('.drop').forEach(function(x){if(x!==c)x.classList.remove('drop');});c.classList.add('drop');});
+document.addEventListener('drop',function(e){if(!S.calNew)return;var c=e.target.closest&&e.target.closest('[data-cday],[data-ycell]');if(!c)return;e.preventDefault();
+  var key=S.calNew;S.calNew=null;c.classList.remove('drop');
+  if(c.hasAttribute('data-cday'))calPlace(key,c.getAttribute('data-cday'));
+  else{var pr=c.getAttribute('data-ycell').split('|');calPlace(key,lastDay(pr[1]),pr[0]);}});
+
+/* Add creator / deliverable from the calendar */
+var CAQ=['IG Reel','IG Story','IG Post','TikTok','YouTube video','UGC video'];
+function calAddOpen(iid,date){
+  var c=FULL;if(!c||!canEdit())return;S.calDay=null;S.calArm=null;
+  var film=false;
+  S.calAdd={who:iid?'ct:'+iid:(selected(c)[0]?'ct:'+selected(c)[0].id:'__ix'),tid:'',name:'',plat:'',film:film,recv:'',live:date||'',rate:'',err:''};
+  render();setTimeout(function(){var f=document.getElementById(S.calAdd&&S.calAdd.who==='__ix'?'ca-q':'ca-name');if(f)f.focus();},30);
+}
+function calAddSnap(){var a=S.calAdd;if(!a)return;var g=function(id){var e=document.getElementById(id);return e?e:null;};
+  if(g('ca-who'))a.who=g('ca-who').value;if(g('ca-name'))a.name=g('ca-name').value;if(g('ca-plat'))a.plat=g('ca-plat').value;
+  if(g('ca-film'))a.film=g('ca-film').checked;if(g('ca-recv'))a.recv=g('ca-recv').value;if(g('ca-live'))a.live=g('ca-live').value;if(g('ca-rate'))a.rate=g('ca-rate').value;
+  var r=document.querySelector('input[name="ca-tid"]:checked');if(r)a.tid=r.value;}
+function calAddModal(){
+  var a=S.calAdd,c=FULL;if(!c)return '';
+  var sel=selected(c),other=c.infl.filter(function(i){return !(i.approved==='Yes'&&!i.archived);}),inC={};c.infl.forEach(function(i){inC[i.tid]=1;});
+  var ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null,needsRate=a.who==='__ix'||(ct&&!(ct.approved==='Yes'&&!ct.archived));
+  var h='<div class="ov" data-cax="1"></div><div class="smod cadd" role="dialog" aria-label="Add to calendar"><div class="row" style="justify-content:space-between;margin-bottom:10px"><div style="font:500 20px var(--display);text-transform:uppercase;letter-spacing:.02em">Add to calendar</div><button class="btn sm" data-cax="1">Close</button></div>';
+  h+='<label class="cfl"><span class="lbl">Creator</span><select id="ca-who" class="sel plain">'
+    +(sel.length?'<optgroup label="Selected for this campaign">'+sel.map(function(i){return '<option value="ct:'+i.id+'"'+(a.who==='ct:'+i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</optgroup>':'')
+    +(other.length?'<optgroup label="On this campaign, not selected yet">'+other.map(function(i){return '<option value="ct:'+i.id+'"'+(a.who==='ct:'+i.id?' selected':'')+'>'+esc(ix(i.tid).name)+' ('+esc(i.archived?'archived':i.approved)+')</option>';}).join('')+'</optgroup>':'')
+    +'<option value="__ix"'+(a.who==='__ix'?' selected':'')+'>Someone else from the Talent Index…</option></select></label>';
+  if(ct&&needsRate)h+='<div class="small" style="margin:-4px 0 10px">They’ll be marked as selected (Approved: Yes) on the Influencers tab.</div>';
+  if(a.who==='__ix'){
+    var list=TAL.filter(function(t){return !inC[t.id];}).sort(function(x,y){return x.name<y.name?-1:1;});
+    h+='<input id="ca-q" class="fld" placeholder="Search the Talent Index ('+list.length+')" autocomplete="off"><div class="calist" id="ca-list">'+list.map(function(t){return '<label data-caname="'+esc((t.name+' '+t.niche+' '+t.region).toLowerCase())+'"><input type="radio" name="ca-tid" value="'+esc(t.id)+'"'+(a.tid===t.id?' checked':'')+'><b>'+esc(t.name)+'</b><span>'+esc([t.plat,t.region,t.niche].filter(Boolean).join(' · '))+'</span></label>';}).join('')+'</div>'
+      +'<div class="row" style="justify-content:space-between;margin:6px 0 12px"><span class="small">They’ll be added to Influencers as selected and stay linked to their Index profile.</span><button class="cmore" data-act="canewtal">Not in the Index? Add new talent</button></div>';
+  }
+  if(needsRate)h+='<label class="cfl"><span class="lbl">Creator rate ('+c.cur+', optional)</span><input id="ca-rate" class="fld" type="number" min="0" step="any" value="'+esc(a.rate)+'" placeholder="Blank uses their Talent Index typical rate"></label>';
+  h+='<div class="lbl" style="margin:4px 0 6px">Deliverable</div><div class="row" style="gap:6px;margin-bottom:8px">'+CAQ.map(function(q){return '<button class="tch" data-caq="'+q+'">'+q+'</button>';}).join('')+'</div>';
+  h+='<div class="row" style="gap:8px;flex-wrap:nowrap"><input id="ca-name" class="fld" style="flex:1" placeholder="e.g. IG Reel" value="'+esc(a.name)+'"><select id="ca-plat" class="sel plain" style="width:auto">'+['','Instagram','TikTok','YouTube','Snapchat','Other'].map(function(o){return '<option value="'+o+'"'+((a.plat||scPlat(a.name))===o?' selected':'')+'>'+(o||'Platform')+'</option>';}).join('')+'</select></div>';
+  h+='<label class="row" style="gap:8px;margin:10px 0"><input type="checkbox" id="ca-film"'+(a.film?' checked':'')+'><span>Filming or attendance day (no posting)</span></label>';
+  h+='<div class="g2" style="gap:10px">'+(a.film?'<label class="cfl"><span class="lbl">Filming date</span><input id="ca-live" class="fld" type="date" value="'+esc(a.live)+'"></label>'
+    :'<label class="cfl"><span class="lbl">Content due</span><input id="ca-recv" class="fld" type="date" value="'+esc(a.recv)+'"></label><label class="cfl"><span class="lbl">Goes live</span><input id="ca-live" class="fld" type="date" value="'+esc(a.live)+'"></label>')+'</div>';
+  if(a.err)h+='<div class="pill bad" style="margin-top:10px;white-space:normal">'+esc(a.err)+'</div>';
+  h+='<div class="row" style="justify-content:space-between;margin-top:16px"><span class="small">Dates can be left blank – it’ll sit in To schedule.</span><div class="row"><button class="btn" data-act="cago" data-another="1"'+(a.busy?' disabled':'')+'>Add &amp; another</button><button class="btn pri" data-act="cago"'+(a.busy?' disabled':'')+'>'+(a.busy?'Saving…':'Add')+'</button></div></div></div>';
+  return h;
+}
+function calAddGo(another){
+  calAddSnap();var a=S.calAdd,c=FULL;a.err='';
+  var name=a.name.trim(),ct=a.who.indexOf('ct:')===0?find(a.who.slice(3)):null;
+  if(a.who==='__ix'&&!a.tid){a.err='Pick someone from the Talent Index.';render();return;}
+  if(!name&&ct&&ct.approved==='Yes'&&!ct.archived){a.err='Name the deliverable.';render();return;}
+  if(!a.film&&a.recv&&a.live&&a.recv>a.live){a.err='Content due can’t be after the go-live date.';render();return;}
+  if(a.rate!==''&&!(Number(a.rate)>0)){a.err='The rate needs to be above 0, or leave it blank.';render();return;}
+  a.busy=true;render();
+  var ctId=ct?ct.id:null,who=ct?ix(ct.tid).name:(TAL.filter(function(t){return t.id===a.tid;})[0]||{}).name||'Creator',isNew=!ct||!(ct.approved==='Yes'&&!ct.archived);
+  var p=Promise.resolve(),last=null;
+  var go=function(path,method,body){return api(path,{method:method,body:body}).then(function(j){if(j.campaign){last=j.campaign;FULL=hydrate(j.campaign);}return j;});};
+  if(!ct)p=p.then(function(){return go(P('/talents'),'POST',{talent_id:a.tid});}).then(function(){var n=FULL.infl.filter(function(i){return i.tid===a.tid;})[0];if(!n)throw new Error('Could not add them');ctId=n.id;});
+  p=p.then(function(){if(isNew)return go(P('/talents/'+ctId),'PATCH',ct&&ct.archived?{approved:'Yes',archived:null}:{approved:'Yes'});});
+  p=p.then(function(){if(a.rate!=='')return go(P('/talents/'+ctId),'PATCH',{initial:Number(a.rate)});});
+  p=p.then(function(){if(name)return go(P('/talents/'+ctId+'/deliverables'),'POST',a.film?{name:name,platform:a.plat||scPlat(name),noPost:true,recv:a.live}:{name:name,platform:a.plat||scPlat(name),recv:a.recv,live:a.live});});
+  p.then(function(){
+    toast((isNew?who+' added to Influencers':who)+(name?(isNew?' with ':': ')+name+(a.live?(a.film?' filming ':' going live ')+fd(a.live):' (to schedule)'):''));
+    if(another)S.calAdd={who:'ct:'+ctId,tid:'',name:'',plat:'',film:false,recv:'',live:a.live,rate:'',err:''};else S.calAdd=null;
+    if(a.live&&S.calV!=='Year')S.calM=a.live.slice(0,7),S.calPick=a.live.slice(0,7);
+    render();if(another)setTimeout(function(){var f=document.getElementById('ca-name');if(f)f.focus();},30);
+  }).catch(function(er){if(S.calAdd){S.calAdd.busy=false;S.calAdd.err=er.message||'Something went wrong';}render();loadOne(true);});
+}
+document.addEventListener('input',function(e){if(e.target.id!=='ca-q')return;var q=e.target.value.toLowerCase().trim();
+  document.querySelectorAll('#ca-list label').forEach(function(l){l.style.display=!q||l.getAttribute('data-caname').indexOf(q)>=0?'':'none';});});
 function calDayModal(){
   if(!FULL)return '';var day=S.calDay,list=calFiltered(FULL).filter(function(e){return e.date===day;});
   var dt=new Date(day+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
-  return '<div class="ov" data-calx="1"></div><div class="smod cpop" role="dialog" aria-label="'+esc(dt)+'"><div class="row" style="justify-content:space-between"><div style="font:500 18px var(--display);text-transform:uppercase;letter-spacing:.02em">'+esc(dt)+'</div><button class="btn sm" data-calx="1">Close</button></div>'+(list.length?list.map(function(e){return cevBtn(e,true);}).join(''):'<div class="small" style="margin-top:10px">Nothing due this day.</div>')+'</div>';
+  return '<div class="ov" data-calx="1"></div><div class="smod cpop" role="dialog" aria-label="'+esc(dt)+'"><div class="row" style="justify-content:space-between"><div style="font:500 18px var(--display);text-transform:uppercase;letter-spacing:.02em">'+esc(dt)+'</div><button class="btn sm" data-calx="1">Close</button></div>'+(list.length?list.map(function(e){return cevBtn(e,true);}).join(''):'<div class="small" style="margin-top:10px">Nothing due this day.</div>')+(canEdit()?'<button class="btn sm" style="margin-top:14px" data-act="caladd" data-cadate="'+day+'">+ Add creator or deliverable on this day</button>':'')+'</div>';
 }
 function calIcs(c){
   var ev=calFiltered(c),L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Zodiac Global//Campaign Management//EN','CALSCALE:GREGORIAN','X-WR-CALNAME:'+icsEsc(c.name)];
@@ -1195,7 +1336,7 @@ function render(){
   if(S.view==='campaign'&&S.tab==='Deliverables'&&FULL&&CUR&&canEdit()){S.af=S.af||{};if(!S.af[FULL.id]){S.af[FULL.id]=1;setTimeout(function(){if(FULL&&S.tab==='Deliverables')scFill(FULL);},0);}}
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
-  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'');
+  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'');
   var so=document.querySelector('[data-sother]');if(so)so.focus();
   var lq=document.getElementById('lq');if(lq&&S.lqFocus){lq.focus();lq.setSelectionRange(lq.value.length,lq.value.length);}
   var pq=document.getElementById('pq');if(pq&&S.pqFocus){pq.focus();pq.setSelectionRange(pq.value.length,pq.value.length);}
@@ -1283,6 +1424,9 @@ document.addEventListener('change',function(e){
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
   if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
+  if(t.id==='ca-who'||t.id==='ca-film'){calAddSnap();if(t.id==='ca-who')S.calAdd.err='';render();return;}
+  if(t.id==='ca-name'){calAddSnap();var pe=document.getElementById('ca-plat');if(pe&&!pe.value)pe.value=scPlat(t.value);return;}
+  if(t.id==='calpick'){if(t.value){S.calPick=t.value;S.calM=t.value;render();}return;}
   if(t.id==='calnote'){var cv=t.value.trim();FULL.calNote=cv;post(P(''),'PATCH',{calNote:cv},{quiet:true,msg:'Note saved'});return;}
   if(t.id==='lshare'){if(t.value)post(P('/links'),'POST',{code:t.value},{msg:'Link added to this campaign'});return;}
   if(t.id==='mstage'){post(P(''),'PATCH',{stage:t.value});return;}
@@ -1331,12 +1475,12 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-caq]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
   else if(d.cpclose){S.clientPop=null;render();}
-  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
+  else if(d.open){S.clientPop=null;S.backc=S.view==='client'?S.clientPage:null;S.backv=S.view==='sales'?'sales':null;S.view='campaign';S.cid=d.open;FULL=null;S.calM=null;S.calY=null;S.calPick=null;S.calArm=null;S.calWho='All';S.calT={};S.calDay=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.sel=null;S.pick=false;S.editSec=null;render();loadOne();}
   else if(d.tab){S.tab=d.tab;S.sel=null;S.editSec=null;render();if(d.tab==='Decks & links')loadShares();}
   else if(d.calm!==undefined){if(d.calm){S.calM=d.calm;render();}}
   else if(d.calt){S.calT=S.calT||{};S.calT[d.calt]=!S.calT[d.calt];render();}
@@ -1346,6 +1490,13 @@ document.addEventListener('click',function(e){
   else if(d.calpast){S.calPast=!S.calPast;render();}
   else if(d.caly!==undefined){if(d.caly){S.calY=d.caly;render();}}
   else if(d.callab){S.calLab=d.callab;render();}
+  else if(d.cnew){S.calArm=S.calArm===d.cnew?null:d.cnew;render();}
+  else if(d.calarm!==undefined){S.calArm=null;render();}
+  else if(d.caltray){S.calTrayOff=!S.calTrayOff;render();}
+  else if(d.cday){if(S.calArm)calPlace(S.calArm,d.cday);}
+  else if(d.ycell){var yp=d.ycell.split('|');if(S.calArm)calPlace(S.calArm,lastDay(yp[1]),yp[0]);else if(canEdit())calAddOpen(yp[0],lastDay(yp[1]));}
+  else if(d.cax){S.calAdd=null;render();}
+  else if(d.caq){calAddSnap();S.calAdd.name=d.caq;S.calAdd.plat=scPlat(d.caq);render();}
   else if(d.rmrow){S.rmrow=d.rmrow;render();}
   else if(d.rmrowno){S.rmrow=null;render();}
   else if(d.rmrowgo){var rg=d.rmrowgo;S.rmrow=null;S.sel=null;post(P('/talents/'+rg),'DELETE',undefined,{msg:'Removed from the campaign'});}
@@ -1413,6 +1564,9 @@ document.addEventListener('click',function(e){
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='calics'){if(FULL)calIcs(FULL);}
+  else if(d.act==='caladd'){calAddOpen(d.caiid,d.cadate);}
+  else if(d.act==='cago'){if(!S.calAdd.busy)calAddGo(!!d.another);}
+  else if(d.act==='canewtal'){calAddSnap();S.calAddNew=true;var qv=(document.getElementById('ca-q')||{}).value||'';try{window.parent.postMessage({type:'zodiac-new-talent',name:qv},location.origin);}catch(er){toast('Open the Talent Index and use Add Talent');}}
   else if(d.act==='wkopen'){S.view='weekly';render();window.scrollTo(0,0);}
   else if(d.sdcur){S.sd.cur=d.sdcur;render();}
   else if(d.act==='newc'){S.newc=!S.newc;render();}
@@ -1424,7 +1578,10 @@ document.addEventListener('dragleave',function(e){var z=e.target.closest&&e.targ
 document.addEventListener('drop',function(e){var z=e.target.closest&&e.target.closest('#docdrop');if(z){e.preventDefault();z.classList.remove('on');addDocs(e.dataTransfer.files);}});
 window.addEventListener('message',function(e){
   var m=e.data;if(e.origin!==location.origin||!m||m.type!=='zodiac-talent-created'||!FULL)return;
-  api(P('/talents'),{method:'POST',body:{talent_id:m.id}}).then(function(j){FULL=hydrate(j.campaign);S.pick=false;return api('/state');})
+  var fromCal=S.calAddNew&&S.calAdd;S.calAddNew=false;
+  api(P('/talents'),{method:'POST',body:{talent_id:m.id}}).then(function(j){FULL=hydrate(j.campaign);S.pick=false;
+      if(fromCal){var n=FULL.infl.filter(function(i){return i.tid===m.id;})[0];if(n)return api(P('/talents/'+n.id),{method:'PATCH',body:{approved:'Yes'}}).then(function(j2){FULL=hydrate(j2.campaign);if(S.calAdd){S.calAdd.who='ct:'+n.id;S.calAdd.err='';}});}})
+    .then(function(){return api('/state');})
     .then(function(st){setTal(st.talents);render();toast((m.name||'Talent')+' saved to the Talent Index and added to this campaign');}).catch(function(er){toast(er.message);});
 });
 function setTal(list){TAL=list.map(function(t){return {id:t.id,name:t.name,plat:platOf(t),region:t.region||'',niche:t.niche||''};});}
