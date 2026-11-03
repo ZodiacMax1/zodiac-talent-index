@@ -112,7 +112,7 @@ function shapeCampaign(c) {
   return {
     id: c.id, name: c.name, client: c.client || '', owner: c.owner || '',
     created: c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : '',
-    wonAt: c.won_at || '', fnote: c.fnote || '',
+    wonAt: c.won_at || '', fnote: c.fnote || '', calNote: c.cal_note || '',
     start: c.start_date || '', end: c.end_date || '',
     cur: c.cur, fx: Number(c.fx), budget: Number(c.budget), target: Number(c.target_margin),
     markets: c.markets || '', platforms: c.platforms || '', brief: c.brief || '', deck: c.deck_name || '',
@@ -338,7 +338,7 @@ export async function handleCampaigns(ctx) {
     const b = await body();
     const sets = []; const vals = [id];
     const set = (col, v) => { vals.push(v); sets.push(`${col} = $${vals.length}`); };
-    const strMap = { name: ['name', 200], client: ['client', 200], owner: ['owner', 100], markets: ['markets', 200], platforms: ['platforms', 200], brief: ['brief', 8000], fnote: ['fnote', 300], deck: ['deck_name', 200], mondayItemId: ['monday_item_id', 40],
+    const strMap = { name: ['name', 200], client: ['client', 200], owner: ['owner', 100], markets: ['markets', 200], platforms: ['platforms', 200], brief: ['brief', 8000], fnote: ['fnote', 300], calNote: ['cal_note', 500], deck: ['deck_name', 200], mondayItemId: ['monday_item_id', 40],
       contactName: ['contact_name', 200], contactRole: ['contact_role', 200], contactEmail: ['contact_email', 200], contactPhone: ['contact_phone', 60], cUsage: ['c_usage', 8000] };
     for (const [k, [col, max]] of Object.entries(strMap)) if (k in b) { if (k === 'name' && !text(b.name)) return bad('Campaign name is required'); set(col, text(b[k], max)); }
     if ('start' in b) set('start_date', dateOrNull(b.start));
