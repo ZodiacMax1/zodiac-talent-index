@@ -2881,9 +2881,9 @@ renderShortlist();
       document.getElementById('zh-dot').hidden = !ATT.length;
       const pill = (cls, txt, cid) => '<button class="zh-p ' + cls + '" data-cid="' + cid + '"><span class="ico">' + ZICO[cls] + '</span><span class="tx">' + esc(txt) + '</span><span class="ar">' + ZARR + '</span></button>';
       const P = [];
-      P.push(od ? pill('r', od + ' deliverable' + (od === 1 ? '' : 's') + ' overdue', pick('overdue')) : '<div class="zh-p n"><span class="ico">' + ZICO.r + '</span><span class="tx">Nothing overdue</span></div>');
-      P.push(dw ? pill('a', dw + ' deliverable' + (dw === 1 ? '' : 's') + ' due this week', pick('dueWeek')) : '<div class="zh-p n"><span class="ico">' + ZICO.a + '</span><span class="tx">Nothing due this week</span></div>');
-      P.push(ri ? pill('g', ri + ' campaign' + (ri === 1 ? '' : 's') + ' ready to invoice', pick('readyInv')) : us ? pill('g', us + ' creator contract' + (us === 1 ? '' : 's') + ' unsigned', pick('unsigned')) : '<div class="zh-p n"><span class="ico">' + ZICO.g + '</span><span class="tx">No invoices to raise</span></div>');
+      P.push(od ? pill('r', od + ' overdue', pick('overdue')) : '<div class="zh-p n"><span class="ico">' + ZICO.r + '</span><span class="tx">Nothing overdue</span></div>');
+      P.push(dw ? pill('a', dw + ' due this week', pick('dueWeek')) : '<div class="zh-p n"><span class="ico">' + ZICO.a + '</span><span class="tx">Nothing due this week</span></div>');
+      P.push(ri ? pill('g', ri + ' ready to invoice', pick('readyInv')) : us ? pill('g', us + ' creator contract' + (us === 1 ? '' : 's') + ' unsigned', pick('unsigned')) : '<div class="zh-p n"><span class="ico">' + ZICO.g + '</span><span class="tx">No invoices to raise</span></div>');
       tick.innerHTML = P.join('');
     }).catch(() => { cEl.innerHTML = ''; tick.innerHTML = ''; });
   }
