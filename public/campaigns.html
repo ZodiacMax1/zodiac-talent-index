@@ -463,6 +463,29 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .calmain .yv th.yc,.calmain .yv td.yc{width:140px}
 @media (max-width:1000px){.calwrap{grid-template-columns:1fr}.cside{position:static;max-height:none}}
 
+/* batch 59 */
+.undobar{display:flex;align-items:center;gap:10px;background:var(--ok-bg);color:var(--ok-fg);border-radius:10px;padding:7px 8px 7px 14px;margin:-4px 0 12px;font-size:13.5px}.undobar span{flex:1}
+.dz{flex-direction:row;justify-content:flex-start;text-align:left;gap:10px;padding:11px 14px;border-radius:10px;border-width:1px;font-size:13.5px}.dz .ic{font-size:15px;width:26px;height:26px;border-radius:50%;background:var(--surface);display:grid;place-items:center;border:1px solid var(--line2);color:var(--fg);flex:none}
+.udrop{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 10px 8px 12px;border:1px dashed var(--line2);border-radius:10px;font-size:13.5px;background:var(--soft);color:var(--muted)}.udrop.on{border-color:var(--accent);background:var(--accent-soft)}.udrop b{color:var(--fg)}.udrop .ic{font-size:15px;width:26px;height:26px;border-radius:50%;background:var(--surface);display:grid;place-items:center;border:1px solid var(--line2);flex:none}
+.dsh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.dsec .sc table{margin-top:12px}
+.ctl{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ctr .ctn b{overflow:hidden;text-overflow:ellipsis}.ctr{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 140px 118px;gap:12px;align-items:center;padding:9px 12px;border-top:1px solid var(--line)}.ctr:first-child{border-top:0}
+.ctn{display:flex;align-items:center;gap:9px;min-width:0}.ctn b{white-space:nowrap}
+.ctf{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.cts{display:contents}.ctd{display:flex}.ctst{display:flex;justify-content:flex-end}.ctst .sel{width:100%}.ctd .fld.dt{width:140px;padding:5px 8px;font-size:12.5px}.ctst .sel{min-height:32px;font-size:12.5px}
+.fchip{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:3px 4px 3px 9px;font-size:12.5px;max-width:100%}.fchip .lkb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.ctup{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--line2);border-radius:8px;padding:4px 10px;font-size:12.5px;color:var(--muted);cursor:pointer}.ctup:hover,.ctup.over{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.ctup:before{content:'↑'}
+.m3.m4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.zhero{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:#000;border-radius:16px;padding:24px 30px;margin-bottom:16px;box-shadow:0 10px 30px rgba(26,26,26,.12)}
+.zbrand{display:flex;align-items:center;gap:26px;flex-wrap:wrap}.zlogo{height:70px;width:auto;display:block}.zsep{width:1px;align-self:stretch;background:rgba(228,226,221,.22)}
+.zeye{font:500 11px var(--display);letter-spacing:.2em;text-transform:uppercase;color:#E4E2DD;opacity:.7;margin-bottom:6px}
+.zh1{font:600 40px/1 var(--display);text-transform:uppercase;color:#E4E2DD;letter-spacing:.01em}
+.zright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}.zme{border:1px solid rgba(228,226,221,.45);color:#E4E2DD;border-radius:10px;padding:8px 16px;font-weight:500;font-size:14px}
+.ztot{font:400 12.5px var(--mono);color:rgba(228,226,221,.7);display:flex;align-items:center;gap:7px}.ztot i{width:7px;height:7px;border-radius:50%;background:#3FA56B}
+.ztb{margin-top:0}
+@media (max-width:700px){.ctd{display:none}.zsep{display:none}.zlogo{height:54px}.zh1{font-size:28px}.zright{align-items:flex-start}.ctr{grid-template-columns:1fr 118px}.ctf{grid-column:1/-1}.cts{justify-content:flex-start}.m3.m4{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -649,7 +672,9 @@ function attention(){
   return h+'</div>';
 }
 function viewCampaigns(){
-  var h='<div class="top"><div><h1>Campaigns</h1></div><div class="row"><button class="btn" data-palopen="1" title="Search everything">Search <kbd class="kbd">⌘K</kbd></button>'+(canEdit()?'<div class="row">'+(CAMPS.some(function(c){return c.mondayItemId;})?'<button class="btn" data-act="mrefresh" title="Re-read the company name (and contact) from monday for campaigns already imported">Update company from monday</button>':'')+'<button class="btn" data-act="mimp">Import from monday</button><button class="btn pri" data-act="newc">+ New campaign</button></div>':'')+'</div></div>';
+  var nlive=CAMPS.filter(function(c){return !c.archived&&c.stage==='7 - Won';}).length;
+  var h='<header class="zhero"><div class="zbrand"><img class="zlogo" src="/zodiac-logo.png" alt="Zodiac Global Group"><span class="zsep"></span><div><div class="zeye">Built for creators. Trusted by brands.</div><div class="zh1">Campaign Management</div></div></div><div class="zright">'+(ME&&ME.name?'<span class="zme">'+esc(ME.name)+'</span>':'')+'<span class="ztot"><i></i>'+nlive+' live campaign'+(nlive===1?'':'s')+' · '+CAMPS.filter(function(c){return !c.archived;}).length+' in total</span></div></header>';
+  h+='<div class="top ztb"><div></div><div class="row"><button class="btn" data-palopen="1" title="Search everything">Search <kbd class="kbd">⌘K</kbd></button>'+(canEdit()?'<div class="row">'+(CAMPS.some(function(c){return c.mondayItemId;})?'<button class="btn" data-act="mrefresh" title="Re-read the company name (and contact) from monday for campaigns already imported">Update company from monday</button>':'')+'<button class="btn" data-act="mimp">Import from monday</button><button class="btn pri" data-act="newc">+ New campaign</button></div>':'')+'</div></div>';
   if(S.mimp)h+=mondayImport();
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
   if(S.newc)h+='<form class="add card" id="newc-form" style="margin-bottom:16px"><input class="fld" style="flex:2;min-width:160px" id="nc-name" placeholder="Campaign name" required><input class="fld" style="flex:2;min-width:160px" id="nc-client" placeholder="Client / brand" required><select class="sel plain" id="nc-cur" style="width:auto"><option value="GBP">£ GBP</option><option value="USD">$ USD</option><option value="AED">AED</option></select><input class="fld" style="flex:1;min-width:140px" id="nc-budget" type="number" min="0" placeholder="Client budget" required><button class="btn pri" type="submit">Create</button><button class="btn" type="button" data-act="newc">Cancel</button></form>';
@@ -787,10 +812,10 @@ function tabArchive(c){
 }
 var DOCKINDS=['Client deck','Proposal','Brief','Other'];
 function docsCard(c){
-  var h='<div class="card" style="padding:18px 22px;margin-bottom:16px"><h2 class="sh">Documents</h2>';
-  if(canEdit())h+='<div class="drop" id="docdrop"><div><b style="font-weight:500">Drop files here</b> or <label class="lnk"><input type="file" id="docfile" multiple hidden>choose files</label></div><div class="small" style="margin-top:4px">Up to 4MB each. For bigger files add a link below.</div><div class="row" style="justify-content:center;margin-top:10px"><span class="lbl">File type</span><select class="sel plain" id="dockind" style="width:auto">'+DOCKINDS.map(function(k){return '<option'+(S.dockind===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div></div>'
-    +'<form id="doclink-form" class="row" style="margin:10px 0 0;gap:8px"><input class="fld" id="dl-name" placeholder="Name, e.g. Full client deck v2" style="flex:1;min-width:160px"><input class="fld" id="dl-url" placeholder="https://… (Drive, Dropbox, Canva, Pitch)" style="flex:2;min-width:220px" required><button class="btn" type="submit">Add link</button></form>';
-  var L=c.docs||[];
+  var h='<div class="dsec"><div class="dsh"><span class="mh">Documents</span></div>';
+  if(canEdit())h+='<div class="udrop" id="docdrop"><span class="ic">↑</span><span><b style="font-weight:500">Drop files</b> or <label class="lnk"><input type="file" id="docfile" multiple hidden>choose files</label></span><span class="row" style="gap:6px;margin-left:auto;flex-wrap:nowrap"><span class="small">Save as</span><select class="sel plain sm2" id="dockind">'+DOCKINDS.map(function(k){return '<option'+(S.dockind===k?' selected':'')+'>'+k+'</option>';}).join('')+'</select></span></div>'
+    +'<form id="doclink-form" class="row" style="margin:8px 0 0;gap:8px;flex-wrap:nowrap"><input class="fld" id="dl-name" placeholder="Link name" style="flex:1;min-width:120px"><input class="fld" id="dl-url" placeholder="Paste a Drive, Dropbox, Canva or Pitch link (for files over 4MB)" style="flex:2.4;min-width:200px" required><button class="btn sm" type="submit">Add link</button></form>';
+  var L=(c.docs||[]).filter(function(d){return !d.ct;});
   if(!L.length)h+='<div class="small" style="margin-top:12px">'+(canEdit()?'Nothing added yet.':'No documents.')+'</div>';
   else{h+='<div class="sc" style="margin-top:14px"><table><thead><tr><th>Name</th><th>Type</th><th>Added</th><th></th></tr></thead><tbody>';
     L.forEach(function(d){h+='<tr><td><b>'+esc(d.name)+'</b><div class="small">'+(d.url?'Link':fsize(d.size))+'</div></td><td><span class="pill neu">'+esc(d.kind)+'</span></td><td>'+fd(String(d.at).slice(0,10))+(d.by?'<div class="small">'+esc(d.by)+'</div>':'')+'</td><td class="r">'
@@ -800,15 +825,15 @@ function docsCard(c){
   return h+'</div>';
 }
 function tabDecks(c){
-  var h='<div class="card" style="padding:20px 24px;margin-bottom:16px"><div class="row" style="justify-content:space-between"><div><div class="lbl">Linked deck</div><div style="font-size:19px;font-weight:500;margin-top:4px">'+esc(c.deck||'Not linked yet')+'</div></div></div></div>';
+  var h='<div class="card" style="padding:20px 24px">'+(c.deck?'<div class="row" style="justify-content:space-between;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)"><span class="mh">Linked deck</span><b style="font-weight:500">'+esc(c.deck)+'</b></div>':'');
   h+=docsCard(c);
   var linked={};c.links.forEach(function(l){linked[l.code]=1;});
   var avail=(S.shares||[]).filter(function(x){return !linked[x.code]&&!x.campaign_id;});
-  if(canEdit())h+='<div class="card" style="padding:16px 20px;margin-bottom:16px"><div class="row"><span class="lbl">Link a client link</span><select class="sel plain" id="lshare" style="flex:1;min-width:220px"><option value="">'+(S.shares?'Choose a link you have sent…':'Loading links…')+'</option>'+avail.map(function(x){return '<option value="'+esc(x.code)+'">'+esc((x.name||'Deck')+' · '+(x.recipient||x.brand||'no recipient')+' · '+fd(String(x.created_at).slice(0,10)))+'</option>';}).join('')+'</select></div></div>';
-  if(!c.links.length)return h+(canEdit()?'':'<div class="card" style="padding:24px">No client links linked yet.</div>');
-  h+='<div class="card sc"><table><thead><tr><th>Sent to</th><th>Sent by</th><th>Date</th><th>Status</th><th>Opened</th><th>Last opened</th><th></th></tr></thead><tbody>';
+  h+='<div class="dsec" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)"><div class="dsh"><span class="mh">Client links</span>'+(canEdit()?'<select class="sel plain sm2" id="lshare" style="max-width:420px"><option value="">'+(S.shares?'+ Link a deck link you have sent…':'Loading links…')+'</option>'+avail.map(function(x){return '<option value="'+esc(x.code)+'">'+esc((x.name||'Deck')+' · '+(x.recipient||x.brand||'no recipient')+' · '+fd(String(x.created_at).slice(0,10)))+'</option>';}).join('')+'</select>':'')+'</div>';
+  if(!c.links.length)return h+'<div class="small">No client links linked yet.</div></div></div>';
+  h+='<div class="sc"><table><thead><tr><th>Sent to</th><th>Sent by</th><th>Date</th><th>Status</th><th>Opened</th><th>Last opened</th><th></th></tr></thead><tbody>';
   c.links.forEach(function(l){h+='<tr><td><b>'+esc(l.recipient||l.name||'Client link')+'</b><div class="small">'+esc(l.name||'')+' · '+l.talent_count+' talent</div></td><td>'+esc(l.created_by||'')+'</td><td>'+fd(String(l.created_at).slice(0,10))+'</td><td><span class="pill '+(l.revoked?'neu':'ok')+'">'+(l.revoked?'Revoked':'Live')+'</span></td><td>'+l.views+' times'+(l.visitors?'<div class="small">'+l.visitors+' device'+(l.visitors===1?'':'s')+'</div>':'')+'</td><td>'+(l.last_viewed_at?fts(l.last_viewed_at):'Not yet')+'</td><td class="r">'+(canEdit()?'<button class="btn sm" data-unlink="'+esc(l.code)+'">Unlink</button>':'')+'</td></tr>';});
-  h+='</tbody></table></div>';
+  h+='</tbody></table></div></div></div>';
   var q=c.infl.filter(function(i){return i.feedback;});
   if(q.length)h+='<div class="card" style="padding:20px 24px;margin-top:16px"><h2 class="sh">What the client said</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">'+q.map(function(i){return '<div class="quote"><b>'+esc(i.name)+'</b> <span class="pill '+cls(i.approved)+'">'+esc(i.approved)+'</span><div style="margin-top:6px">“'+esc(i.feedback)+'”</div></div>';}).join('')+'</div></div>';
   return h;
@@ -854,15 +879,17 @@ function tabDeliv(c){
   var rows=[];selected(c).forEach(function(i){i.deliv.forEach(function(d){rows.push([i,d]);});});
   rows.sort(function(a,b){var ka=dinfo(a[1]),kb=dinfo(b[1]);if(ka.done!==kb.done)return ka.done?1:-1;return (ka.key||'9')<(kb.key||'9')?-1:1;});
   var KM={bad:'Overdue',warn:'Due soon',neu:'Upcoming',ok:'Completed'},cnt={All:rows.length,Overdue:0,'Due soon':0,Upcoming:0,Completed:0};
+  var ppl=selected(c);if(S.dft&&S.dft!=='All'&&!ppl.some(function(i){return i.id===S.dft;}))S.dft='All';
+  if(S.dft&&S.dft!=='All')rows=rows.filter(function(r){return r[0].id===S.dft;});cnt.All=rows.length;
   rows.forEach(function(r){cnt[KM[dinfo(r[1]).k]]++;});
   var all=rows.length;
-  rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg);});
-  var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div>';
+  rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg)&&(!S.dft||S.dft==='All'||r[0].id===S.dft);});
+  var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><div class="row" style="gap:10px">'+(canEdit()?'<button class="btn sm" data-act="shopen">Shift dates…</button>':'')+'<label class="row" style="gap:8px"><span class="lbl">Talent</span><select id="dft" class="sel plain" style="width:auto;max-width:240px"><option value="All">All talent</option>'+ppl.map(function(i){return '<option value="'+esc(i.id)+'"'+(S.dft===i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</select></label><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div></div>'+(S.undoShift&&S.undoShift.cid===c.id?'<div class="undobar"><span>Moved '+S.undoShift.items.length+' deliverable'+(S.undoShift.items.length===1?'':'s')+' by '+dayTxt(S.undoShift.days)+'.</span><button class="btn sm" data-act="shundo">Undo</button><button class="x" data-act="shforget" aria-label="Dismiss">×</button></div>':'');
   var pend=scPending(c).length;if(pend&&canEdit())bar='<div class="row" style="margin-bottom:12px"><button class="btn sm pri" data-act="scfill">Add '+pend+' deliverable'+(pend===1?'':'s')+' from scope</button></div>'+bar;
   var ed=canEdit();S.dsel=S.dsel||{};
   var sk=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]);return i&&i.deliv.some(function(d){return d.id===p[1];});});
   if(ed&&sk.length){var same=sk.every(function(k){return k.split('|')[0]===sk[0].split('|')[0];});
-    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+(S.ddelAsk?'<span>Delete '+sk.length+'? They come off the quote too.</span><button class="btn light" style="color:var(--bad-fg)" data-act="ddelgo">Yes, delete</button><button class="btn ghost" data-act="ddelno">Keep</button>':'<button class="btn ghost" data-act="ddel">Delete</button>')+'<button class="btn ghost" data-act="dselclear">Clear</button></div>';}
+    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+(S.ddelAsk?'<span>Delete '+sk.length+'? They come off the quote too.</span><button class="btn light" style="color:var(--bad-fg)" data-act="ddelgo">Yes, delete</button><button class="btn ghost" data-act="ddelno">Keep</button>':'<button class="btn ghost" data-act="ddel">Delete</button>')+'<button class="btn ghost" data-act="shopen">Shift dates</button><button class="btn ghost" data-act="dselclear">Clear</button></div>';}
   else h=bar;
   h+='<div class="card sc"><table><thead><tr>'+(ed?'<th style="width:34px"></th>':'')+'<th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
   if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
@@ -870,6 +897,73 @@ function tabDeliv(c){
     h+='<tr class="clk" data-dd="'+key+'">'+(ed?'<td><input type="checkbox" data-dsel="'+key+'"'+(S.dsel[key]?' checked':'')+' aria-label="Select '+esc(d.name)+'"></td>':'')+'<td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b>'+(q>1?'<span class="qtag">'+q+' pieces</span>':'')+'<div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td>'+(ed?'<td class="r">'+(q>1?'<button class="btn sm" data-dsplit="'+key+'" title="Make each piece its own deliverable">Split into '+q+'</button>':'')+'</td>':'')+'</tr>';});
   return h+'</tbody></table></div>';
 }
+
+
+/* Shift dates in bulk (client pushes the campaign back), with undo */
+function dayTxt(n){var a=Math.abs(n),w=a%7===0&&a>=7;return (n>0?'+':'−')+(w?a/7+' week'+(a===7?'':'s'):a+' day'+(a===1?'':'s'));}
+function shTargets(){
+  var a=S.sh,c=FULL,out=[];if(!a||!c)return out;
+  var selK=a.only&&S.dsel?Object.keys(S.dsel):null;
+  selected(c).forEach(function(i){if(a.who!=='All'&&i.id!==a.who)return;
+    i.deliv.forEach(function(d){
+      if(selK&&selK.indexOf(i.id+'|'+d.id)<0)return;
+      if(!d.recv&&!d.live)return;
+      if(a.skip&&(d.stage==='Live'||d.liveAt))return;
+      var first=d.recv&&d.live?(d.recv<d.live?d.recv:d.live):(d.recv||d.live);
+      if(a.from&&(d.live||d.recv)<a.from)return;
+      out.push({i:i,d:d,first:first});});});
+  return out;
+}
+function shModal(){
+  var a=S.sh,t=shTargets(),n=Number(a.days)||0,ppl=selected(FULL),nsel=S.dsel?Object.keys(S.dsel).length:0;
+  var ex=t.slice().sort(function(x,y){return x.first<y.first?-1:1;})[0];
+  var h='<div class="ov" data-shx="1"></div><div class="smod cadd" role="dialog" aria-label="Shift dates"><div class="row" style="justify-content:space-between;margin-bottom:12px"><div><div style="font:500 22px var(--display);text-transform:uppercase;letter-spacing:.02em">Shift dates</div><div class="small">Content due and go-live move together</div></div><button class="btn sm" data-shx="1">Close</button></div>';
+  h+='<div class="k2" style="margin-bottom:6px">Move by</div><div class="row" style="gap:6px;margin-bottom:14px">'+[-7,7,14,21,28].map(function(k){return '<button class="tch'+(n===k?' on':'')+'" data-shd="'+k+'">'+dayTxt(k)+'</button>';}).join('')+'<span class="row" style="gap:6px;margin-left:6px"><input class="fld" type="number" id="sh-days" value="'+esc(String(a.days))+'" style="width:84px"><span class="small">days (minus to bring forward)</span></span></div>';
+  h+='<div class="g2" style="gap:12px">'
+    +(nsel?'<label style="grid-column:1/-1" class="apc"><input type="checkbox" id="sh-only"'+(a.only?' checked':'')+'> Only the '+nsel+' selected deliverable'+(nsel===1?'':'s')+'</label>':'')
+    +'<label><div class="k2" style="margin-bottom:5px">Creator</div><select class="sel plain" id="sh-who"><option value="All">All creators</option>'+ppl.map(function(i){return '<option value="'+esc(i.id)+'"'+(a.who===i.id?' selected':'')+'>'+esc(ix(i.tid).name)+'</option>';}).join('')+'</select></label>'
+    +'<label><div class="k2" style="margin-bottom:5px">Only dates from</div><input class="fld" type="date" id="sh-from" value="'+esc(a.from||'')+'"><div class="small" style="margin-top:3px">Leave blank for every date</div></label>'
+    +'<label style="grid-column:1/-1" class="apc"><input type="checkbox" id="sh-skip"'+(a.skip?' checked':'')+'> Leave anything already posted where it is</label></div>';
+  h+=t.length&&n?'<div class="cichk ok" style="margin-top:14px"><span><b style="font-weight:600">'+t.length+' deliverable'+(t.length===1?'':'s')+'</b> move '+dayTxt(n)+'. E.g. '+esc(ix(ex.i.tid).name)+' · '+esc(ex.d.name)+': '+fd(ex.d.live||ex.d.recv)+' → '+fd(addDays(ex.d.live||ex.d.recv,n))+'</span></div>'
+    :'<div class="cichk warn" style="margin-top:14px"><span>'+(t.length?'Pick how far to move them.':'Nothing with a date matches.')+'</span></div>';
+  if(a.err)h+='<div class="pill bad" style="white-space:normal;margin-top:8px">'+esc(a.err)+'</div>';
+  h+='<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn" data-shx="1">Cancel</button><button class="btn pri" data-act="shgo"'+(a.busy||!t.length||!n?' disabled':'')+'>'+(a.busy?'Moving…':'Move '+t.length)+'</button></div></div>';
+  return h;
+}
+function shSnap(){var a=S.sh,g=function(x){return document.getElementById(x);};if(!a)return;
+  if(g('sh-days'))a.days=Math.round(Number(g('sh-days').value)||0);if(g('sh-who'))a.who=g('sh-who').value;if(g('sh-from'))a.from=g('sh-from').value;
+  if(g('sh-skip'))a.skip=g('sh-skip').checked;if(g('sh-only'))a.only=g('sh-only').checked;}
+function shRun(list,days,undo){
+  var calls=list.map(function(x){return [P('/talents/'+x.iid+'/deliverables/'+x.did),x.b];});
+  return calls.reduce(function(pr,cl,k){return pr.then(function(){if(k%6===5)toast('Moving '+(k+1)+' of '+calls.length+'…');return api(cl[0],{method:'PATCH',body:cl[1]});});},Promise.resolve()).then(function(){return loadOne(true);});
+}
+function shApply(){
+  shSnap();var a=S.sh,t=shTargets(),n=a.days;if(!t.length||!n)return;a.busy=true;render();
+  var list=[],undo=[];t.forEach(function(x){var b={},o={};if(x.d.recv){b.recv=addDays(x.d.recv,n);o.recv=x.d.recv;}if(x.d.live){b.live=addDays(x.d.live,n);o.live=x.d.live;}list.push({iid:x.i.id,did:x.d.id,b:b});undo.push({iid:x.i.id,did:x.d.id,b:o});});
+  shRun(list).then(function(){S.sh=null;S.undoShift={cid:FULL.id,items:undo,days:n};toast('Moved '+list.length+' by '+dayTxt(n));render();})
+    .catch(function(e){if(S.sh){S.sh.busy=false;S.sh.err=e.message;}loadOne();});
+}
+function shUndo(){var u=S.undoShift;if(!u)return;S.undoShift=null;toast('Putting the dates back…');shRun(u.items).then(function(){toast('Dates put back');render();}).catch(function(e){toast(e.message);loadOne();});}
+
+/* Creator contracts card on Campaign Overview */
+function ctContracts(c){
+  var ppl=selected(c),ed=canEdit();if(!ppl.length)return '<div class="card" style="padding:22px 26px"><h2 class="sh" style="margin:0 0 6px">Creator contracts</h2><div class="small">Creators marked Approved: Yes on Influencers show here.</div></div>';
+  var signed=ppl.filter(function(i){return i.contract==='Signed';}).length,docs=(c.docs||[]).filter(function(d){return d.ct;});
+  var h='<div class="card" style="padding:22px 26px"><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="sh" style="margin:0">Creator contracts</h2><span class="pill '+(signed===ppl.length?'ok':signed?'warn':'neu')+'">'+signed+' of '+ppl.length+' signed</span></div><div class="ctl">';
+  ppl.forEach(function(i){var f=docs.filter(function(d){return d.ct===i.id;});
+    h+='<div class="ctr"><div class="ctn"><span class="cav sm">'+initials(ix(i.tid).name)+'</span><span><b style="font-weight:500">'+esc(ix(i.tid).name)+'</b>'+(i.contract==='Signed'&&i.contractSigned?'<span class="small"> · signed '+fd(i.contractSigned)+'</span>':i.contract==='Sent'?'<span class="small"> · waiting to sign</span>':'')+'</span></div>'
+      +'<div class="ctf">'+f.map(function(d){return '<span class="fchip"><button class="lkb" data-docview="'+d.id+'" title="Open">'+esc(d.name)+'</button>'+(ed?(S.docrm===d.id?'<button class="lkb" style="color:var(--bad-fg)" data-docrmgo="'+d.id+'">Remove?</button><button class="lkb" data-docrmno="1">Keep</button>':'<button class="x" data-docrm="'+d.id+'" title="Remove" aria-label="Remove">×</button>'):'')+'</span>';}).join('')
+      +(ed&&!f.length?'<label class="ctup" data-ctdrop="'+i.id+'">Upload signed<input type="file" data-ctup="'+i.id+'" accept=".pdf,.doc,.docx,image/*" hidden></label>':'')+'</div>'
+      +'<div class="ctd">'+(ed&&i.contract==='Signed'?'<input class="fld dt" type="date" data-ctsd="'+i.id+'" value="'+esc(i.contractSigned||'')+'" aria-label="Date signed" title="Date signed">':'')+'</div><div class="ctst">'+(ed?sel('contract',i.contract,CONTRACT,i.id):'<span class="pill '+cls(i.contract)+'">'+esc(i.contract==='–'?'Not sent':i.contract)+'</span>')+'</div></div>';});
+  return h+'</div></div>';
+}
+function ctUpload(iid,file){
+  if(!file)return;if(file.size>4*1024*1024){toast(file.name+' is over 4MB. Compress it first.');return;}
+  toast('Uploading…');b64(file).then(function(data){return post(P('/docs'),'POST',{name:file.name,type:file.type,data:data,kind:'Creator contract',ct:iid},{msg:'Contract saved · marked Signed'});}).catch(function(e){toast(e.message);});
+}
+document.addEventListener('dragover',function(e){var z=e.target.closest&&e.target.closest('[data-ctdrop]');if(z){e.preventDefault();z.classList.add('over');}});
+document.addEventListener('dragleave',function(e){var z=e.target.closest&&e.target.closest('[data-ctdrop]');if(z)z.classList.remove('over');});
+document.addEventListener('drop',function(e){var z=e.target.closest&&e.target.closest('[data-ctdrop]');if(z){e.preventDefault();z.classList.remove('over');if(canEdit())ctUpload(z.getAttribute('data-ctdrop'),e.dataTransfer.files&&e.dataTransfer.files[0]);}});
 
 /* Group several deliverables into one (e.g. 3 stories posted together) or split a group back into pieces */
 
@@ -1066,7 +1160,7 @@ function tabCal(c){
   var ed=canEdit(),side=ed&&un.length&&V!=='Agenda'&&!S.calTrayOff;
   var nav2=V==='Month'?'<button class="calarr" data-calm="'+(pm||'')+'"'+(pm?'':' disabled')+' aria-label="Previous month">‹</button><button class="calarr" data-calm="'+(nm||'')+'"'+(nm?'':' disabled')+' aria-label="Next month">›</button><h2>'+(ym?mlabel(ym):'Nothing to show')+'</h2>':'';
   var menu='<details class="calmenu"><summary class="kebab" aria-label="More">⋯</summary><div class="calpop">'
-    +'<button class="mi" data-act="calics">Download .ics <span class="small">for Outlook / Google Calendar</span></button>'
+    +(ed?'<button class="mi" data-act="shopen">Shift dates… <span class="small">move a block of dates later or earlier</span></button>':'')+'<button class="mi" data-act="calics">Download .ics <span class="small">for Outlook / Google Calendar</span></button>'
     +(V==='Month'?'<label class="mi" style="position:relative">Go to any month…<input type="month" id="calpick" value="'+esc(ym||cm)+'" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>'
       +(months.length>1?'<div class="mh2">Months with content</div><div class="mmon">'+months.map(function(m){var me=ev.filter(function(e){return e.date.slice(0,7)===m;}),lt=me.some(function(e){return e.late;});return '<button class="calm'+(m===ym?' on':'')+(lt&&m!==ym?' late':'')+'" data-calm="'+m+'"><b>'+mlabel(m,true)+'</b><span>'+me.length+'</span></button>';}).join('')+'</div>':''):'')
     +'</div></details>';
@@ -1545,12 +1639,12 @@ function moneyState(c){
   var v=c.cinv||[],paid=0,inv=0;v.forEach(function(x){if(x.paidAt)paid+=x.amount;else if(x.invAt)inv+=x.amount;});
   var out=0,ready=0,s=stats(c);
   selected(c).forEach(function(i){i.deliv.forEach(function(d){var r=crRateOf(i,d)||0;if(d.crStatus==='Paid')out+=r;else if(d.crStatus==='Invoiced'&&isPosted(d)&&cliSt(cinvFor(c,d))==='Paid')ready+=r;});});
-  var bud=c.budget||0;return {paid:paid,inv:inv,left:Math.max(0,bud-paid-inv),spend:s.cost,out:out,ready:ready,spendLeft:s.cost-out,cash:paid-out,bud:bud};
+  var bud=c.budget||0,crBud=bud*(1-(Number(c.target)||0)/100);return {paid:paid,inv:inv,left:Math.max(0,bud-paid-inv),spend:s.cost,out:out,ready:ready,spendLeft:s.cost-out,cash:paid-out,bud:bud,crBud:crBud,unas:crBud-s.cost};
 }
 function moneyCards(c){
-  var m=moneyState(c),b=m.bud||1,sp=m.spend||1,w1=Math.min(100,m.paid/b*100),w2=Math.min(100-w1,m.inv/b*100),w3=Math.min(100,m.out/sp*100);
+  var m=moneyState(c),b=m.bud||1,cb=Math.max(m.crBud,m.spend)||1,w1=Math.min(100,m.paid/b*100),w2=Math.min(100-w1,m.inv/b*100),w3=Math.min(100,m.out/cb*100),w4=Math.min(100-w3,Math.max(0,m.spendLeft)/cb*100);
   return '<div class="mcards"><div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Client · money in</span></div><div class="mbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--ok-fg)"></i>Paid</span><b>'+money(m.paid)+'</b></div><div><span class="small"><i class="dot" style="background:#D9A93F"></i>Invoiced, unpaid</span><b>'+money(m.inv)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to invoice</span><b>'+money(m.left)+'</b></div></div></div>'
-   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i></div><div class="m3"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:var(--line2)"></i>Left to spend</span><b>'+money(m.spendLeft)+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
+   +'<div class="mcard"><div class="row" style="justify-content:space-between"><span class="mh">Creators · money out</span></div><div class="mbar"><i style="width:'+w3+'%;background:var(--accent)"></i><i style="width:'+w4+'%;background:#B98A93"></i></div><div class="m3 m4"><div><span class="small"><i class="dot" style="background:var(--accent)"></i>Paid out</span><b>'+money(m.out)+'</b></div><div><span class="small"><i class="dot" style="background:#B98A93"></i>Assigned, not paid</span><b>'+money(m.spendLeft)+'</b></div><div title="Creator budget (client budget less your target margin) not yet given to a creator"><span class="small"><i class="dot" style="background:var(--line2)"></i>Unassigned</span><b'+(m.unas<0?' style="color:var(--bad-fg)"':'')+'>'+(m.crBud?(m.unas<0?'−':'')+money(Math.abs(m.unas)):'–')+'</b></div><div><span class="small">Cash position</span><b style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></div></div></div></div>';
 }
 function covers(c,v){var n=0;selected(c).forEach(function(i){i.deliv.forEach(function(d){if(cinvFor(c,d)===v)n++;});});
   var per=v.start&&v.end?(v.start.slice(0,7)===v.end.slice(0,7)?MON[+v.start.slice(5,7)-1]:MON[+v.start.slice(5,7)-1]+'–'+MON[+v.end.slice(5,7)-1]):'All deliverables';
@@ -1651,13 +1745,14 @@ function tabSetup(c){
   var briefR='<div style="max-width:70ch;line-height:1.65">'+(c.brief?esc(c.brief):'<span class="small">No brief added yet. Use Edit to add it.</span>')+'</div>';
   var steps=[ci>0?'Drafted':'Not started','Sent to client','Signed'].map(function(n,k){return '<div class="p '+(k<ci||ci===2&&k===2?'d':k===ci?'c':'')+'"><i>'+(k<ci||ci===2&&k===2?'✓':k+1)+'</i>'+n+'</div>'+(k<2?'<div class="ln'+(k<ci?' d':'')+'"></div>':'');}).join('');
   var file=c.cFile?'<div class="file"><div class="ft">PDF</div><div style="flex:1;min-width:0"><div class="fn">'+esc(c.cFile.name)+'</div><div class="small">'+esc(fsize(c.cFile.size))+' · Uploaded '+fd(String(c.cFile.at).slice(0,10))+'</div></div><button class="btn sm" data-act="cview">View</button>'+'<label class="btn sm" style="cursor:pointer">Replace<input id="cfile" type="file" accept=".pdf,.doc,.docx,image/*" style="display:none"></label><button class="btn sm" data-act="cfilerm" aria-label="Remove file">✕</button></div>'
-    :'<label class="dz" id="cdz"><span class="ic">⬆</span><b style="font-weight:500;color:var(--fg)">Drop the signed agreement here</b><span class="small">or click to choose a file. PDF, Word or an image, up to 4MB.</span><input id="cfile" type="file" accept=".pdf,.doc,.docx,image/*" style="display:none"></label>';
+    :'<label class="dz" id="cdz"><span class="ic">↑</span><span><b style="font-weight:500;color:var(--fg)">Drop the signed agreement</b> or <u>choose a file</u></span><span class="small" style="margin-left:auto">PDF, Word or image · 4MB</span><input id="cfile" type="file" accept=".pdf,.doc,.docx,image/*" style="display:none"></label>';
   var conR='<div class="cst">'+steps+'</div><div class="terms"><div class="t"><div class="l">Contract value</div><div class="v">'+money(c.cValue)+'</div></div><div class="t"><div class="l">Date signed</div><div class="v">'+(c.cSigned?fd(c.cSigned):'–')+'</div></div><div class="t"><div class="l">Payment terms</div><div class="v">'+esc(c.cTerms)+'</div></div></div><div class="lbl" style="margin-bottom:6px">Usage rights, exclusivity and key terms</div><div style="line-height:1.6;margin-bottom:18px">'+(c.cUsage?esc(c.cUsage):'<span class="small">Not set</span>')+'</div>';
   var conE='<div class="g2"><label><span class="lbl">Status</span><select class="sel plain" data-cf="cStatus">'+CSTATUS.map(function(o){return '<option'+(o===c.cStatus?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label>'+fcf('Contract value ('+c.cur+')','cValue',c,'number')+fcf('Date signed','cSigned',c,'date')+'<label><span class="lbl">Payment terms</span><select class="sel plain" data-cf="cTerms">'+TERMS.map(function(o){return '<option'+(o===c.cTerms?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label></div><label style="display:block;margin:14px 0 18px"><span class="lbl" style="display:block;margin-bottom:5px">Usage rights, exclusivity and key terms</span><textarea class="fld" data-cf="cUsage">'+esc(c.cUsage)+'</textarea></label>';
   var cliR='<div class="row" style="flex-wrap:nowrap;gap:14px;margin-bottom:14px"><div class="cav">'+(c.contactName?initials(c.contactName):'?')+'</div><div><div style="font-weight:500">'+esc(c.contactName||'No contact yet')+'</div><div class="small">'+esc(c.contactRole||'')+'</div></div></div><div class="kv" style="grid-template-columns:70px 1fr"><span class="k">Email</span><span>'+(c.contactEmail?'<a class="lkx" style="font-weight:400" href="mailto:'+esc(c.contactEmail)+'">'+esc(c.contactEmail)+'</a>':'–')+'</span><span class="k">Phone</span><span>'+esc(c.contactPhone||'–')+'</span></div>';
   var cliE='<div class="g2">'+fcf('Name','contactName',c)+fcf('Role','contactRole',c)+fcf('Email','contactEmail',c,'email')+fcf('Phone','contactPhone',c,'tel')+'</div>';
   var mon='<div class="kv" style="grid-template-columns:90px 1fr"><span class="k">Deal stage</span><span><span class="pill '+stcls(c.stage)+'">'+esc(c.stage)+'</span></span><span class="k">Board</span><span>Agency Sales Pipeline</span><span class="k">Sync</span>'+(c.mondayItemId?'<span style="color:var(--ok-fg)">● Imported from monday</span>':'<span class="small">Not linked to a monday deal</span>')+'</div>'+(c.mondayItemId?'<div style="margin-top:14px"><a class="btn sm" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit" href="https://monday.com/boards/5092522587/pulses/'+encodeURIComponent(c.mondayItemId)+'" target="_blank" rel="noopener">Open in monday ↗</a></div>':'');
   var left=sec('camp','Brief',briefR,campE)+'<div class="card" style="padding:22px 26px"><div class="row" style="justify-content:space-between;margin-bottom:14px"><h2 class="sh" style="margin:0">Client agreement</h2><span class="pill '+cls(c.cStatus)+'">'+esc(c.cStatus)+'</span></div>'+(S.editSec==='con'?conE:conR)+file+'<div style="margin-top:14px"><button class="btn sm'+(S.editSec==='con'?' pri':'')+'" data-esec="'+(S.editSec==='con'?'':'con')+'">'+(S.editSec==='con'?'Done':'Edit terms')+'</button></div></div>';
+  left+=ctContracts(c);
   var right=sec('cli','Client contact',cliR,cliE)+'<div class="card" style="padding:22px 26px"><h2 class="sh">monday deal</h2>'+mon+'</div>';
   return hero+'<div class="sgrid"><div style="display:grid;gap:16px">'+left+'</div><div style="display:grid;gap:16px">'+right+'</div></div>';
 }
@@ -2047,7 +2142,7 @@ function render(){
   // deliverables are only made from the quote when asked (button on the Deliverables tab)
   m.innerHTML=S.view==='campaign'?viewCampaign():S.view==='client'?viewClient():S.view==='sales'?viewSales():S.view==='weekly'?viewWeekly():viewCampaigns();
   var nv=(S.view==='sales'||S.view==='weekly'||(S.view==='campaign'&&S.backv==='sales'))?'sales':'campaigns';if(nv!==S.navSent){S.navSent=nv;try{window.parent.postMessage({type:'zodiac-nav',view:nv},location.origin);}catch(er){}}
-  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'')+(S.view==='campaign'&&S.crInv&&FULL?crInvModal():'')+(S.view==='campaign'&&S.bulk&&FULL?bulkModal():'')+(S.view==='campaign'&&S.ap&&FULL?apModal():'')+(S.view==='campaign'&&S.splitD&&FULL?splitModal():'');
+  document.getElementById('layer').innerHTML=(S.view==='campaign'&&camp()?(S.pick?picker():drawer())+(S.scopeEd?scopeModal():''):'')+(S.clientPop?clientModal():'')+(S.view==='campaign'&&S.calDay?calDayModal():'')+(S.view==='campaign'&&S.calAdd?calAddModal():'')+(S.view==='campaign'&&S.crInv&&FULL?crInvModal():'')+(S.view==='campaign'&&S.bulk&&FULL?bulkModal():'')+(S.view==='campaign'&&S.ap&&FULL?apModal():'')+(S.view==='campaign'&&S.sh&&FULL?shModal():'')+(S.view==='campaign'&&S.splitD&&FULL?splitModal():'');
   var so=document.querySelector('[data-sother]');if(so)so.focus();
   var lq=document.getElementById('lq');if(lq&&S.lqFocus){lq.focus();lq.setSelectionRange(lq.value.length,lq.value.length);}
   var pq=document.getElementById('pq');if(pq&&S.pqFocus){pq.focus();pq.setSelectionRange(pq.value.length,pq.value.length);}
@@ -2134,6 +2229,7 @@ document.addEventListener('change',function(e){
   if(t.id==='lgroup'){S.lf.group=t.value;render();return;}
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
+  if(t.id==='dft'){S.dft=t.value;S.dsel={};render();return;}
   if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
   if(t.hasAttribute&&t.hasAttribute('data-rcr')){var rp=t.getAttribute('data-rcr').split('|'),ri=find(rp[0]);if(!ri)return;var rv=t.value.trim(),rn=num(rv);if(rv!==''&&!(rn>=0)){toast('Enter a rate, e.g. 2500');render();return;}var rs=ri.scope.map(function(x){return {item:x.item,qty:x.qty,rate:x.rate};});if(rv==='')delete rs[+rp[1]].rate;else rs[+rp[1]].rate=r2(rn);saveRateCard(ri,rs);return;}
   if(t.hasAttribute&&t.hasAttribute('data-crr')){var cr=t.getAttribute('data-crr').split('|'),cv=t.value.trim(),cn=num(cv);if(cv!==''&&!(cn>=0)){toast('Enter a rate, e.g. 2500');render();return;}post(P('/talents/'+cr[0]+'/deliverables/'+cr[1]),'PATCH',{crRate:cv===''?null:r2(cn)},{msg:cv===''?'Using the rate card':'Creator rate saved'});return;}
@@ -2143,6 +2239,9 @@ document.addEventListener('change',function(e){
   if(t.hasAttribute&&t.hasAttribute('data-crfile')){crInvOpen(t.getAttribute('data-crfile'),t.files&&t.files[0]);t.value='';return;}
   if(t.hasAttribute&&t.hasAttribute('data-crid')){crInvSnap();var ck=t.getAttribute('data-crid');if(t.checked)S.crInv.dids[ck]=1;else delete S.crInv.dids[ck];render();return;}
   if(t.id==='cri-amt'){crInvSnap();render();return;}
+  if(/^sh-(days|who|from|skip|only)$/.test(t.id)){shSnap();render();return;}
+  if(t.hasAttribute&&t.hasAttribute('data-ctup')){ctUpload(t.getAttribute('data-ctup'),t.files&&t.files[0]);t.value='';return;}
+  if(t.hasAttribute&&t.hasAttribute('data-ctsd')){post(P('/talents/'+t.getAttribute('data-ctsd')),'PATCH',{contractSigned:t.value},{msg:'Date signed saved'});return;}
   if(/^ap-(from|to|per|due|max|spread)$/.test(t.id)){apSnap();render();return;}
   if(t.hasAttribute&&t.hasAttribute('data-apwho')){apSnap();var aw=t.getAttribute('data-apwho');if(t.checked)S.ap.who[aw]=1;else delete S.ap.who[aw];render();return;}
   if(t.id==='bulk-approved'){bulkSet('approved',t.value);return;}
@@ -2202,7 +2301,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-shx],[data-shd],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -2233,6 +2332,8 @@ document.addEventListener('click',function(e){
   else if(d.ciclr){var cl=d.ciclr.split('|'),cb={};cb[cl[1]]='';if(cl[1]==='invAt')cb.paidAt='';post(P('/cinv/'+cl[0]),'PATCH',cb,{msg:cl[1]==='invAt'?'Back to not invoiced':'Back to not paid'});}
   else if(d.calc){S.calOpenC=(S.calOpenC===d.calc||(S.calOpenC===undefined&&e.target.closest('.csc.on')))?null:d.calc;render();}
   else if(d.apx){S.ap=null;render();}
+  else if(d.shx){S.sh=null;render();}
+  else if(d.shd){shSnap();S.sh.days=Number(d.shd);render();}
   else if(d.apday!==undefined){apSnap();if(S.ap.days[d.apday])delete S.ap.days[d.apday];else S.ap.days[d.apday]=1;render();}
   else if(d.nutab){S.tab=d.nutab;S.dfs=d.nudfs||'All';S.dfg='All';S.sel=null;render();}
   else if(d.rofall){S.rofAll=S.rofAll||{};S.rofAll[d.rofall]=!S.rofAll[d.rofall];render();}
@@ -2323,6 +2424,10 @@ document.addEventListener('click',function(e){
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='rcsplit'){var si=find(S.sel);if(si){var pcs=0;(si.scope||[]).forEach(function(x){pcs+=x.qty;});var each=r2(base(si)/pcs);saveRateCard(si,si.scope.map(function(x){return {item:x.item,qty:x.qty,rate:each};}));}}
   else if(d.act==='apopen'){apStart();}
+  else if(d.act==='shopen'){var ns=S.dsel?Object.keys(S.dsel).length:0;S.sh={days:14,who:S.tab==='Content Calendar'?(S.calWho||'All'):(S.dft||'All'),from:'',skip:true,only:ns>0&&S.tab==='Deliverables',busy:false,err:''};render();}
+  else if(d.act==='shgo'){if(!S.sh.busy)shApply();}
+  else if(d.act==='shundo'){shUndo();}
+  else if(d.act==='shforget'){S.undoShift=null;render();}
   else if(d.act==='apgo'){if(!S.ap.busy)apApply();}
   else if(d.act==='caltray'){S.calTrayOff=!S.calTrayOff;render();}
   else if(d.act==='nutog'){S.nuOpen=!S.nuOpen;render();}
