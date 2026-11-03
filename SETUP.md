@@ -289,3 +289,11 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Home has a live clock (ticks every second): Dubai time with date, plus London time.
 - Tagline is larger with a burgundy rule.
 - Signing in (or reopening the site) always lands on Home.
+
+## Update 63 · Home page redesign (ChatGPT concept)
+- Home rebuilt to the new concept: top bar (date · Dubai time ticking · live Dubai weather from Open-Meteo, no key needed), search, notifications bell (red dot when something needs attention; opens a list that jumps to the campaign), settings (opens your account menu).
+- Hero "zodiac os." with the night-time Earth and Z artwork (public/home-earth.jpg, cropped from the concept; swap for a high-res export when available).
+- Cards: Talent Index (total talent, added this month) and Campaign Management (active campaigns, need attention, to invoice).
+- Needs Attention bar: deliverables overdue, deliverables due this week, campaigns ready to invoice; each opens the campaign.
+- Sidebar: count badges on Talent Index and Campaign Management; Home highlighted in burgundy.
+- API: campaign list now returns dueWeek, readyInv and toInvoice; talents return their added date. No database changes.
