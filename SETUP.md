@@ -237,3 +237,10 @@ New migration `19_deliverable_item_qty.sql` (runs automatically on deploy).
 - Stat boxes at the top show the figure only (the ≈ £ line and descriptions are gone; use the currency switch).
 - All table headings are bold and black.
 - Fix: adding deliverables from the calendar no longer clears the rate card.
+
+## Update 54 – Story sets and bulk creator actions
+No new migration.
+- Stories in sets: "Split into N" now asks how many per deliverable (1 each, or sets, e.g. 12 × IG Story → 4 × "3 × IG Story · Set 1–4"). Dates carry over. Set numbers continue after existing sets.
+- Influencers tab: tick creators (or tick-all in the header). A bar appears:
+  - + Add deliverables: the same deliverable editor, applied to every ticked creator (e.g. 1 × IG Reel, 6 × IG Story in sets of 3). Added to each creator's quote and Index rate quote; for selected (Approved: Yes) creators the deliverables are created too, with optional content due / go-live dates.
+  - Approved… and Stage… set the value for every ticked creator in one go (Approved only shows before the campaign is won).
