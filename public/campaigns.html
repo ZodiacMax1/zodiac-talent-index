@@ -356,6 +356,16 @@ input.ynote:hover{border-color:var(--line2)}input.ynote:focus{border-color:var(-
 @media (max-width:760px){.mcards{grid-template-columns:1fr}.pt{display:block;overflow-x:auto}.g3{grid-template-columns:1fr}}
 
 .drawer.wide{width:min(800px,100%)}
+/* Table headings: bold and black everywhere */
+th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!important;text-transform:uppercase;color:var(--fg)!important}
+.calh div{font-weight:700;color:var(--fg)}
+.yv th{font:700 15px Arial,Helvetica,sans-serif!important;color:#fff!important;letter-spacing:0!important;text-transform:none}
+.sel-bar{display:flex;align-items:center;gap:10px;background:var(--fg);color:var(--bg);border-radius:12px;padding:9px 14px;margin-bottom:12px;font-size:13.5px}
+.sel-bar .btn{min-height:32px;padding:5px 12px;font-size:13px}
+.sel-bar .btn.light{background:var(--bg);color:var(--fg);border-color:var(--bg)}
+.sel-bar .btn.ghost{background:transparent;color:var(--bg);border-color:rgba(255,255,255,.35)}
+.qtag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:6px;padding:1px 7px;font:500 11px var(--mono);margin-left:6px}
+
 </style>
 </head>
 <body>
@@ -509,7 +519,7 @@ function fillSub(c,s){
   if(S.fillc&&canEdit())return 'Set every creator to '+f.m.toFixed(1)+'%? <button class="btn sm" data-act="fillgo">Yes</button> <button class="btn sm" data-act="fillno">No</button>';
   return 'Budget fully used = <b>'+f.m.toFixed(1)+'% margin</b>'+(canEdit()?' · <button class="scbtn" style="color:var(--accent);padding:0" data-act="fillask">Apply</button>':'');
 }
-function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' '+hl:'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(g?'<span style="color:var(--gold)">≈ '+g+'</span> · ':'')+s+'</div></div>';}
+function cellS(l,v,s,hl,g){return '<div class="cell'+(hl?' '+hl:'')+'"><div class="lbl">'+l+'</div><div class="v">'+v+'</div></div>';}
 function toast(m){var t=document.getElementById('toast');t.innerHTML='<div class="toast">'+esc(m)+'</div>';setTimeout(function(){t.innerHTML='';},2600);}
 
 function mondayImport(){
@@ -717,11 +727,26 @@ function dcell(d,kind){
   if(!dl)return '<span class="small">No date</span>';
   return '<span class="dtx'+(m.k==='bad'?' late':'')+'">'+fd(dl)+'</span> <span class="pill '+m.k+'">'+esc(m.sub)+'</span>';
 }
+
+/* Deliverables from a quote: one per piece (IG Reel 1, IG Reel 2…); stories stay together as one (3 × IG Story) */
+var GROUPED=/stor(y|ies)/i;
+function dItem(d){if(d.item)return {item:d.item,qty:d.qty||1};var m=String(d.name).match(/^\s*(\d+)\s*[×x]\s*(.+?)\s*$/);return m?{item:m[2],qty:+m[1]}:{item:String(d.name).replace(/\s+\d+$/,''),qty:1};}
+function usedMap(i){var u={};(i?i.deliv:[]).forEach(function(d){var it=dItem(d).item;u[it]=(u[it]||0)+1;});return u;}
+function splitScope(item,qty,used,total){
+  var noPost=['Filming day','Event / attendance'].indexOf(item)>=0;if(item==='Usage rights')return [];
+  var plat=scPlat(item);
+  if(GROUPED.test(item))return [{name:qty>1?qty+' × '+item:item,item:item,qty:qty,plat:plat,noPost:noPost}];
+  var u=used[item]||0,all=total!=null?total:u+qty,out=[];
+  for(var k=0;k<qty;k++)out.push({name:all>1?item+' '+(u+k+1):item,item:item,qty:1,plat:plat,noPost:noPost});
+  used[item]=u+qty;return out;
+}
+function delBody(x,extra){var b={name:x.name,platform:x.plat,item:x.item,qty:x.qty,noPost:!!x.noPost};for(var k in (extra||{}))b[k]=extra[k];return b;}
+
 function scPlat(x){return /^IG/.test(x)?'Instagram':/TikTok/.test(x)?'TikTok':/YouTube/.test(x)?'YouTube':'';}
-function scPending(c){var a=[];selected(c).forEach(function(i){if(i.deliv.length)return;(i.scope||[]).forEach(function(x){a.push({iid:i.id,name:x.qty+' × '+x.item,plat:scPlat(x.item)});});});return a;}
+function scPending(c){var a=[];selected(c).forEach(function(i){if(i.deliv.length)return;var u={};(i.scope||[]).forEach(function(x){splitScope(x.item,x.qty,u).forEach(function(y){y.iid=i.id;a.push(y);});});});return a;}
 function scFill(c,quiet){var a=scPending(c);if(!a.length||S.filling)return;S.filling=true;var n=0,id=c.id;
   (function nx(){var x=a[n++];if(!x){S.filling=false;toast('Added '+a.length+' deliverable'+(a.length===1?'':'s')+' from the scope');render();return;}
-    post('/campaigns/'+id+'/talents/'+x.iid+'/deliverables','POST',{name:x.name,platform:x.plat},{quiet:true}).then(nx).catch(function(e){S.filling=false;toast(e.message);});})();}
+    post('/campaigns/'+id+'/talents/'+x.iid+'/deliverables','POST',delBody(x),{quiet:true}).then(nx).catch(function(e){S.filling=false;toast(e.message);});})();}
 function tabDeliv(c){
   var rows=[];selected(c).forEach(function(i){i.deliv.forEach(function(d){rows.push([i,d]);});});
   rows.sort(function(a,b){var ka=dinfo(a[1]),kb=dinfo(b[1]);if(ka.done!==kb.done)return ka.done?1:-1;return (ka.key||'9')<(kb.key||'9')?-1:1;});
@@ -731,10 +756,43 @@ function tabDeliv(c){
   rows=rows.filter(function(r){return (S.dfs==='All'||KM[dinfo(r[1]).k]===S.dfs)&&(S.dfg==='All'||r[1].stage===S.dfg);});
   var bar='<div class="row" style="justify-content:space-between;margin-bottom:14px"><div class="row" style="gap:6px"><span class="lbl" style="margin-right:4px">Show</span>'+['All','Overdue','Due soon','Upcoming','Completed'].map(function(f){return '<button class="btn sm fb'+(S.dfs===f?' on':'')+(f==='Overdue'&&cnt[f]?' bad':'')+'" data-dfs="'+f+'">'+f+' '+cnt[f]+'</button>';}).join('')+'</div><label class="row" style="gap:8px"><span class="lbl">Stage</span><select id="dfg" class="sel plain" style="width:auto"><option>All</option>'+DSTAGES.map(function(x){return '<option'+(S.dfg===x?' selected':'')+'>'+x+'</option>';}).join('')+'</select></label></div>';
   var pend=scPending(c).length;if(pend&&canEdit())bar='<div class="row" style="margin-bottom:12px"><button class="btn sm pri" data-act="scfill">Add '+pend+' deliverable'+(pend===1?'':'s')+' from scope</button></div>'+bar;
-  var h=bar+'<div class="card sc"><table><thead><tr><th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th></tr></thead><tbody>';
-  if(!rows.length)h+='<tr><td colspan="5" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
-  rows.forEach(function(r){var d=r[1];h+='<tr class="clk" data-dd="'+r[0].id+'|'+d.id+'"><td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b><div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td></tr>';});
+  var ed=canEdit();S.dsel=S.dsel||{};
+  var sk=Object.keys(S.dsel).filter(function(k){var p=k.split('|'),i=find(p[0]);return i&&i.deliv.some(function(d){return d.id===p[1];});});
+  if(ed&&sk.length){var same=sk.every(function(k){return k.split('|')[0]===sk[0].split('|')[0];});
+    h=bar+'<div class="sel-bar"><span><b style="font-weight:500">'+sk.length+' selected</b>'+(same?'':' · pick deliverables from one creator to group them')+'</span><span style="flex:1"></span>'+(same&&sk.length>1?'<button class="btn light" data-act="dgroup">Group into one</button>':'')+'<button class="btn ghost" data-act="dselclear">Clear</button></div>';}
+  else h=bar;
+  h+='<div class="card sc"><table><thead><tr>'+(ed?'<th style="width:34px"></th>':'')+'<th>Influencer</th><th>Deliverable</th><th>Stage</th><th>Content due</th><th>To be posted by</th>'+(ed?'<th></th>':'')+'</tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="7" class="small" style="padding:26px">'+(all?'Nothing matches these filters.':'No deliverables yet. Add each influencer’s scope on the Influencers tab and it will appear here.')+'</td></tr>';
+  rows.forEach(function(r){var d=r[1],key=r[0].id+'|'+d.id,q=dItem(d).qty;
+    h+='<tr class="clk" data-dd="'+key+'">'+(ed?'<td><input type="checkbox" data-dsel="'+key+'"'+(S.dsel[key]?' checked':'')+' aria-label="Select '+esc(d.name)+'"></td>':'')+'<td><b>'+esc(ix(r[0].tid).name)+'</b></td><td>'+(d.noPost?'<span class="ftag">Filming</span>':'')+'<b>'+esc(d.name)+'</b>'+(q>1?'<span class="qtag">'+q+' pieces</span>':'')+'<div class="small">'+esc(d.plat)+'</div></td><td>'+mtrk(d)+'</td><td>'+dcell(d,'recv')+'</td><td>'+dcell(d,'live')+'</td>'+(ed?'<td class="r">'+(q>1?'<button class="btn sm" data-dsplit="'+key+'" title="Make each piece its own deliverable">Split into '+q+'</button>':'')+'</td>':'')+'</tr>';});
   return h+'</tbody></table></div>';
+}
+
+/* Group several deliverables into one (e.g. 3 stories posted together) or split a group back into pieces */
+function dGroup(){
+  var ks=Object.keys(S.dsel),iid=ks[0].split('|')[0],i=find(iid);if(!i)return;
+  var ds=ks.map(function(k){return i.deliv.filter(function(d){return d.id===k.split('|')[1];})[0];}).filter(Boolean);
+  if(ds.some(function(d){return d.crInv||d.crStatus!=='Not due';})){toast('One of these has a creator invoice or payment against it. Remove that first.');return;}
+  ds.sort(function(a,b){return (dDate(a)||'9')<(dDate(b)||'9')?-1:1;});
+  var its=ds.map(dItem),one=its.every(function(x){return x.item===its[0].item;}),qty=its.reduce(function(a,x){return a+x.qty;},0);
+  var b={name:one?qty+' × '+its[0].item:its.map(function(x){return x.qty+' × '+x.item;}).join(' + '),item:one?its[0].item:'',qty:one?qty:1};
+  if(!one){var tr=0,ok=true;ds.forEach(function(d){var r=crRateOf(i,d);if(r==null)ok=false;else tr+=r;});if(ok)b.crRate=tr;}
+  var keep=ds[0],path=P('/talents/'+iid+'/deliverables/');
+  var pr=api(path+keep.id,{method:'PATCH',body:b});
+  ds.slice(1).forEach(function(d){pr=pr.then(function(){return api(path+d.id,{method:'DELETE'});});});
+  pr.then(function(){S.dsel={};return loadOne();}).then(function(){toast('Grouped into '+b.name);}).catch(function(e){toast(e.message);loadOne();});
+}
+function dSplit(key){
+  var p=key.split('|'),i=find(p[0]),d=i&&i.deliv.filter(function(z){return z.id===p[1];})[0];if(!d)return;
+  if(d.crInv||d.crStatus!=='Not due'){toast('This has a creator invoice or payment against it. Remove that first.');return;}
+  var di=dItem(d),used=usedMap(i);used[di.item]=Math.max(0,(used[di.item]||1)-1);
+  var parts=[];for(var k=0;k<di.qty;k++)parts.push(1);
+  var tot=(used[di.item]||0)+di.qty,u=used[di.item]||0;
+  var names=parts.map(function(x,k){return di.item+(tot>1?' '+(u+k+1):'');});
+  var path=P('/talents/'+p[0]+'/deliverables'),base0={platform:d.plat||scPlat(di.item),item:di.item,qty:1,noPost:d.noPost,recv:d.recv,live:d.live};
+  var pr=api(path+'/'+d.id,{method:'PATCH',body:{name:names[0],item:di.item,qty:1,crRate:null}});
+  names.slice(1).forEach(function(nm){pr=pr.then(function(){var b={name:nm};for(var k in base0)b[k]=base0[k];return api(path,{method:'POST',body:b});});});
+  pr.then(function(){return loadOne();}).then(function(){toast('Split into '+di.qty+' × '+di.item);}).catch(function(e){toast(e.message);loadOne();});
 }
 
 /* ---------- Content calendar ---------- */
@@ -855,7 +913,7 @@ function calUnsched(c,ignoreWho){
   var w=ignoreWho?'All':(S.calWho||'All'),out=[];
   selected(c).forEach(function(i){if(w!=='All'&&i.id!==w)return;var who=ix(i.tid).name;
     i.deliv.forEach(function(d){if(d.noPost?d.recv:(d.recv||d.live))return;out.push({key:'d~'+i.id+'~'+d.id,kind:'d',iid:i.id,did:d.id,who:who,name:d.name,plat:d.plat,noPost:d.noPost});});});
-  var sp={};scPending(c).forEach(function(x){if(w!=='All'&&x.iid!==w)return;sp[x.iid]=(sp[x.iid]||0)+1;out.push({key:'s~'+x.iid+'~'+sp[x.iid],kind:'s',iid:x.iid,who:ix(find(x.iid).tid).name,name:x.name,plat:x.plat,noPost:false});});
+  var sp={};scPending(c).forEach(function(x){if(w!=='All'&&x.iid!==w)return;sp[x.iid]=(sp[x.iid]||0)+1;out.push({key:'s~'+x.iid+'~'+sp[x.iid],kind:'s',iid:x.iid,who:ix(find(x.iid).tid).name,name:x.name,plat:x.plat,item:x.item,qty:x.qty,noPost:!!x.noPost});});
   S.calU={};out.forEach(function(u){S.calU[u.key]=u;});
   return out;
 }
@@ -879,8 +937,8 @@ function calPlace(key,date,rowIid){
     // creating the first deliverable hides the rest of that creator's scope, so create the others too (undated, they stay in the tray)
     var rest=[];for(var k in S.calU){var o=S.calU[k];if(o.kind==='s'&&o.iid===u.iid&&k!==key)rest.push(o);}
     var path=P('/talents/'+u.iid+'/deliverables');
-    var chain=rest.reduce(function(pr,o){return pr.then(function(){return api(path,{method:'POST',body:{name:o.name,platform:o.plat}});});},Promise.resolve());
-    chain.then(function(){return post(path,'POST',{name:u.name,platform:u.plat,live:date},{msg:msg});}).catch(function(er){toast(er.message);loadOne();});
+    var chain=rest.reduce(function(pr,o){return pr.then(function(){return api(path,{method:'POST',body:delBody(o)});});},Promise.resolve());
+    chain.then(function(){return post(path,'POST',delBody(u,u.noPost?{recv:date}:{live:date}),{msg:msg});}).catch(function(er){toast(er.message);loadOne();});
   }
 }
 document.addEventListener('dragstart',function(e){var t=e.target.closest&&e.target.closest('[data-cnew]');if(!t)return;S.calNew=t.getAttribute('data-cnew');e.dataTransfer.effectAllowed='copy';try{e.dataTransfer.setData('text/plain',S.calNew);}catch(er){}});
@@ -946,13 +1004,14 @@ function calAddGo(another){
   p=p.then(function(){if(isNew)return go(P('/talents/'+ctId),'PATCH',ct&&ct.archived?{approved:'Yes',archived:null}:{approved:'Yes'});});
   p=p.then(function(){
     if(!a.lines.length)return;
-    var i=find(ctId),sc=(i.scope||[]).map(function(x){return {item:x.item,qty:x.qty};}),pend=i.deliv.length?[]:sc.slice();
+    var i=find(ctId),sc=(i.scope||[]).map(function(x){var o={item:x.item,qty:x.qty};if(x.rate!=null)o.rate=x.rate;return o;}),pend=i.deliv.length?[]:sc.map(function(x){return {item:x.item,qty:x.qty};}),used=usedMap(i),mk=[];
     a.lines.forEach(function(l){var f=sc.filter(function(x){return x.item===l.item;})[0];if(f)f.qty+=l.qty;else sc.push({item:l.item,qty:l.qty});});
     var q=go(P('/talents/'+ctId),'PATCH',{scope:sc});
     // creator had quoted scope but no deliverables yet: create those (undated) so they stay in To schedule
-    pend.forEach(function(x){if(CA_NODATE.indexOf(x.item)>=0)return;q=q.then(function(){var np=CA_NOPOST.indexOf(x.item)>=0;return go(P('/talents/'+ctId+'/deliverables'),'POST',{name:x.qty+' × '+x.item,platform:scPlat(x.item),noPost:np});});});
-    a.lines.forEach(function(l){if(CA_NODATE.indexOf(l.item)>=0)return;var np=CA_NOPOST.indexOf(l.item)>=0;
-      q=q.then(function(){return go(P('/talents/'+ctId+'/deliverables'),'POST',np?{name:l.qty+' × '+l.item,platform:scPlat(l.item),noPost:true,recv:a.live}:{name:l.qty+' × '+l.item,platform:scPlat(l.item),recv:a.recv,live:a.live});});});
+    var tot={};pend.concat(a.lines).forEach(function(x){tot[x.item]=(tot[x.item]||used[x.item]||0)+x.qty;});
+    pend.forEach(function(x){splitScope(x.item,x.qty,used,tot[x.item]).forEach(function(y){mk.push(delBody(y));});});
+    a.lines.forEach(function(l){splitScope(l.item,l.qty,used,tot[l.item]).forEach(function(y){mk.push(delBody(y,y.noPost?{recv:a.live}:{recv:a.recv,live:a.live}));});});
+    mk.forEach(function(b){q=q.then(function(){return go(P('/talents/'+ctId+'/deliverables'),'POST',b);});});
     return q;
   });
   p.then(function(){
@@ -994,8 +1053,7 @@ var PST={'Paid':'ok','Invoiced':'warn','Not due':'neu'};
 function r2(n){return Math.round(n*100)/100;}
 function crRateOf(i,d){
   if(d.crRate!=null)return d.crRate;
-  var sc=i.scope||[],m=String(d.name).match(/^\s*(\d+)\s*[×x]\s*(.+?)\s*$/),q=1,it=d.name;
-  if(m){q=Number(m[1]);it=m[2];}
+  var sc=i.scope||[],di=dItem(d),q=di.qty,it=di.item;
   var l=sc.filter(function(x){return x.item===it;})[0];
   return l&&l.rate!=null?r2(q*l.rate):null;
 }
@@ -1751,7 +1809,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -1773,6 +1831,8 @@ document.addEventListener('click',function(e){
   else if(d.ycell){var yp=d.ycell.split('|');if(S.calArm)calPlace(S.calArm,lastDay(yp[1]));else if(canEdit())calAddOpen(yp[0],lastDay(yp[1]));}
   else if(d.cax){S.calAdd=null;render();}
   else if(d.crx){S.crInv=null;render();}
+  else if(d.dsel){S.dsel=S.dsel||{};if(S.dsel[d.dsel])delete S.dsel[d.dsel];else S.dsel[d.dsel]=1;render();}
+  else if(d.dsplit){dSplit(d.dsplit);}
   else if(d.crf){S.crf=d.crf;render();}
   else if(d.crst){var cp=d.crst.split('|'),ci2=find(cp[0]),cd=ci2&&ci2.deliv.filter(function(z){return z.id===cp[1];})[0];if(cd){var nx={'Not due':'Invoiced','Invoiced':'Paid','Paid':'Not due'}[cd.crStatus]||'Not due';
       if(nx==='Paid'&&!isPosted(cd)){toast('Not posted yet. Creators are paid once the content is live.');return;}
@@ -1855,6 +1915,8 @@ document.addEventListener('click',function(e){
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}
   else if(d.act==='rcsplit'){var si=find(S.sel);if(si){var pcs=0;(si.scope||[]).forEach(function(x){pcs+=x.qty;});var each=r2(base(si)/pcs);saveRateCard(si,si.scope.map(function(x){return {item:x.item,qty:x.qty,rate:each};}));}}
+  else if(d.act==='dgroup'){dGroup();}
+  else if(d.act==='dselclear'){S.dsel={};render();}
   else if(d.act==='crsave'){if(S.crInv&&!S.crInv.busy)crInvSave();}
   else if(d.act==='ciadd'){post(P('/cinv'),'POST',{label:'Invoice '+(((FULL.cinv||[]).length)+1),amount:0},{msg:'Invoice added'});}
   else if(d.act==='arctog'){S.showArc=!S.showArc;render();}

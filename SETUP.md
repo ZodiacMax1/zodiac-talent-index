@@ -228,3 +228,12 @@ The rule throughout: a creator is only paid for a deliverable once it's live **a
   - Creator payments per creator (total, paid, ready to pay, left, invoices) and every creator invoice received, filterable On hold / Ready to pay / Paid, with Mark paid.
 - The influencer Invoicing field is now set from the client invoices (read-only), so the sales dashboard and weekly reports keep working. Older won campaigns keep their hand-set statuses until an invoice is issued here; if every creator was already invoiced or paid, the Final invoice starts that way.
 - Changing the campaign currency converts invoice amounts and rates too.
+
+## Update 53 – One deliverable per piece, clearer headings
+New migration `19_deliverable_item_qty.sql` (runs automatically on deploy).
+- Quoted deliverables now become one deliverable per piece: 4 × IG Reel → IG Reel 1, IG Reel 2, IG Reel 3, IG Reel 4. Stories stay together (3 × IG Story is one deliverable). Applies everywhere deliverables are made from a quote: Deliverables tab, Content Calendar tray and Add.
+- Deliverables tab: tick deliverables from one creator and "Group into one" (e.g. 3 stories posted together), or "Split into N" on any grouped one (also fixes older "4 × IG Reel" deliverables). Grouping/splitting is blocked once a creator invoice or payment is against them.
+- Each deliverable stores what it is and how many pieces, so its creator rate comes from the rate card (qty × rate).
+- Stat boxes at the top show the figure only (the ≈ £ line and descriptions are gone; use the currency switch).
+- All table headings are bold and black.
+- Fix: adding deliverables from the calendar no longer clears the rate card.

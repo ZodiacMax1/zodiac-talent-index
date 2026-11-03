@@ -140,7 +140,7 @@ async function loadFull(id) {
   const dels = ids.length ? await query(
     `SELECT id, ct_id, name, platform, stage, to_char(recv_by,'YYYY-MM-DD') AS recv_by, to_char(recv_at,'YYYY-MM-DD') AS recv_at,
             to_char(live_by,'YYYY-MM-DD') AS live_by, to_char(live_at,'YYYY-MM-DD') AS live_at, links, insights, no_post,
-            cr_rate, cr_status, cr_invoice, to_char(cr_paid_at,'YYYY-MM-DD') AS cr_paid_at
+            cr_rate, cr_status, cr_invoice, to_char(cr_paid_at,'YYYY-MM-DD') AS cr_paid_at, item, qty
        FROM campaign_deliverables WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const coms = ids.length ? await query(`SELECT id, ct_id, author, body, link, tag, created_at FROM campaign_comments WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
   const quotes = ids.length ? await query(`SELECT id, ct_id, amount, note, author, created_at FROM campaign_quotes WHERE ct_id = ANY($1::text[]) ORDER BY created_at, id`, [ids]) : [];
@@ -157,7 +157,7 @@ async function loadFull(id) {
     scope: x.scope || [], contract: x.contract, invoice: x.invoice, next: x.next_action || '', feedback: x.feedback || '', archived: x.archived || null,
     deliv: dels.filter((d) => d.ct_id === x.id).map((d) => ({
       id: d.id, name: d.name, plat: d.platform || '', stage: d.stage, recv: d.recv_by || '', recvAt: d.recv_at || '', live: d.live_by || '', liveAt: d.live_at || '',
-      noPost: !!d.no_post, crRate: d.cr_rate == null ? null : Number(d.cr_rate), crStatus: d.cr_status || 'Not due', crInv: d.cr_invoice || '', crPaidAt: d.cr_paid_at || '', links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
+      noPost: !!d.no_post, crRate: d.cr_rate == null ? null : Number(d.cr_rate), crStatus: d.cr_status || 'Not due', crInv: d.cr_invoice || '', crPaidAt: d.cr_paid_at || '', item: d.item || '', qty: Number(d.qty) || 1, links: d.links || [], ins: { ...Object.fromEntries(INS_KEYS.map((k) => [k, ''])), ...(d.insights || {}) },
     })),
     comments: coms.filter((m) => m.ct_id === x.id).map((m) => ({ id: Number(m.id), by: m.author, at: m.created_at, t: m.body, link: m.link || '', tag: m.tag || '' })),
     quotes: quotes.filter((q) => q.ct_id === x.id).map((q) => ({ id: Number(q.id), a: q.amount, n: q.note || '', by: q.author || '', d: q.created_at })),
@@ -616,7 +616,8 @@ export async function handleCampaigns(ctx) {
         const b = await body();
         const name = text(b.name, 200);
         if (!name) return bad('Name the deliverable');
-        await query('INSERT INTO campaign_deliverables (id, ct_id, name, platform, recv_by, live_by, no_post) VALUES ($1,$2,$3,$4,$5,$6,$7)', [newId('d'), ctId, name, text(b.platform, 60), dateOrNull(b.recv), b.noPost ? null : dateOrNull(b.live), !!b.noPost]);
+        const q = Math.round(num(b.qty)); const crr = num(b.crRate);
+        await query('INSERT INTO campaign_deliverables (id, ct_id, name, platform, recv_by, live_by, no_post, item, qty, cr_rate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)', [newId('d'), ctId, name, text(b.platform, 60), dateOrNull(b.recv), b.noPost ? null : dateOrNull(b.live), !!b.noPost, text(b.item, 60), q >= 1 && q <= 999 ? q : 1, b.crRate != null && b.crRate !== '' && crr >= 0 ? r2(crr) : null]);
         await touch();
         return json({ campaign: await loadFull(id) }, 201);
       }
@@ -634,6 +635,9 @@ export async function handleCampaigns(ctx) {
         if ('stage' in b) { if (!D_STAGES.includes(b.stage)) return bad('Invalid stage'); upd.stage = b.stage; }
         for (const [k, col] of [['recv', 'recv_by'], ['recvAt', 'recv_at'], ['live', 'live_by'], ['liveAt', 'live_at']]) if (k in b) upd[col] = dateOrNull(b[k]);
         if ('noPost' in b) { upd.no_post = !!b.noPost; if (b.noPost) { upd.live_by = null; upd.live_at = null; } }
+        if ('item' in b) upd.item = text(b.item, 60);
+        if ('qty' in b) { const q = Math.round(num(b.qty)); if (!(q >= 1 && q <= 999)) return bad('Invalid quantity'); upd.qty = q; }
+        if ('platform' in b) upd.platform = text(b.platform, 60);
         if ('crRate' in b) { if (b.crRate === null || b.crRate === '') upd.cr_rate = null; else { const n = num(b.crRate); if (!Number.isFinite(n) || n < 0) return bad('Invalid creator rate'); upd.cr_rate = r2(n); } }
         if ('crStatus' in b) {
           if (!CR_STATUS.includes(b.crStatus)) return bad('Invalid creator payment status');
