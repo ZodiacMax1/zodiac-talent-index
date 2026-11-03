@@ -277,3 +277,10 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 ## Update 60 · Overview layout, money out reverted
 - Campaign Overview: Brief (long briefs clamp with "Read the full brief") beside Client contact + monday deal; Client agreement full width (terms left, usage + file right); Creator contracts full width, two columns on wide screens.
 - Creators · money out back to Paid out · Left to spend · Cash position (Unassigned removed).
+
+## Update 61 · Zodiac OS home page
+- The app is now Zodiac OS (browser tab, sign-in card, sidebar wordmark "zodiac os." in Aileron per the brand kit).
+- New Home page (opens first after sign-in): live date/time (Dubai), greeting, cards into Talent Index (talent on file, deck links live, opened this week) and Campaign Management (live campaigns, need attention, deliverables overdue), and a Next up strip that opens the campaign it refers to.
+- Sidebar: Home, Talent Index, Campaign Management, Sales dashboard. The logo also goes Home.
+- Search on the home page opens the ⌘K search.
+- New files: public/fonts/aileron-*.woff2, public/zodiac-mark.png. No database changes.

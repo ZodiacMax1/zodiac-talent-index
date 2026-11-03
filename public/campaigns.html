@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/png" href="/favicon.png">
-<title>Campaign Management</title>
+<title>Campaign Management · Zodiac OS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Oswald:wght@400;500;600&display=swap">
 <style>
@@ -2472,12 +2472,15 @@ window.addEventListener('message',function(e){
 function setTal(list){TAL=list.map(function(t){return {id:t.id,name:t.name,plat:platOf(t),region:t.region||'',niche:t.niche||''};});}
 window.addEventListener('focus',function(){if(S.view==='campaign'&&FULL&&!S.pick)loadOne(true);else if(S.view==='campaigns'||S.view==='sales')loadList().then(render);});
 window.addEventListener('message',function(e){var m=e.data;if(e.origin!==location.origin||!m||m.type!=='zodiac-view')return;
-  S.backc=null;S.backv=null;S.clientPop=null;S.view=m.view==='sales'?'sales':'campaigns';S.cid=null;FULL=null;S.sel=null;S.pick=false;render();loadList().then(render);});
+  S.backc=null;S.backv=null;S.clientPop=null;S.sel=null;S.pick=false;
+  if(m.cid){openCid(m.cid);return;}
+  S.view=m.view==='sales'?'sales':'campaigns';S.cid=null;FULL=null;render();loadList().then(render);});
+function openCid(id){S.view='campaign';S.cid=id;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.dft='All';S.isel={};S.dsel={};S.calWho='All';S.calT={};S.editSec=null;render();loadOne();}
 if(!TOKEN){document.getElementById('main').innerHTML='<div class="ld">Please sign in to the Talent Index first.</div>';}
 else{
   if(location.hash==='#sales')S.view='sales';
   render();
-  api('/state').then(function(st){ROLE=st.role;ME=st.me;setTal(st.talents);return loadList();}).then(render).catch(function(e){LISTERR=e.message;READY=true;render();});
+  api('/state').then(function(st){ROLE=st.role;ME=st.me;setTal(st.talents);return loadList();}).then(function(){var hm=/^#c=(.+)$/.exec(location.hash);if(hm){try{history.replaceState(null,'',location.pathname);}catch(e){}openCid(decodeURIComponent(hm[1]));}else render();}).catch(function(e){LISTERR=e.message;READY=true;render();});
 }
 })();
 </script>
