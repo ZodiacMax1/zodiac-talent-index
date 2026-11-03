@@ -264,3 +264,12 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - To schedule now sits beside the calendar (Month and Year), one line per creator with a count; click to open their chips, search box at the top. Drag or pick-and-click to place as before.
 - Auto-plan (button in the To schedule list): pick a go-live date range (defaults to the campaign dates), posting days, posts per creator per week, content-due lead time, max posts per day, spread evenly or as soon as possible, and which creators. Preview shows posts per week/month and anything that won't fit. Schedule writes the dates in one go. Nothing already dated is moved. It is plain arithmetic in the browser, so it uses no AI or console credits.
 - No database changes.
+
+## Update 59 · Talent filter, creator contracts, shift dates, tidier uploads, assigned spend, banner
+- Deliverables: Talent filter next to Stage (counts follow it).
+- Shift dates… (Deliverables bar, the selection bar, and Calendar ⋯ menu): move content due and go-live together by ±N days for all creators, one creator, the selected deliverables, or only dates from a given day. Posted content stays put by default. An Undo bar puts every date back.
+- Campaign Overview: Creator contracts card under Client agreement. Lists every Approved: Yes creator automatically, with status (same field as Influencers), date signed, and a slot for the signed contract. Uploading a contract marks that creator Signed with today's date (editable).
+- Upload areas are now slim one-line rows. Linked deck, Documents and Client links sit in one Decks & links card. Creator contracts don't appear in Documents.
+- Creators · money out: Paid out · Assigned, not paid · Unassigned (client budget less target margin, minus creator costs; red if over) · Cash position.
+- Campaign list has the black Zodiac banner.
+- Migration 20 (runs on deploy): campaign_talents.contract_signed, campaign_docs.ct_id.
