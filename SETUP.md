@@ -332,3 +332,6 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - "Edit the wording": per deal, choose where it shows (Auto / Key Updates / Conversations / Hide), a tag and a line; saved for the whole team and kept month to month.
 - Save as PDF (prints one section per A4 page), Excel (Summary, Closed Won, Pipeline, Key Updates, Active Conversations), and Download HTML. Sales has Download Excel.
 - Migration 23 (runs on deploy): report_notes.
+
+## Update 69 — Customisable Forecast report
+Reports → Forecast now has a "Customise the report" panel. One layout is saved for the whole team (app_settings key `forecast_cfg`, PUT /api/campaigns/report-config). You can set the title, the report month (blank means the current month), the start of the financial year, what Key Updates covers, which stages count as pipeline and conversations, show or hide headline cards, by-status, agreed list, margins, likelihood and top lines, rename and reorder sections or hide them, and add an intro note. "Reset to the standard layout" puts everything back. Viewers can see the settings but can't change them.
