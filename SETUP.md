@@ -359,3 +359,4 @@ Every main page now opens with the same burgundy header with big figure tiles, a
 - Campaign list: Live campaigns, Won this year, In the pipeline, To invoice and Needs attention, with the action buttons in the header.
 - Sales: the five headline figures and the period/owner/currency controls are in the header.
 - Talent Index: the header, toolbar and Talent/Followers/Instagram/TikTok/YouTube tiles sit in the burgundy band.
+Update 72b: toned down for consistency. One flat burgundy (#2A0009) for the sidebar and every page header, so they read as one frame. Figure tiles show just the label and number (no extra lines underneath); Margin % is simply green or red. Billing pill removed from the campaign header. Budget uses the same currency symbol as the other figures. Home blends from the sidebar burgundy into its starfield. Tiles stay five across down to 980px wide.

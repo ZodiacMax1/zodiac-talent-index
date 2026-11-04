@@ -105,7 +105,7 @@
   /* ---- Talent Index burgundy header (matches Campaign Management) ---- */
   html,body{overflow-x:clip}
   .tihero{position:relative;margin:-44px 0 30px;padding:28px 0 26px;color:#F3EFE8;isolation:isolate}
-  .tihero:before{content:"";position:absolute;top:0;bottom:0;left:-100vw;right:-100vw;z-index:-1;background:radial-gradient(1200px 420px at 70% -12%,#7a1530 0%,transparent 60%),linear-gradient(180deg,#3B000D,#2A0009)}
+  .tihero:before{content:"";position:absolute;top:0;bottom:0;left:-100vw;right:-100vw;z-index:-1;background:#2A0009}
   .tihero header.hero{background:none;border-radius:0;padding:0;margin:0 0 18px;box-shadow:none}
   .tihero header.hero .eyebrow{font-family:inherit;color:#E2C48F;opacity:1;font-weight:600;font-size:11px;letter-spacing:.2em}
   .tihero header.hero h1{font-family:'Aileron','DM Sans',sans-serif;font-weight:800;text-transform:none;font-size:42px;letter-spacing:-.02em;color:#fff}
@@ -116,13 +116,13 @@
   .tihero .toolbar .tb-main{background:#F3EFE8;color:#3B000D;border-color:#F3EFE8}.tihero .toolbar .tb-main:hover{background:#fff}
   .tihero .count-pill{background:rgba(255,255,255,.14);color:#fff}
   .tihero .card-grid{gap:12px;border:0;background:none;box-shadow:none;overflow:visible;margin-bottom:0}
-  .tihero .card-grid .card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)!important;border-radius:16px;padding:16px 18px}
+  .tihero .card-grid .card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)!important;border-radius:14px;padding:16px 18px 18px}
   .tihero .card-grid .card:hover{background:rgba(255,255,255,.12);box-shadow:none}
-  .tihero .card-grid .card.no-click:hover{background:rgba(255,255,255,.07)}
-  .tihero .card-label{font-family:inherit;color:#E3D6D9;font-size:11px;letter-spacing:.14em;font-weight:600}
-  .tihero .card-label svg{color:#E3D6D9}
+  .tihero .card-grid .card.no-click:hover{background:rgba(255,255,255,.05)}
+  .tihero .card-label{font-family:inherit;color:#BFAFB2;margin-bottom:10px;font-size:11px;letter-spacing:.14em;font-weight:600}
+  .tihero .card .pl svg{color:#BFAFB2}
   .tihero .card-num{color:#fff;font-family:inherit;font-weight:800;font-size:32px;letter-spacing:-.025em}
-  .tihero .card-sub{color:#D2C2C5;font-size:12.5px}
+  .tihero .card-sub,.tihero .share{display:none!important}
   .tihero .share{background:rgba(255,255,255,.14)!important}.tihero .share i{background:linear-gradient(90deg,#B08D57,#E2C48F)!important}
   /* stat tiles (5) */
   .card-grid{grid-template-columns:repeat(5,1fr);margin-bottom:32px;}
@@ -482,14 +482,14 @@
   @media(max-width:560px){.form-grid{grid-template-columns:1fr;}}
   /* ---- app shell: burgundy side navigation (Talent Index / Campaign Management) ---- */
   body.zshell{padding-left:236px;}
-  .zside{position:fixed;top:0;left:0;bottom:0;width:236px;background:#000;color:#E4E2DD;padding:26px 16px 20px;display:flex;flex-direction:column;gap:4px;z-index:40;}
+  .zside{position:fixed;top:0;left:0;bottom:0;width:236px;background:#2A0009;border-right:1px solid rgba(255,255,255,.06);color:#E4E2DD;padding:26px 16px 20px;display:flex;flex-direction:column;gap:4px;z-index:40;}
   .zside .zbrand{padding:2px 8px 26px;}
   .zside .zbrand img{display:block;width:100%;max-width:170px;}
   .zside .zsec{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;padding:8px 10px 6px;}
   .zside .znav{position:relative;display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-radius:10px;color:inherit;font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 12px;cursor:pointer;opacity:.82;}
   .zside .znav.sub{padding-left:38px;font-size:14px;margin-top:-6px;opacity:.82;}.zside .znav.sub svg{width:17px;height:17px;}
   .zside .znav:hover{background:rgba(255,255,255,.07);opacity:1;}
-  .zside .znav.on{background:#4D0011;opacity:1;font-weight:500;}
+  .zside .znav.on{background:rgba(255,255,255,.09);opacity:1;font-weight:500;}
   .zside .znav.on::before{content:"";position:absolute;left:-16px;top:10px;bottom:10px;width:3px;background:var(--gold);border-radius:0 3px 3px 0;}
   .zside .znav svg{width:20px;height:20px;flex:none;}
   .zside .zwho{margin-top:auto;padding:14px 10px 0;border-top:1px solid rgba(243,239,232,.16);font-size:13px;display:flex;gap:10px;align-items:center;}
@@ -513,7 +513,7 @@
   .zside .zbrand b{font:800 24px/1 Aileron,'DM Sans',sans-serif;letter-spacing:-.06em;white-space:nowrap}.zside .zbrand b i{font-style:normal;color:#4d0011;text-shadow:0 0 1px rgba(228,226,221,.5)}
   .zside .znav.on{background:rgba(228,226,221,.09)}
   .zside .znav.on::before{background:#E4E2DD}
-  .home-view{position:fixed;top:0;left:236px;right:0;bottom:0;z-index:30;overflow:hidden auto;background:#000;color:#E4E2DD;font-family:Aileron,'DM Sans',sans-serif}
+  .home-view{position:fixed;top:0;left:236px;right:0;bottom:0;z-index:30;overflow:hidden auto;background:linear-gradient(90deg,#2A0009 0,#160005 28%,#000 62%);color:#E4E2DD;font-family:Aileron,'DM Sans',sans-serif}
   .home-view[hidden],.zside .znav[hidden]{display:none}
   .zside .znav .zct{margin-left:auto;font:500 12px 'DM Sans',sans-serif;background:rgba(228,226,221,.1);border:1px solid rgba(228,226,221,.12);border-radius:8px;padding:2px 8px;opacity:.9}
   .zside .znav.on{background:linear-gradient(90deg,#6b0a1f,#4D0011);box-shadow:0 8px 24px -10px rgba(140,16,40,.7)}
