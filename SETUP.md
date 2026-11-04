@@ -351,3 +351,11 @@ Admins see a **Can edit** tick next to each connection in Account → Connect Cl
 - add_talent / update_talent (Index niches only; duplicate check by name and handle) and notes
 Every change returns a preview plus a confirm_token tied to the exact arguments; changing anything needs a new preview. Nothing writes to monday, nothing marks payments, everything is logged under the person's name.
 Also: get_campaign now runs a fresh monday check if the last one is over 10 minutes old, and entering a client agreement signed date now sets the status to Signed (migration 25 fixes existing ones).
+
+## Update 72 — One look across Zodiac OS
+Every main page now opens with the same burgundy header with big figure tiles, and cream with white cards below:
+- Campaign page: name, client, dates, owner, stage, currency, billing and monday check in the header, then Budget (still editable), Creator costs, Margin, Margin % and a campaign timeline. Tabs are now Overview · Creators · Deliverables · Calendar · Financials and live in the header. Campaigns open on Overview.
+- Overview: delivery rings, money in/out, brief, client agreement and creator contracts on the left; Next up, monday check and client contact on the right; documents and links underneath. Money in/out also shows on Financials. The other tabs keep the compact Next up bar.
+- Campaign list: Live campaigns, Won this year, In the pipeline, To invoice and Needs attention, with the action buttons in the header.
+- Sales: the five headline figures and the period/owner/currency controls are in the header.
+- Talent Index: the header, toolbar and Talent/Followers/Instagram/TikTok/YouTube tiles sit in the burgundy band.
