@@ -413,7 +413,7 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .chero{position:relative;margin:0 0 22px;padding:26px 30px 0;border-radius:18px;color:#E4E2DD;background:#000;box-shadow:0 14px 34px -18px rgba(0,0,0,.45)}
 .phero{padding-bottom:4px}.hbrand{display:flex;align-items:center;gap:26px;min-width:0}.hcrumb{margin-bottom:6px}.hlogo{height:64px;width:auto;display:block}.hbsep{width:1px;align-self:stretch;background:rgba(228,226,221,.22)}
 .chero .crumb{color:#CDBEC1}.chero .crumb:hover{color:#fff}
-.htop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-top:12px;flex-wrap:wrap}
+.htop{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-top:10px}
 .hh1{font:800 40px/1.05 var(--body)!important;letter-spacing:-.02em!important;text-transform:none!important;color:#fff!important;margin:0}
 .hsub{margin-top:9px;color:#D9CCCF;font-size:14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}.hdot{opacity:.5}
 .hcl{color:#fff!important;font-weight:700!important;font-size:14px!important}
@@ -425,7 +425,8 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .hseg{display:inline-flex;border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:2px;background:rgba(255,255,255,.05)}.hseg button{border:0;background:none;color:#D9CCCF;height:22px;padding:0 10px;border-radius:99px;font-size:12px;cursor:pointer}.hseg button.on{background:#F3EFE8;color:#3B000D;font-weight:600}
 .chero .mdb{height:28px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);color:#F3EFE8}
 .chero .mdb.bad{background:rgba(255,120,130,.12);border-color:rgba(255,140,150,.3);color:#FFB3BA}.chero .mdb.ok{background:rgba(120,210,160,.12);border-color:rgba(120,210,160,.3);color:#A8E8C3}
-.hacts{display:flex;gap:10px;flex-wrap:wrap}
+.hacts{display:flex;gap:10px;flex-wrap:nowrap;align-items:center;flex:none}.hmw{position:relative}.hdots{width:36px;padding:0;justify-content:center;font-size:18px}
+.hmenu{position:absolute;right:0;top:42px;background:#fff;border-radius:12px;box-shadow:0 14px 34px -12px rgba(0,0,0,.4);padding:6px;min-width:180px;z-index:20}.hmenu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;border-radius:8px;font-size:13.5px;color:#1a1a1a;cursor:pointer}.hmenu button:hover{background:#F4EFE8}
 .hbtn{height:36px;padding:0 15px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#F3EFE8;display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none}
 .hbtn:hover{background:rgba(255,255,255,.12)}.hbtn.w{background:#F3EFE8;color:#3B000D;border-color:#F3EFE8}.hbtn.w:hover{background:#fff}
 .hks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.3fr);gap:12px;margin:22px 0 16px}
@@ -437,7 +438,7 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .hk.mg{background:linear-gradient(180deg,rgba(120,210,160,.16),rgba(120,210,160,.06));border-color:rgba(120,210,160,.38)}.hk.mg .hv{color:#A8E8C3}
 .hk.mgb{background:linear-gradient(180deg,rgba(255,120,130,.16),rgba(255,120,130,.05));border-color:rgba(255,140,150,.38)}.hk.mgb .hv{color:#FFB3BA}
 .hk.tl{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)}.htl{font-size:12.5px;color:#fff}
-.htrack{position:relative;height:6px;border-radius:9px;background:rgba(255,255,255,.14);margin:16px 0 10px}.htrack i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,#B08D57,#E2C48F)}.htrack b{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:#F3EFE8;box-shadow:0 0 0 4px rgba(243,239,232,.15);transform:translateX(-50%)}
+.htlr{display:flex;justify-content:space-between;align-items:baseline;gap:10px;white-space:nowrap}.htrack{position:relative;height:6px;border-radius:9px;background:rgba(255,255,255,.14);margin:auto 0 9px}.hk.tl .hsx{margin-top:0}.htrack i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:linear-gradient(90deg,#B08D57,#E2C48F)}.htrack b{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:#F3EFE8;box-shadow:0 0 0 4px rgba(243,239,232,.15);transform:translateX(-50%)}
 .htabs{display:flex;gap:4px;flex-wrap:wrap}
 .htab{border:0;background:none;padding:14px 18px 15px;font-weight:600;font-size:14px;color:#CDBEC1;border-bottom:2px solid transparent;cursor:pointer}
 .htab:hover{color:#fff}.htab.on{color:#fff;border-bottom-color:#E4E2DD}
@@ -731,11 +732,11 @@ function fillSub(c,s){
 }
 var TABLAB={'Campaign Overview':'Overview','Influencers':'Creators','Deliverables':'Deliverables','Content Calendar':'Calendar','Financials':'Financials'};
 function cTimeline(c){
-  if(!c.start||!c.end||c.end<c.start)return '<div class="hk tl"><div class="hl">Campaign timeline</div><div class="hsx" style="margin-top:14px">'+(c.start?'Starts '+fd(c.start):'Dates TBC')+'</div></div>';
+  if(!c.start||!c.end||c.end<c.start)return '<div class="hk tl"><div class="hl">Timeline</div><div class="hsx" style="margin-top:14px">'+(c.start?'Starts '+fd(c.start):'Dates TBC')+'</div></div>';
   var tot=Math.max(1,daysBetween(c.start,c.end)),at=daysBetween(c.start,TODAY),p=Math.max(0,Math.min(100,at/tot*100));
   var lab=at<0?'Starts in '+(-at)+' day'+(-at===1?'':'s'):at>tot?'Finished '+fd(c.end):'Day '+(at+1)+' of '+(tot+1);
   var mid=function(f){return new Date(new Date(c.start+'T00:00:00').getTime()+tot*f*864e5).toLocaleDateString('en-GB',{month:'short'});};
-  return '<div class="hk tl"><div class="row" style="justify-content:space-between"><span class="hl">Campaign timeline</span><b class="htl">'+lab+'</b></div><div class="htrack"><i style="width:'+p+'%"></i><b style="left:'+p+'%"></b></div><div class="row hsx" style="justify-content:space-between"><span>'+fd(c.start)+'</span><span>'+mid(.25)+'</span><span>'+mid(.5)+'</span><span>'+mid(.75)+'</span><span>'+fd(c.end)+'</span></div></div>';
+  return '<div class="hk tl"><div class="htlr"><span class="hl">Timeline</span><b class="htl">'+lab+'</b></div><div class="htrack"><i style="width:'+p+'%"></i><b style="left:'+p+'%"></b></div><div class="row hsx" style="justify-content:space-between"><span>'+fd(c.start)+'</span><span>'+mid(.25)+'</span><span>'+mid(.5)+'</span><span>'+mid(.75)+'</span><span>'+fd(c.end)+'</span></div></div>';
 }
 function cHero(c,s,ef,w,tabs,crumb){
   var ng=c.cur!=='GBP',ed=canEdit();
@@ -747,12 +748,12 @@ function cHero(c,s,ef,w,tabs,crumb){
     +'<div class="hseg" role="group" aria-label="Currency">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div>'
     +mdBadge(c);
   var acts=(c.mondayItemId?'<a class="hbtn" href="https://monday.com/boards/5092522587/pulses/'+encodeURIComponent(c.mondayItemId)+'" target="_blank" rel="noopener">Open in monday ↗</a>':'')
-    +(ed&&!c.archived?'<button class="hbtn" data-act="carch">Archive</button>':'')+(ed?'<button class="hbtn w" data-act="pick">+ Add creators</button>':'');
+    +(ed?'<button class="hbtn w" data-act="pick">+ Add creators</button>':'')+(ed&&!c.archived?'<span class="hmw"><button class="hbtn hdots" data-act="hmenu" aria-label="More" title="More">⋯</button>'+(S.hmenu?'<div class="hmenu"><button data-act="carch">Archive campaign</button></div>':'')+'</span>':'');
   var k=function(l,v,sx,cls){return '<div class="hk'+(cls?' '+cls:'')+'"><div class="hl">'+l+'</div><div class="hv num">'+v+'</div><div class="hs">'+sx+'</div></div>';};
   var mv=function(n){var t=money(n),m=t.match(/^([^\d\-–]*)(.*)$/);return m&&m[1].trim()?'<small>'+esc(m[1].trim())+'</small>'+esc(m[2]):esc(t);};
   var sym=(money(0).match(/^[^\d\-–]*/)||[''])[0].trim();
   var bud=ed?'<small>'+esc(sym)+'</small><input class="hin" inputmode="numeric" data-cf="budget" style="width:'+(money(c.budget).replace(/^[^\d]*/,'').length+.4)+'ch" value="'+money(c.budget).replace(/^[^\d]*/,'')+'" aria-label="Client budget" title="Click to change the budget">':mv(c.budget);
-  var h='<section class="chero"><div class="hcrumb">'+crumb+'</div><div class="htop"><div class="hbrand"><img class="hlogo" src="/zodiac-logo.png" alt="Zodiac Global Group"><span class="hbsep"></span><div style="min-width:0"><h1 class="hh1">'+esc(c.name)+'</h1><div class="hsub">'+sub.join('<span class="hdot">·</span>')+'</div><div class="hpills">'+pills+'</div></div></div><div class="hacts">'+acts+'</div></div>';
+  var h='<section class="chero"><div class="hcrumb">'+crumb+'</div><div class="htop"><div style="min-width:0;flex:1"><h1 class="hh1">'+esc(c.name)+'</h1><div class="hsub">'+sub.join('<span class="hdot">·</span>')+'</div><div class="hpills">'+pills+'</div></div><div class="hacts">'+acts+'</div></div>';
   h+='<div class="hks">'+k('Budget',bud,ng?'≈ '+gbpIn(c.budget,c)+' · client pays':'Client pays')
     +k('Creator costs',mv(s.cost),s.n+' creator'+(s.n===1?'':'s')+' '+(w?'booked':'selected')+(ng&&s.cost?' · ≈ '+gbpIn(s.cost,c):''))
     +k('Margin',ef.price?mv(ef.m):'–','Budget minus creator costs')
@@ -2713,7 +2714,8 @@ document.addEventListener('click',function(e){
     ids.reduce(function(p,tid){return p.then(function(){return api(P('/talents'),{method:'POST',body:{talent_id:tid}}).then(function(j){FULL=hydrate(j.campaign);added++;});});},Promise.resolve()).then(function(){toast(added+' added from the Talent Index');render();}).catch(function(er){toast(er.message);loadOne();});}
   else if(d.act==='attall'){S.attAll=!S.attAll;render();}
   else if(d.act==='newfull'){try{window.parent.postMessage({type:'zodiac-new-talent',name:S.pickQ||''},location.origin);}catch(er){toast('Open the Talent Index and use Add Talent');}}
-  else if(d.act==='carch'){S.carch=!S.carch;render();}
+  else if(d.act==='hmenu'){S.hmenu=!S.hmenu;render();}
+  else if(d.act==='carch'){S.hmenu=false;S.carch=!S.carch;render();}
   else if(d.act==='crestore'){post(P(''),'PATCH',{archive:null},{msg:'Campaign restored'});}
   else if(d.act==='mrefresh'){toast('Reading monday…');api('/campaigns/refresh-monday',{method:'POST'}).then(function(j){toast('Company updated from monday on '+j.updated+' campaign'+(j.updated===1?'':'s'));return loadList();}).then(render).catch(function(er){toast(er.message);});}
   else if(d.act==='fillask'){S.fillc=true;render();}
