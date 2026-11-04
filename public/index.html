@@ -2273,6 +2273,8 @@ document.getElementById('add-talent-btn').addEventListener('click', () => openTa
 const REGION_MAP = {'united kingdom':'UK','uk':'UK','great britain':'UK','england':'UK','scotland':'UK','wales':'UK',
   'united arab emirates':'UAE','uae':'UAE','dubai':'UAE','abu dhabi':'UAE',
   'united states of america':'US','united states':'US','usa':'US','us':'US','america':'US'};
+const UK_PLACES = ["london", "birmingham", "manchester", "liverpool", "leeds", "sheffield", "bristol", "newcastle", "newcastle upon tyne", "nottingham", "leicester", "coventry", "bradford", "brighton", "brighton and hove", "hove", "oxford", "cambridge", "york", "bath", "cardiff", "swansea", "newport", "edinburgh", "glasgow", "aberdeen", "dundee", "inverness", "stirling", "belfast", "derry", "londonderry", "norwich", "ipswich", "exeter", "plymouth", "bournemouth", "poole", "southampton", "portsmouth", "reading", "milton keynes", "luton", "northampton", "peterborough", "stoke", "stoke-on-trent", "wolverhampton", "derby", "hull", "kingston upon hull", "sunderland", "middlesbrough", "durham", "carlisle", "lancaster", "preston", "blackpool", "bolton", "salford", "wigan", "stockport", "warrington", "chester", "worcester", "gloucester", "cheltenham", "hereford", "shrewsbury", "telford", "lincoln", "canterbury", "maidstone", "guildford", "windsor", "slough", "watford", "st albans", "chelmsford", "colchester", "southend", "basildon", "crawley", "wakefield", "huddersfield", "harrogate", "doncaster", "rotherham", "barnsley", "lichfield", "tamworth", "solihull", "walsall", "stafford", "birkenhead", "wrexham", "bangor", "truro", "torquay", "swindon", "salisbury", "winchester", "hackney", "shoreditch", "camden", "brixton", "croydon", "cornwall", "devon", "dorset", "somerset", "wiltshire", "hampshire", "kent", "surrey", "sussex", "east sussex", "west sussex", "essex", "hertfordshire", "bedfordshire", "buckinghamshire", "berkshire", "oxfordshire", "cambridgeshire", "norfolk", "suffolk", "lincolnshire", "nottinghamshire", "derbyshire", "leicestershire", "warwickshire", "staffordshire", "shropshire", "cheshire", "lancashire", "merseyside", "greater manchester", "west midlands", "midlands", "yorkshire", "north yorkshire", "south yorkshire", "west yorkshire", "east yorkshire", "northumberland", "cumbria", "county durham", "tyne and wear", "isle of wight", "jersey", "guernsey", "isle of man", "gloucestershire", "herefordshire", "worcestershire", "northamptonshire", "rutland"], UAE_PLACES = ["sharjah", "ajman", "ras al khaimah", "fujairah", "umm al quwain", "al ain"];
+UK_PLACES.forEach(x => REGION_MAP[x] = 'UK'); UAE_PLACES.forEach(x => REGION_MAP[x] = 'UAE');
 const NICHE_MAP = {'food & drink':'F&B','food and drink':'F&B','food & beverage':'F&B','food and beverage':'F&B','f&b':'F&B',
   'fashion & style':'Fashion','fashion and style':'Fashion'};
 const HEADER_ALIASES = {
@@ -2280,9 +2282,9 @@ const HEADER_ALIASES = {
   exclusivity:['exclusivity','exclusive'],
   location:['location','locations','region','location by country','country'],
   gender:['gender'],
-  niche:['niche','niches','category','categories'],
+  niche:['niche','niches','category','categories','category / niche','content type','content','content category','type'],
   instagram:['instagram','instagram url','instagram link','ig link','ig url'],
-  ig_followers:['instagram followers','ig followers','ig following','instagram following'],
+  ig_followers:['instagram followers','ig followers','ig following','instagram following','followers','follower count','followers count','instagram follower count'],
   tiktok:['tiktok','tiktok url','tiktok link','tt link','tt url'],
   tt_followers:['tiktok followers','tt followers','tt following','tiktok following'],
   youtube:['youtube','youtube url','youtube link','yt link','yt url'],
@@ -2294,17 +2296,34 @@ const HEADER_ALIASES = {
 function parseFollowers(v){
   if(v === null || v === undefined || v === '') return null;
   if(typeof v === 'number') return Number.isFinite(v) && v >= 0 ? Math.round(v) : NaN;
-  const t = String(v).trim().toLowerCase().replace(/,/g,'').replace(/\s/g,'');
-  if(!t) return null;
+  const t = String(v).trim().toLowerCase().replace(/,/g,'').replace(/\s/g,'').replace(/^(~|≈|approx\.?|c\.|circa)/,'').replace(/\+$/,'');
+  if(!t || /not confirmed|unknown|n\/a|tbc|^-$/.test(t)) return null;
   const m = t.match(/^(\d+(?:\.\d+)?)([km]?)$/);
   if(!m) return NaN;
   return Math.round(parseFloat(m[1]) * (m[2]==='k' ? 1e3 : m[2]==='m' ? 1e6 : 1));
 }
-function normNicheList(str, knownLower){
-  return String(str||'').split(/[,;/]/).map(x => x.trim()).filter(Boolean).map(x => {
-    const k = x.toLowerCase();
-    return NICHE_MAP[k] || knownLower[k] || x;
-  }).filter((x,i,a) => a.indexOf(x) === i).join(', ');
+// Free-text niches (e.g. "Food / travel", "Vegan recipes") are mapped onto the Index's own niches
+const NICHE_RULES = [
+  [/food|recipe|cook|chef|vegan|vegetarian|plant|restaurant|dining|baking|bake|bbq|meat|halal|brunch|eats?\b|foodie|gluten|sugar|scran|supper|kitchen|drink|cocktail|coffee/, 'F&B'],
+  [/travel|tourism|experiences|hotel/, 'Travel & Tourism'],
+  [/lifestyle/, 'Lifestyle'],
+  [/health|nutrition|fitness|wellness|wellbeing|low.?cal|slimming|protein|gym|yoga/, 'Health & Wellness'],
+  [/family|parent|mum|mom|dad|kids/, 'Parenting'],
+  [/\bugc\b/, 'UGC'], [/events?\b/, 'Events'], [/fashion|style/, 'Fashion'], [/beauty|makeup|skincare/, 'Beauty'],
+  [/comedy|funny/, 'Comedy'], [/gaming|gamer/, 'Gaming'], [/sport|football/, 'Sports'], [/car|auto/, 'Automotive'],
+];
+function normNicheList(str, knownLower, unknown){
+  const out = [], left = [];
+  String(str||'').split(/[,;/]/).map(x => x.trim()).filter(Boolean).forEach(x => {
+    const k = x.toLowerCase(), hit = NICHE_MAP[k] || knownLower[k];
+    if(hit){ out.push(hit); return; }
+    const m = NICHE_RULES.filter(r => r[0].test(k)).map(r => r[1]).filter(n => knownLower[n.toLowerCase()] || Object.keys(knownLower).length === 0);
+    if(m.length) m.forEach(n => out.push(knownLower[n.toLowerCase()] || n));
+    else left.push(x);
+  });
+  // descriptors like "reviews" or "South Asian" next to a real niche are dropped; a cell with no recognisable niche is kept and flagged
+  if(!out.length) left.forEach(x => { out.push(x); if(unknown) unknown.add(x); });
+  return out.filter((x,i,a) => a.indexOf(x) === i).join(', ');
 }
 function handleOf(url){
   if(!url) return '';
@@ -2318,7 +2337,10 @@ function buildImportPlan(sheetRows){
   const keys = Object.keys(sheetRows[0] || {});
   const colFor = {};
   for(const field in HEADER_ALIASES){
-    colFor[field] = keys.find(k => HEADER_ALIASES[field].includes(k.toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim()));
+    const hits = keys.filter(k => HEADER_ALIASES[field].includes(k.toLowerCase().replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim()));
+    // for links, prefer the column that holds full URLs over one with just @handles
+    const urlish = k => sheetRows.slice(0, 20).some(r => /^https?:\/\//i.test(String(r[k] || '').trim()));
+    colFor[field] = (['instagram','tiktok','youtube'].includes(field) && hits.find(urlish)) || hits[0];
   }
   if(!colFor.name) return {error:'Could not find a Name column. The first row needs headings such as Name, Region, Niche, Instagram URL.'};
   const byIg = {}, byTt = {}, byName = {};
@@ -2326,7 +2348,7 @@ function buildImportPlan(sheetRows){
     const i = handleOf(r.instagram), t = handleOf(r.tiktok);
     if(i) byIg[i] = r; if(t) byTt[t] = r; byName[normName(r.name)] = r;
   });
-  const plan = {fresh:[], existing:[], problems:[], skippedBlank:0};
+  const plan = {fresh:[], existing:[], problems:[], skippedBlank:0, newNiches:new Set(), cols:colFor};
   const seen = new Set();
   sheetRows.forEach((raw, idx) => {
     const get = f => colFor[f] ? raw[colFor[f]] : undefined;
@@ -2352,7 +2374,7 @@ function buildImportPlan(sheetRows){
       else if(['mixed','couple','duo'].includes(x)) rec.gender = 'Mixed';
       else issues.push('Gender "' + v + '" not recognised');
     }
-    if((v = txt('niche'))) rec.niche = normNicheList(v, knownLower);
+    if((v = txt('niche'))) rec.niche = normNicheList(v, knownLower, plan.newNiches);
     ['instagram','tiktok','youtube','rate','photo','public_bio'].forEach(f => { if((v = txt(f))) rec[f] = v; });
     ['ig_followers','tt_followers','yt_followers'].forEach(f => {
       const n = parseFollowers(get(f));
@@ -2426,6 +2448,8 @@ function renderImportPreview(plan){
       <strong>${plan.existing.length}</strong> already in the database
       <br><strong>${plan.problems.length}</strong> with problems (these will not be imported)
     </div>
+    <div style="font-size:12.5px;color:var(--grey);margin-top:8px;line-height:1.6">Reading: ${['location','gender','niche','instagram','ig_followers','tiktok','tt_followers'].filter(f => plan.cols[f]).map(f => escapeHtml(plan.cols[f]) + ' → ' + ({location:'Location',gender:'Gender',niche:'Niche',instagram:'Instagram',ig_followers:'IG followers',tiktok:'TikTok',tt_followers:'TikTok followers'})[f]).join(' · ') || 'names only'}${!plan.cols.niche ? ' · <b style="color:#9b1c1c">no niche column found</b>' : ''}${!plan.cols.ig_followers && !plan.cols.tt_followers ? ' · <b style="color:#9b1c1c">no follower column found</b>' : ''}</div>
+    ${plan.newNiches.size ? `<div style="font-size:12.5px;color:#7a4e00;background:#faefd6;border-radius:4px;padding:8px 10px;margin-top:8px">These niches aren't in the Index yet and would be added as new: ${[...plan.newNiches].slice(0,12).map(escapeHtml).join(', ')}${plan.newNiches.size > 12 ? '…' : ''}. Fix them in the sheet first if they should be an existing niche.</div>` : ''}
     ${plan.problems.length ? `<ul style="font-size:12.5px;color:#9b1c1c;margin:10px 0 0 18px;padding:0;">${probs}${plan.problems.length > 12 ? '<li>…and ' + (plan.problems.length - 12) + ' more</li>' : ''}</ul>` : ''}
     ${plan.existing.length ? `<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;"><input type="checkbox" id="imp-update" style="margin-top:3px;">
       <span>Also update the ${plan.existing.length} existing talent with the values in this file (blank cells never overwrite what's already there)</span></label>` : ''}
