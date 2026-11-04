@@ -543,6 +543,37 @@ tr.gh td,tr.gh td *{font-family:Aileron,var(--body)!important;letter-spacing:.06
 .cid .btn.sm{height:34px;border-radius:9px}
 
 .civ .dropmini{white-space:nowrap}.civh span{white-space:nowrap}.duebad{color:var(--bad-fg);font-weight:700}.duewarn{color:var(--warn-fg);font-weight:700}.dueok{color:var(--ok-fg);font-weight:600}.cid{font-size:13.5px}
+/* ---- Financials v3: lighter, cleaner ---- */
+.fsum1{display:grid;grid-template-columns:1fr 1fr .8fr;margin-bottom:18px;padding:0!important}
+.fcol{padding:20px 24px 22px;min-width:0}.fcol+.fcol{border-left:1px solid var(--line)}
+.fsum1 .fbig{font-size:26px;margin:8px 0 0}
+.fsum1 .mbar2{height:8px;margin:14px 0 14px}
+.fsum1 .fl b{font-size:14.5px}
+.fcash1 .fbig{color:var(--ok-fg)}.fcash1.neg .fbig{color:var(--bad-fg)}
+.fpill{display:inline-block;margin-top:12px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:99px}
+.fpill.ok{background:var(--ok-bg);color:var(--ok-fg)}.fpill.warn{background:var(--warn-bg);color:var(--warn-fg)}
+.fin.tcard .tch{padding:18px 24px 10px;border-bottom:0}
+.bsel{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:600}
+.bsel .sel.plain{width:auto!important;min-height:0!important;height:32px;padding:0 30px 0 12px!important;font-size:13px!important;border-radius:9px!important}
+.civh{background:transparent!important;border-top:0!important;border-bottom:1px solid var(--line);padding-top:6px!important;padding-bottom:8px!important;font-size:10px!important}
+.civ{padding-top:12px;padding-bottom:12px}.civ+.civ{border-top:1px solid var(--line)}.civh+.civ{border-top:0}
+.cid .fld.dt{border-color:transparent;background:var(--soft)}
+.cid .x{opacity:.45}.cid .x:hover{opacity:1}
+.fin .tcf{background:transparent;border-top:1px solid var(--line)}
+.fin .pt thead th,.fin.tcard table thead th{background:transparent!important;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.14em;padding-top:6px;padding-bottom:8px}
+.fin tr.grp td{background:var(--soft)!important;border-top:1px solid var(--line)}
+.fin .pt td{padding-top:9px;padding-bottom:9px}
+.cpl{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.fnote{padding:12px 24px 16px;border-top:1px solid var(--line)}
+@media (max-width:1100px){.fsum1{grid-template-columns:1fr}.fcol+.fcol{border-left:0;border-top:1px solid var(--line)}}
+
+.fin .pt{border:0!important}
+.fin .pt td,.fin .pt th{border-left:0!important;border-right:0!important;border-top:0!important;border-bottom:1px solid var(--line)!important}
+.fin .pt th:first-child,.fin .pt td:first-child{padding-left:24px!important}.fin .pt th:last-child,.fin .pt td:last-child{padding-right:24px!important}
+.fin .pt tr:not(.grp) td:first-child{padding-left:40px!important}
+.fin .pt tfoot td{background:transparent!important;border-bottom:0!important;padding-top:14px;padding-bottom:14px}
+.fin .pt tr.grp td{background:var(--soft)!important}
+
 /* overview */
 .ovgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
 .ovl,.ovr{display:grid;gap:18px;min-width:0}
@@ -1948,29 +1979,22 @@ function dateCell(v,key,lbl,show){
 function finSummary(c){
   var m=moneyState(c),b=m.bud||1,sp=m.spend||1,pc=function(x,t){return Math.max(0,Math.min(100,x/t*100));};
   var w1=pc(m.paid,b),w2=Math.min(100-w1,pc(m.inv,b)),w3=pc(m.out,sp),w4=Math.min(100-w3,pc(m.ready,sp));
-  var L=function(col,lab,val,cl){return '<div class="fl"><span class="flk"><i style="background:'+col+'"></i>'+lab+'</span><b class="num"'+(cl?' style="color:'+cl+'"':'')+'>'+val+'</b></div>';};
-  var cash=m.cash,cashTxt=m.paid||m.out?'Received '+money(m.paid)+' from '+esc(c.client||'the client')+', paid '+money(m.out)+' to creators.'+(m.ready>0?' '+money(m.ready)+' is ready to pay out now.':m.inv>0?' '+money(m.inv)+' invoiced and waiting.':''):'Nothing received or paid out yet.';
-  return '<div class="fsum"><div class="card fbox"><div class="fbh"><span class="eb2">Money in · client</span><span class="pill neu">'+esc(c.cTerms||'Net 30')+'</span></div><div class="fbig num">'+money(m.bud)+'<span>budget</span></div>'
+  var L=function(col,lab,val){return '<div class="fl"><span class="flk"><i style="background:'+col+'"></i>'+lab+'</span><b class="num">'+val+'</b></div>';};
+  var cash=m.cash,note=m.paid||m.out?'In '+money(m.paid)+' · out '+money(m.out):'Nothing in or out yet';
+  return '<div class="card fsum1">'
+   +'<div class="fcol"><div class="eb2">Money in · client</div><div class="fbig num">'+money(m.bud)+'</div>'
      +'<div class="mbar2"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div>'
-     +'<div class="fleg">'+L('var(--ok-fg)','Paid',money(m.paid))+L('#D9A93F','Invoiced, waiting',money(m.inv))+L('var(--bar)','Still to invoice',money(m.left))+'</div></div>'
-   +'<div class="card fbox"><div class="fbh"><span class="eb2">Money out · creators</span><span class="pill neu">'+selected(c).length+' creator'+(selected(c).length===1?'':'s')+'</span></div><div class="fbig num">'+money(m.spend)+'<span>booked</span></div>'
+     +'<div class="fleg">'+L('var(--ok-fg)','Paid',money(m.paid))+L('#D9A93F','Invoiced',money(m.inv))+L('var(--bar)','To invoice',money(m.left))+'</div></div>'
+   +'<div class="fcol"><div class="eb2">Money out · creators</div><div class="fbig num">'+money(m.spend)+'</div>'
      +'<div class="mbar2"><i style="width:'+w3+'%;background:var(--accent)"></i><i style="width:'+w4+'%;background:#B0727F"></i></div>'
      +'<div class="fleg">'+L('var(--accent)','Paid out',money(m.out))+L('#B0727F','Ready to pay',money(m.ready))+L('var(--bar)','Left to pay',money(Math.max(0,m.spendLeft-m.ready)))+'</div></div>'
-   +'<div class="fcash'+(cash<0?' neg':'')+'"><span class="eb2">Cash position</span><b class="num">'+(cash>0?'+':'')+money(cash)+'</b><span class="small">'+cashTxt+'</span></div></div>';
-}
-function ovMoney(c){
-  var m=moneyState(c),b=m.bud||1,sp=m.spend||1,pc=function(x,t){return Math.max(0,Math.min(100,x/t*100));};
-  var row=function(lab,tot,bars,items){return '<div class="omr"><div><div class="eb2">'+lab+'</div><div class="omt num">'+tot+'</div></div><div><div class="mbar2" style="margin:4px 0 10px">'+bars+'</div><div class="oml">'+items+'</div></div></div>';};
-  var it=function(col,l,v,cl){return '<span><i style="background:'+col+'"></i>'+l+' <b class="num"'+(cl?' style="color:'+cl+'"':'')+'>'+v+'</b></span>';};
-  var w1=pc(m.paid,b),w2=Math.min(100-w1,pc(m.inv,b)),w3=pc(m.out,sp);
-  return '<div class="card rail om"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 class="sh">Money</h2><button class="lkb" data-tab="Financials">Financials →</button></div>'
-    +row('Client',money(m.bud),'<i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i>',it('var(--ok-fg)','Paid',money(m.paid))+it('#D9A93F','Invoiced',money(m.inv))+it('var(--bar)','To invoice',money(m.left)))
-    +row('Creators',money(m.spend),'<i style="width:'+w3+'%;background:var(--accent)"></i>',it('var(--accent)','Paid out',money(m.out))+it('var(--bar)','Left to pay',money(m.spendLeft))+'<span>Cash <b class="num" style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></span>')+'</div>';
+   +'<div class="fcol fcash1'+(cash<0?' neg':'')+'"><div class="eb2">Cash position</div><div class="fbig num">'+(cash>0?'+':'')+money(cash)+'</div><div class="small">'+note+'</div>'
+     +(m.ready>0?'<div class="fpill ok">'+money(m.ready)+' ready to pay out</div>':m.inv>0?'<div class="fpill warn">'+money(m.inv)+' waiting on the client</div>':'')+'</div></div>';
 }
 function tabFin(c){
   var ed=canEdit(),v=c.cinv||[],tot=0,issued=v.some(function(x){return x.invAt||x.paidAt||x.file;});v.forEach(function(x){tot+=x.amount;});
   var h=finSummary(c);
-  h+='<div class="card fin tcard"><div class="tch"><h2 class="sh">Client invoices</h2><div class="seg">'+BILL.map(function(b){return '<button class="'+(c.billing===b[0]?'on':'')+'" data-bill="'+b[0]+'"'+(ed?'':' disabled')+'>'+b[1]+'</button>';}).join('')+'</div></div>';
+  h+='<div class="card fin tcard"><div class="tch"><h2 class="sh">Client invoices</h2><label class="bsel"><span>Billing</span><select class="sel plain" id="billsel"'+(ed&&!issued?'':' disabled')+' title="'+(issued?'Can’t be changed once an invoice has been issued':'How the client is billed')+'">'+BILL.map(function(b){return '<option value="'+b[0]+'"'+(c.billing===b[0]?' selected':'')+'>'+b[1]+'</option>';}).join('')+'</select></label></div>';
   if(v.length)h+='<div class="civ civh"><span>Invoice</span><span class="r">Amount</span><span>Date invoiced</span><span>Payment due</span><span>Date paid</span><span>Invoice file</span><span class="r">Status</span></div>';
   if(!v.length)h+='<div class="small" style="padding:6px 24px 20px">No invoices set up. Pick how the client is billed above'+(c.billing==='custom'?', or add one below':'')+'.</div>';
   v.forEach(function(x){var st=cliSt(x);
@@ -1985,9 +2009,6 @@ function tabFin(c){
      +'<div class="r">'+payPill(st==='Not due'?'Not due':st).replace('>Not due<','>Not invoiced<')+(ed&&c.billing==='custom'?' <button class="x" data-cidel="'+x.id+'" title="Delete invoice" aria-label="Delete invoice">×</button>':'')+'</div></div>';});
   h+='<div class="tcf"><b>Total <span class="num">'+money(tot)+'</span></b><span class="small">'+(Math.abs(tot-c.budget)<0.5?'<span style="color:var(--ok-fg)">✓ Matches the budget</span>':'<span style="color:var(--warn-fg)">Budget is '+money(c.budget)+(tot<c.budget?' · '+money(c.budget-tot)+' not on an invoice':' · invoices are '+money(tot-c.budget)+' over')+'</span>')+'</span></div>';
   if(ed&&c.billing==='custom')h+='<div style="padding:0 24px 14px"><button class="btn sm" data-act="ciadd">+ Add invoice</button></div>';
-  var pd=v.filter(function(x){return x.paidAt;});
-  if(pd.length){var last=pd[pd.length-1];h+='<div class="cichk ok" style="margin:0 24px 14px"><span>'+esc(last.label)+' paid '+fd(last.paidAt)+': its deliverables show <b style="font-weight:500">Client payment: Paid</b>, and their creators can be paid.</span><span>✓</span></div>';}
-  if(issued)h+='<div class="small" style="padding:0 24px 16px">Billing can’t be switched once an invoice has been issued.</div>';
   h+='</div>';
   // creators: every payment input lives here
   var ed=canEdit(),rows=selected(c),f=S.crf||'All',T={t:0,p:0,r:0};
@@ -2005,12 +2026,12 @@ function tabFin(c){
     ds.forEach(function(d){var r=crRateOf(i,d),ci=cinvFor(c,d),cs=cliSt(ci),v=inv[d.crInv],st=stOf(i,d);
       h+='<tr'+(ed?' data-crrow="'+i.id+'|'+d.id+'"':'')+'><td style="padding-left:26px"><button class="lkb" data-dd="'+i.id+'|'+d.id+'">'+esc(d.name)+'</button></td><td>'+liveCell(d)+'</td>'
         +'<td class="r">'+(ed?'<input class="in rc" inputmode="decimal" data-crr="'+i.id+'|'+d.id+'" value="'+(r!=null?money(r):'')+'" placeholder="Set rate" title="'+(d.crRate!=null?'Set by hand. Clear it to use the rate card':'From the rate card')+'" aria-label="Creator rate">':'<span class="num">'+(r!=null?money(r):'–')+'</span>')+'</td>'
-        +'<td>'+payPill(cs)+'<div class="small">'+esc(ci?ci.label:'No invoice')+'</div></td>'
-        +'<td>'+(v?'<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="pdfb" data-crpdf="'+i.id+'|'+v.id+'"'+(v.file?'':' disabled')+'><span class="pdf">PDF</span>'+esc(v.number||'Invoice')+'</button>'+(ed?'<button class="x" data-crdel="'+i.id+'|'+v.id+'" title="Delete this creator invoice" aria-label="Delete this creator invoice">×</button>':'')+'</span><div class="small">'+(v.date?fd(v.date)+' · ':'')+money(v.amount)+'</div>':'<span class="small">No invoice yet</span>')+'</td>'
+        +'<td><span class="cpl">'+payPill(cs)+(ci?'<span class="small">'+esc(ci.label)+'</span>':'')+'</span></td>'
+        +'<td>'+(v?'<span class="row" style="gap:4px;flex-wrap:nowrap"><button class="pdfb" data-crpdf="'+i.id+'|'+v.id+'"'+(v.file?'':' disabled')+'><span class="pdf">PDF</span>'+esc(v.number||'Invoice')+'</button>'+(ed?'<button class="x" data-crdel="'+i.id+'|'+v.id+'" title="Delete this creator invoice" aria-label="Delete this creator invoice">×</button>':'')+'</span><div class="small">'+(v.date?fd(v.date)+' · ':'')+money(v.amount)+'</div>':'<span class="small">–</span>')+'</td>'
         +'<td>'+(ed?'<button class="pillb" data-crst="'+i.id+'|'+d.id+'" title="Click to change">'+payPill(d.crStatus)+'</button>':payPill(d.crStatus))+'<div class="small"'+(st==='On hold'?' style="color:var(--warn-fg)"':st==='Ready to pay'?' style="color:var(--ok-fg)"':'')+'>'+(st==='On hold'?'On hold · '+(cs!=='Paid'?'waits for client':'not posted'):st==='Ready to pay'?'Ready to pay':st==='Paid'&&d.crPaidAt?'Paid '+fd(d.crPaidAt):'')+'</div>'+(ed&&v&&st==='Ready to pay'&&i.deliv.filter(function(z){return z.crInv===v.id;}).every(function(z){return stOf(i,z)==='Ready to pay'||stOf(i,z)==='Paid';})?'<button class="btn sm" style="margin-top:4px" data-crpay="'+i.id+'|'+v.id+'">Mark invoice paid</button>':'')+'</td></tr>';});
   });
   h+='</tbody><tfoot><tr><td colspan="2"><b>Total · '+rows.length+' creator'+(rows.length===1?'':'s')+'</b></td><td class="r num"><b>'+money(T.t)+'</b></td><td colspan="3" class="small">Paid '+money(T.p)+' · Ready to pay '+money(T.r)+' · Left '+money(T.t-T.p)+'</td></tr></tfoot></table>';
-  h+='<div class="small" style="padding:12px 24px 16px">Drop a creator invoice on a creator (or one of their deliverables) to record it. Click a creator payment to move it on; Paid unlocks once the content is live and the client has paid. × deletes a creator invoice and puts its deliverables back to Not due.</div>';
+  h+='<div class="small fnote">Drop a creator’s invoice onto their row to log it. Creators can be marked paid once their content is live and the client has paid.</div>';
   return h+'</div>';
 }
 function ciUpload(iid,file){if(!file)return;if(file.size>4*1024*1024){toast(file.name+' is over 4MB. Compress it and try again.');return;}
@@ -2663,6 +2684,7 @@ document.addEventListener('change',function(e){
   if(t.id==='lgroup'){S.lf.group=t.value;render();return;}
   if(d.mdsel){if(t.checked)S.mdSel[d.mdsel]=1;else delete S.mdSel[d.mdsel];render();return;}
   if(t.id==='dfg'){S.dfg=t.value;render();return;}
+  if(t.id==='billsel'){var bv=t.value;if(FULL.billing!==bv)post(P(''),'PATCH',{billing:bv},{msg:'Billing updated'});return;}
   if(t.id==='dft'){S.dft=t.value;S.dsel={};render();return;}
   if(t.id==='calwho'){S.calWho=t.value;S.calM=null;render();return;}
   if(t.hasAttribute&&t.hasAttribute('data-rcr')){var rp=t.getAttribute('data-rcr').split('|'),ri=find(rp[0]);if(!ri)return;var rv=t.value.trim(),rn=num(rv);if(rv!==''&&!(rn>=0)){toast('Enter a rate, e.g. 2500');render();return;}var rs=ri.scope.map(function(x){return {item:x.item,qty:x.qty,rate:x.rate};});if(rv==='')delete rs[+rp[1]].rate;else rs[+rp[1]].rate=r2(rn);saveRateCard(ri,rs);return;}
