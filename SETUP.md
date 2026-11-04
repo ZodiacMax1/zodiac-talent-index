@@ -361,3 +361,10 @@ Every main page now opens with the same burgundy header with big figure tiles, a
 - Talent Index: the header, toolbar and Talent/Followers/Instagram/TikTok/YouTube tiles sit in the burgundy band.
 Update 72b: toned down for consistency. One flat burgundy (#2A0009) for the sidebar and every page header, so they read as one frame. Figure tiles show just the label and number (no extra lines underneath); Margin % is simply green or red. Billing pill removed from the campaign header. Budget uses the same currency symbol as the other figures. Home blends from the sidebar burgundy into its starfield. Tiles stay five across down to 980px wide.
 Update 72c: back to the black rounded banner with the Zodiac Global logo, now used the same way on every page (Talent Index, campaign list, each campaign, Sales). Logo, divider, title in the same font, actions on the right, and the figure tiles inside the banner with just a label and number. Sidebar and Home back to black.
+Update 73: every campaign tab redesigned to match the Overview, and one style across the platform.
+- Tabs: Creators is first and campaigns open on it.
+- Financials: Money in / Money out cards (big total, one bar, three figures), a Cash position line in plain English, client invoices as rows with an Invoiced → Paid tracker, creator payments grouped by creator with a paid-so-far bar.
+- Creators: title, deadline chips and Add button inside the table card.
+- Deliverables: a stage strip (Brief sent → Live) with counts; click a stage to filter. Filter chips match everywhere.
+- Overview: one compact Money card.
+- Everywhere: sentence-case section titles, one number font, same chips, same cards. Client pages and Reports use the same black banner (no logo on detail pages). Talent Index section heading matches.
