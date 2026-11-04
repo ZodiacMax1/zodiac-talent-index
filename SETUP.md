@@ -335,3 +335,8 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 
 ## Update 69 — Customisable Forecast report
 Reports → Forecast now has a "Customise the report" panel. One layout is saved for the whole team (app_settings key `forecast_cfg`, PUT /api/campaigns/report-config). You can set the title, the report month (blank means the current month), the start of the financial year, what Key Updates covers, which stages count as pipeline and conversations, show or hide headline cards, by-status, agreed list, margins, likelihood and top lines, rename and reorder sections or hide them, and add an intro note. "Reset to the standard layout" puts everything back. Viewers can see the settings but can't change them.
+
+## Update 70 — Connect Claude (Zodiac OS connector)
+Anyone with their own login can go to Account → Connect Claude, make a personal link (`/mcp/zos_…`) and add it to their Claude as a custom connector. Their Claude can then read the Talent Index, campaigns, deliverables, invoices and the live monday pipeline, and shortlist an existing creator on a campaign (Claude shows a preview and must be told yes first). It cannot change fees, stages, contracts or invoices, delete anything or write to monday. It works through the normal API as that person, so their role applies and everything is in the activity log.
+Links are stored hashed (table `claude_keys`, migration 24). Making a new link switches off the old one. Admins see everyone's connections there and can switch any of them off. Deactivating a user also stops their link.
+Tools: search_talent, get_talent, list_campaigns, get_campaign, sales_pipeline, needs_attention, add_creator_to_campaign.
