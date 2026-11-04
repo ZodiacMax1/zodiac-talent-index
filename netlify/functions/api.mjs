@@ -608,6 +608,33 @@ export default async (req, context) => {
     }
 
     // ---- Campaign Management
+    // ---- Claude connector keys: each named user can make one personal link; admins can see and switch off anyone's
+    if (route === 'claude-keys') {
+      if (!me.uid) return json({ error: 'Sign in with your own email to connect Claude' }, 403);
+      const kh = (k) => createHash('sha256').update(`${process.env.AUTH_SECRET || ''}|claude|${k}`).digest('hex');
+      const list = async () => (await query(
+        `SELECT k.id, k.user_id, u.name, k.hint, k.created_at, k.last_used_at, k.uses FROM claude_keys k JOIN users u ON u.id = k.user_id
+          WHERE k.revoked_at IS NULL ${me.admin ? '' : 'AND k.user_id = $1'} ORDER BY lower(u.name)`, me.admin ? [] : [me.uid]))
+        .map((k) => ({ id: Number(k.id), uid: Number(k.user_id), name: k.name, hint: k.hint, created: k.created_at, lastUsed: k.last_used_at, uses: k.uses, mine: Number(k.user_id) === me.uid }));
+      if (method === 'GET') return json({ keys: await list() });
+      if (method === 'POST' && !parts[1]) {
+        const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        const key = 'zos_' + Array.from(randomBytes(40), (b) => chars[b % chars.length]).join('');
+        await query('UPDATE claude_keys SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL', [me.uid]);
+        await query('INSERT INTO claude_keys (user_id, key_hash, hint) VALUES ($1, $2, $3)', [me.uid, kh(key), key.slice(-4)]);
+        await logAct('claude.key', String(me.uid), me.name, { action: 'created' });
+        return json({ url: `${url.origin}/mcp/${key}`, keys: await list() }, 201);
+      }
+      if (method === 'DELETE' && parts[1]) {
+        const [k] = await query('SELECT k.user_id, u.name FROM claude_keys k JOIN users u ON u.id = k.user_id WHERE k.id = $1 AND k.revoked_at IS NULL', [parts[1]]);
+        if (!k) return json({ error: 'Not found' }, 404);
+        if (Number(k.user_id) !== me.uid && !me.admin) return json({ error: 'Admin access required' }, 403);
+        await query('UPDATE claude_keys SET revoked_at = now() WHERE id = $1', [parts[1]]);
+        await logAct('claude.key', String(k.user_id), k.name, { action: 'switched off' });
+        return json({ keys: await list() });
+      }
+    }
+
     if (route === 'campaigns') return handleCampaigns({ req, parts, method, json, needEdit, actor, logAct });
 
     // ---- Shared lists and decks (anyone logged in can save)
