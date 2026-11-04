@@ -978,7 +978,7 @@ document.addEventListener('drop',function(e){var z=e.target.closest&&e.target.cl
 
 /* Closed Won check against monday (read only: figures come from monday, nothing is written back) */
 function mdBadge(c){
-  if(!won(c)||!c.mondayItemId)return '';
+  if(!c.mondayItemId||c.stage==='8 - Closed Lost')return '';
   var k=c.mondayCheck;if(!k)return '<button class="mdb" data-act="mdopen">Check against monday</button>';
   var n=(k.diffs||[]).length;
   return n?'<button class="mdb bad" data-act="mdopen"><i></i>'+n+' difference'+(n===1?'':'s')+' with monday</button>':'<button class="mdb ok" data-act="mdopen" title="Checked '+esc(fts(k.at))+'"><i></i>Matches monday</button>';
@@ -2186,7 +2186,7 @@ function find(iid){return FULL?FULL.infl.filter(function(i){return i.id===iid;})
 function cdel(){var i=find(S.dd.iid);return i.deliv.filter(function(z){return z.id===S.dd.did;})[0];}
 function num(v){var n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:NaN;}
 function loadList(){return api('/campaigns').then(function(j){CAMPS=j.campaigns;LISTERR='';READY=true;}).catch(function(e){LISTERR=e.message;READY=true;});}
-function loadOne(quiet){if(!S.cid)return Promise.resolve();return api('/campaigns/'+S.cid).then(function(j){FULL=hydrate(j.campaign);if(!quiet&&canEdit()&&won(FULL)&&FULL.mondayItemId&&(!FULL.mondayCheck||Date.now()-new Date(FULL.mondayCheck.at)>6e5))setTimeout(function(){mdRun(true);},400);if(!quiet||!document.activeElement||!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))render();}).catch(function(e){toast(e.message);});}
+function loadOne(quiet){if(!S.cid)return Promise.resolve();return api('/campaigns/'+S.cid).then(function(j){FULL=hydrate(j.campaign);if(!quiet&&canEdit()&&FULL.mondayItemId&&FULL.stage!=='8 - Closed Lost'&&(!FULL.mondayCheck||Date.now()-new Date(FULL.mondayCheck.at)>6e5))setTimeout(function(){mdRun(true);},400);if(!quiet||!document.activeElement||!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))render();}).catch(function(e){toast(e.message);});}
 function loadShares(){return api('/shares').then(function(j){S.shares=j.shares;if(S.view==='campaign'&&S.tab==='Campaign Overview')render();}).catch(function(){S.shares=[];});}
 // Send a change to the server; the answer is the full, recalculated campaign
 function post(path,method,body,o){

@@ -185,7 +185,7 @@ const near = (a, b, tol) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= tol
 const normTxt = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const fmtD = (d) => (d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '');
 export async function mondayCheck(onlyIds) {
-  const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL AND arch IS NULL AND monday_item_id IS NOT NULL AND monday_stage = '7 - Won'` + (onlyIds ? ' AND id = ANY($1::text[])' : ''), onlyIds ? [onlyIds] : []);
+  const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL AND arch IS NULL AND monday_item_id IS NOT NULL AND monday_stage <> '8 - Closed Lost'` + (onlyIds ? ' AND id = ANY($1::text[])' : ''), onlyIds ? [onlyIds] : []);
   if (!rows.length) return { checked: 0 };
   const cts = await query(`SELECT campaign_id, initial, neg, client_rate FROM campaign_talents WHERE campaign_id = ANY($1::text[]) AND approved = 'Yes' AND archived IS NULL`, [rows.map((r) => r.id)]);
   const inv = await query(`SELECT campaign_id, invoiced_at, paid_at FROM client_invoices WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]).catch(() => []);
@@ -210,7 +210,8 @@ export async function mondayCheck(onlyIds) {
       if (m.target != null && m.target > 0 && m.target <= 1) m.target = Math.round(m.target * 1000) / 10; // stored as a fraction
       const sym = (cur) => (cur === 'GBP' ? '£' : cur === 'USD' ? '$' : cur === 'AED' ? 'AED ' : (cur ? cur + ' ' : ''));
       const fm = (cur, v) => sym(cur) + Math.round(Number(v) || 0).toLocaleString('en-GB');
-      if (m.stage && !WON_ON_MONDAY.includes(m.stage)) diffs.push({ key: 'stage', label: 'Stage', ours: '7 - Won', theirs: m.stage, use: MONDAY_STAGES.includes(m.stage) ? { stage: m.stage } : null });
+      const isWon = c.monday_stage === '7 - Won', theyWon = WON_ON_MONDAY.includes(m.stage);
+      if (m.stage && (isWon ? !theyWon : m.stage !== c.monday_stage)) diffs.push({ key: 'stage', label: 'Stage', ours: c.monday_stage, theirs: m.stage, use: MONDAY_STAGES.includes(m.stage) ? { stage: m.stage } : theyWon ? { stage: '7 - Won' } : null });
       if (m.cur && m.cur !== c.cur) diffs.push({ key: 'cur', label: 'Currency', ours: c.cur, theirs: m.cur });
       if (m.budget && (!m.cur || m.cur === c.cur) && !near(m.budget, c.budget, Math.max(1, Number(c.budget) * 0.005))) diffs.push({ key: 'budget', label: 'Budget', ours: fm(c.cur, c.budget), theirs: fm(m.cur || c.cur, m.budget), use: { budget: m.budget } });
       if (m.target != null && m.target < 100 && !near(m.target, c.target_margin, 0.5)) diffs.push({ key: 'target', label: 'Target margin', ours: Number(c.target_margin) + '%', theirs: m.target + '%', use: { target: m.target } });
@@ -223,10 +224,10 @@ export async function mondayCheck(onlyIds) {
       if (m.start && c.start_date && m.start !== c.start_date) diffs.push({ key: 'start', label: 'Start date', ours: fmtD(c.start_date), theirs: fmtD(m.start), use: { start: m.start } });
       if (m.owner && c.owner && !normTxt(m.owner).includes(normTxt(c.owner).slice(0, 4)) && !normTxt(c.owner).includes(normTxt(m.owner.split(',')[0]).slice(0, 4))) diffs.push({ key: 'owner', label: 'Owner', ours: c.owner, theirs: m.owner, use: { owner: m.owner.split(',')[0].trim() } });
       if (m.client && c.client && normTxt(m.client) !== normTxt(c.client)) diffs.push({ key: 'client', label: 'Client', ours: c.client, theirs: m.client, use: { client: m.client } });
-      const mine = inv.filter((v) => v.campaign_id === c.id);
-      const ourInv = !mine.length || mine.every((v) => !v.invoiced_at) ? 'Not Invoiced' : mine.every((v) => v.paid_at) ? 'Paid' : 'Issued';
+      const mine = isWon ? inv.filter((v) => v.campaign_id === c.id) : null;
+      const ourInv = !mine || !mine.length || mine.every((v) => !v.invoiced_at) ? 'Not Invoiced' : mine.every((v) => v.paid_at) ? 'Paid' : 'Issued';
       const theirInv = m.invStatus === 'Late' ? 'Issued' : m.invStatus;
-      if (theirInv && theirInv !== ourInv) diffs.push({ key: 'invoice', label: 'Invoicing', ours: ourInv === 'Issued' ? 'Invoiced, not all paid' : ourInv, theirs: m.invStatus + (m.paid ? ' · paid ' + fmtD(m.paid) : m.invSent ? ' · sent ' + fmtD(m.invSent) : ''), note: true });
+      if (isWon && theirInv && theirInv !== ourInv) diffs.push({ key: 'invoice', label: 'Invoicing', ours: ourInv === 'Issued' ? 'Invoiced, not all paid' : ourInv, theirs: m.invStatus + (m.paid ? ' · paid ' + fmtD(m.paid) : m.invSent ? ' · sent ' + fmtD(m.invSent) : ''), note: true });
     }
     if (diffs.length) flagged++;
     await query('UPDATE campaigns SET monday_check = $2 WHERE id = $1', [c.id, JSON.stringify({ at, diffs, monday: m })]);
