@@ -480,7 +480,7 @@ h2.sh,.card.fin h2.sh{font:700 15.5px var(--body)!important;letter-spacing:-.005
 .fcash{grid-column:1/-1;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 24px;border-radius:16px;background:var(--ok-bg);border:1px solid transparent}
 .fcash b{font-size:22px;font-weight:800!important;color:var(--ok-fg);font-family:Aileron,var(--body)}.fcash .eb2{color:var(--ok-fg)}
 .fcash.neg{background:var(--bad-bg)}.fcash.neg b,.fcash.neg .eb2{color:var(--bad-fg)}
-.civ{display:grid;grid-template-columns:minmax(0,1.3fr) 120px 165px 140px 165px minmax(0,1fr) 110px;gap:16px;align-items:center;padding:14px 24px;border-top:1px solid var(--line)}
+.civ{display:grid;grid-template-columns:minmax(0,1.4fr) 120px 175px minmax(0,1fr) 175px 90px 110px;gap:16px;align-items:center;padding:14px 24px;border-top:1px solid var(--line)}
 .civ.fdrop{background:var(--accent-soft)}
 .civa .in{width:120px;text-align:right}
 .ctrk{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -573,6 +573,13 @@ tr.gh td,tr.gh td *{font-family:Aileron,var(--body)!important;letter-spacing:.06
 .fin .pt tr:not(.grp) td:first-child{padding-left:40px!important}
 .fin .pt tfoot td{background:transparent!important;border-bottom:0!important;padding-top:14px;padding-bottom:14px}
 .fin .pt tr.grp td{background:var(--soft)!important}
+
+.crtg{width:24px;height:24px;border-radius:7px;border:1px solid var(--line2);background:var(--surface);cursor:pointer;font-size:11px;color:var(--muted);flex:none}
+.crtg:hover{color:var(--fg)}
+.fin .pt tr.grp.crg td{background:var(--surface)!important}.fin .pt tr.grp.crg.open td{background:var(--soft)!important}.fin .pt tr.crg{cursor:pointer}
+.cgs{white-space:nowrap}.cgs .pill{font-size:11.5px;margin-right:4px}
+.clip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);cursor:pointer;font-weight:600;padding:6px 8px;border-radius:8px}
+.clip:hover{color:var(--accent);background:var(--soft)}
 
 /* overview */
 .ovgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
@@ -1038,7 +1045,7 @@ function viewCampaign(){
   var tabs=['Influencers','Campaign Overview','Deliverables','Content Calendar'].concat(w?['Financials']:[]);
   var arc=c.infl.length-s.n;
   h=cHero(c,s,ef,w,tabs,HC.crumb)+h;
-  if(S.tab!=='Campaign Overview')h+=nextUpBar(c);
+  if(S.tab!=='Campaign Overview'&&S.tab!=='Financials')h+=nextUpBar(c);
   if(tabs.indexOf(S.tab)<0)S.tab='Influencers';
   if(S.tab==='Influencers'){h+=tabInfl(c);if(w&&arc>0)h+='<div style="margin-top:18px"><button class="crumb" data-act="arctog" style="font-size:14px;color:var(--fg)">'+(S.showArc?'▾':'▸')+' Archived creators ('+arc+')</button></div>'+(S.showArc?'<div style="margin-top:10px">'+tabArchive(c)+'</div>':'');}
   else if(S.tab==='Campaign Overview')h+=tabSetup(c)+'<div class="ovdocs"><h2 class="sh" style="margin:0 0 12px">Documents &amp; links</h2>'+tabDecks(c)+'</div>';
@@ -1995,17 +2002,17 @@ function tabFin(c){
   var ed=canEdit(),v=c.cinv||[],tot=0,issued=v.some(function(x){return x.invAt||x.paidAt||x.file;});v.forEach(function(x){tot+=x.amount;});
   var h=finSummary(c);
   h+='<div class="card fin tcard"><div class="tch"><h2 class="sh">Client invoices</h2><label class="bsel"><span>Billing</span><select class="sel plain" id="billsel"'+(ed&&!issued?'':' disabled')+' title="'+(issued?'Can’t be changed once an invoice has been issued':'How the client is billed')+'">'+BILL.map(function(b){return '<option value="'+b[0]+'"'+(c.billing===b[0]?' selected':'')+'>'+b[1]+'</option>';}).join('')+'</select></label></div>';
-  if(v.length)h+='<div class="civ civh"><span>Invoice</span><span class="r">Amount</span><span>Date invoiced</span><span>Payment due</span><span>Date paid</span><span>Invoice file</span><span class="r">Status</span></div>';
+  if(v.length)h+='<div class="civ civh"><span>Invoice</span><span class="r">Amount</span><span>Date invoiced</span><span>Payment due</span><span>Date paid</span><span>File</span><span class="r">Status</span></div>';
   if(!v.length)h+='<div class="small" style="padding:6px 24px 20px">No invoices set up. Pick how the client is billed above'+(c.billing==='custom'?', or add one below':'')+'.</div>';
   v.forEach(function(x){var st=cliSt(x);
     var tdays={'Upfront':0,'Net 30':30,'Net 45':45,'Net 60':60}[c.cTerms]; if(tdays==null)tdays=30;
     var due=x.invAt?addDays(x.invAt,tdays):null,dd=due&&!x.paidAt?daysBetween(TODAY,due):null;
-    var dueC=!x.invAt?'<span class="small">'+esc(c.cTerms||'Net 30')+' after invoicing</span>':x.paidAt?'<span class="dueok">'+fd(due)+'</span><div class="small">'+(x.paidAt<=due?'Paid on time':'Paid '+daysBetween(due,x.paidAt)+' days late')+'</div>':'<span class="'+(dd<0?'duebad':dd<=7?'duewarn':'')+'">'+fd(due)+'</span><div class="small">'+(dd<0?(-dd)+' day'+(dd===-1?'':'s')+' overdue':dd===0?'Due today':'In '+dd+' day'+(dd===1?'':'s'))+'</div>';
+    var dueC=!x.invAt?'<span class="small">'+esc(c.cTerms||'Net 30')+'</span>':x.paidAt?'<span class="dueok">'+fd(due)+'</span><div class="small">'+(x.paidAt<=due?'Paid on time':'Paid '+daysBetween(due,x.paidAt)+' days late')+'</div>':'<span class="'+(dd<0?'duebad':dd<=7?'duewarn':'')+'">'+fd(due)+'</span><div class="small">'+(dd<0?(-dd)+' day'+(dd===-1?'':'s')+' overdue':dd===0?'Due today':'In '+dd+' day'+(dd===1?'':'s'))+'</div>';
     var trk='<div class="cid">'+dateCell(x,'invAt','Invoiced',true)+'</div><div class="cid">'+dueC+'</div><div class="cid">'+dateCell(x,'paidAt','Paid',!!x.invAt)+'</div>';
     h+='<div class="civ" data-cirow="'+x.id+'"><div><b>'+esc(x.label)+'</b><div class="small">'+covers(c,x)+'</div></div>'
      +'<div class="r civa">'+(ed?'<input class="in rc" inputmode="decimal" data-cia="'+x.id+'" value="'+money(x.amount)+'" aria-label="Invoice amount">':'<span class="num">'+money(x.amount)+'</span>')+'</div>'
      +trk
-     +'<div>'+(x.file?'<button class="pdfb" data-cifile="'+x.id+'"><span class="pdf">PDF</span>'+esc(x.file.name)+'</button>'+(ed?' <button class="x" data-cifrm="'+x.id+'" title="Remove file" aria-label="Remove file">×</button>':''):ed?'<label class="dropmini">↑ Drop invoice PDF<input type="file" data-ciup="'+x.id+'" accept=".pdf,image/*,.doc,.docx" style="display:none"></label>':'<span class="small">–</span>')+'</div>'
+     +'<div>'+(x.file?'<button class="pdfb" data-cifile="'+x.id+'" title="'+esc(x.file.name)+'"><span class="pdf">PDF</span>View</button>'+(ed?' <button class="x" data-cifrm="'+x.id+'" title="Remove file" aria-label="Remove file">×</button>':''):ed?'<label class="clip" title="Attach the invoice PDF (or drop it on this row)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg>Attach<input type="file" data-ciup="'+x.id+'" accept=".pdf,image/*,.doc,.docx" style="display:none"></label>':'<span class="small">–</span>')+'</div>'
      +'<div class="r">'+payPill(st==='Not due'?'Not due':st).replace('>Not due<','>Not invoiced<')+(ed&&c.billing==='custom'?' <button class="x" data-cidel="'+x.id+'" title="Delete invoice" aria-label="Delete invoice">×</button>':'')+'</div></div>';});
   h+='<div class="tcf"><b>Total <span class="num">'+money(tot)+'</span></b><span class="small">'+(Math.abs(tot-c.budget)<0.5?'<span style="color:var(--ok-fg)">✓ Matches the budget</span>':'<span style="color:var(--warn-fg)">Budget is '+money(c.budget)+(tot<c.budget?' · '+money(c.budget-tot)+' not on an invoice':' · invoices are '+money(tot-c.budget)+' over')+'</span>')+'</span></div>';
   if(ed&&c.billing==='custom')h+='<div style="padding:0 24px 14px"><button class="btn sm" data-act="ciadd">+ Add invoice</button></div>';
@@ -2021,7 +2028,11 @@ function tabFin(c){
     var ds=i.deliv.slice().sort(function(a,b2){return (dDate(a)||'9')<(dDate(b2)||'9')?-1:1;}).filter(function(d){return f==='All'||stOf(i,d)===f;});
     i.deliv.forEach(function(d){if(stOf(i,d)==='Ready to pay')T.r+=crRateOf(i,d)||0;});
     if(f!=='All'&&!ds.length)return;
-    var pp=t.t?Math.round(t.p/t.t*100):0;h+='<tr class="grp"'+(ed?' data-crdrop="'+i.id+'"':'')+'><td colspan="2"><div class="cgh"><span class="cav sm">'+initials(ix(i.tid).name)+'</span><div><button class="lkb strong" data-pick="'+i.id+'">'+esc(ix(i.tid).name)+'</button><div class="small">'+i.deliv.length+' deliverable'+(i.deliv.length===1?'':'s')+' · contract '+esc(i.contract==='–'?'not sent':i.contract.toLowerCase())+'</div></div></div></td><td class="r"><b class="num">'+money(t.t)+'</b></td><td><div class="cgp"><div class="small">Paid '+money(t.p)+' · '+pp+'%</div><div class="cgb"><i style="width:'+pp+'%"></i></div></div></td><td colspan="2" class="r">'+(ed&&i.deliv.length?'<label class="dropc">↥ Drop creator invoice<input type="file" data-crfile="'+i.id+'" accept=".pdf,image/*,.doc,.docx" style="display:none"></label>':'')+'</td></tr>';
+    S.crOpen=S.crOpen||{};var isOpen=f!=='All'||!!S.crOpen[i.id];
+    var sc={};i.deliv.forEach(function(d){var k=stOf(i,d);sc[k]=(sc[k]||0)+1;});
+    var stl=['Ready to pay','On hold','Not invoiced','Paid'].filter(function(k){return sc[k];}).map(function(k){return '<span class="pill '+({'Ready to pay':'ok','On hold':'warn','Not invoiced':'neu','Paid':'ok'}[k])+'">'+sc[k]+' '+k.toLowerCase()+'</span>';}).join(' ');
+    var pp=t.t?Math.round(t.p/t.t*100):0;h+='<tr class="grp crg'+(isOpen?' open':'')+'"'+(ed?' data-crdrop="'+i.id+'"':'')+'><td colspan="2"><div class="cgh"><button class="crtg" data-crtog="'+i.id+'" aria-label="'+(isOpen?'Hide':'Show')+' deliverables" aria-expanded="'+isOpen+'">'+(isOpen?'▾':'▸')+'</button><span class="cav sm">'+initials(ix(i.tid).name)+'</span><div><button class="lkb strong" data-pick="'+i.id+'">'+esc(ix(i.tid).name)+'</button><div class="small">'+i.deliv.length+' deliverable'+(i.deliv.length===1?'':'s')+' · contract '+esc(i.contract==='–'?'not sent':i.contract.toLowerCase())+'</div></div></div></td><td class="r"><b class="num">'+money(t.t)+'</b></td><td><div class="cgp"><div class="small">Paid '+money(t.p)+' · '+pp+'%</div><div class="cgb"><i style="width:'+pp+'%"></i></div></div></td><td class="cgs">'+stl+'</td><td class="r">'+(ed&&i.deliv.length?'<label class="dropc">↥ Drop creator invoice<input type="file" data-crfile="'+i.id+'" accept=".pdf,image/*,.doc,.docx" style="display:none"></label>':'')+'</td></tr>';
+    if(!isOpen)return;
     if(!i.deliv.length)h+='<tr><td colspan="6" class="small" style="padding-left:26px">No deliverables yet</td></tr>';
     ds.forEach(function(d){var r=crRateOf(i,d),ci=cinvFor(c,d),cs=cliSt(ci),v=inv[d.crInv],st=stOf(i,d);
       h+='<tr'+(ed?' data-crrow="'+i.id+'|'+d.id+'"':'')+'><td style="padding-left:26px"><button class="lkb" data-dd="'+i.id+'|'+d.id+'">'+esc(d.name)+'</button></td><td>'+liveCell(d)+'</td>'
@@ -2757,7 +2768,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-shx],[data-shd],[data-mdx],[data-mduse],[data-mdgo],[data-fccmv],[data-dfgb],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-shx],[data-shd],[data-mdx],[data-mduse],[data-mdgo],[data-fccmv],[data-dfgb],[data-crtog],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -2796,6 +2807,7 @@ document.addEventListener('click',function(e){
   else if(d.mdgo){S.md=false;S.tab=d.mdgo;render();}
   else if(d.shd){shSnap();S.sh.days=Number(d.shd);render();}
   else if(d.apday!==undefined){apSnap();if(S.ap.days[d.apday])delete S.ap.days[d.apday];else S.ap.days[d.apday]=1;render();}
+  else if(d.crtog){S.crOpen=S.crOpen||{};S.crOpen[d.crtog]=!S.crOpen[d.crtog];render();}
   else if(d.dfgb){S.dfg=S.dfg===d.dfgb?'All':d.dfgb;render();}
   else if(d.nutab){S.tab=d.nutab;S.dfs=d.nudfs||'All';S.dfg='All';S.sel=null;render();}
   else if(d.rofall){S.rofAll=S.rofAll||{};S.rofAll[d.rofall]=!S.rofAll[d.rofall];render();}
