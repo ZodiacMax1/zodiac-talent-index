@@ -476,7 +476,7 @@ export async function handleCampaigns(ctx) {
     for (const [k, [col, max]] of Object.entries(strMap)) if (k in b) { if (k === 'name' && !text(b.name)) return bad('Campaign name is required'); set(col, text(b[k], max)); }
     if ('start' in b) set('start_date', dateOrNull(b.start));
     if ('end' in b) set('end_date', dateOrNull(b.end));
-    if ('cSigned' in b) set('c_signed', dateOrNull(b.cSigned));
+    if ('cSigned' in b) { set('c_signed', dateOrNull(b.cSigned)); if (dateOrNull(b.cSigned) && !('cStatus' in b)) set('c_status', 'Signed'); }
     if ('archive' in b) {
       const a = b.archive;
       set('arch', a ? JSON.stringify({ reason: text(a.reason, 60) || 'Other', note: text(a.note, 500) || '', group: text(a.group, 100) || 'Archived', date: new Date().toISOString().slice(0, 10) }) : null);

@@ -341,3 +341,13 @@ Anyone with their own login can go to Account → Connect Claude, make a persona
 Links are stored hashed (table `claude_keys`, migration 24). Making a new link switches off the old one. Admins see everyone's connections there and can switch any of them off. Deactivating a user also stops their link.
 Tools: search_talent, get_talent, list_campaigns, get_campaign, sales_pipeline, needs_attention, add_creator_to_campaign.
 Update 70b: add_creator_to_campaign can also set the creator fee, client rate or margin, and their deliverables (item, qty, optional per-item rate, content-due and go-live dates). Deliverables are split the same way the app does it (stories as one set, others one each, usage rights scope-only). The creator stays shortlisted; approving is still done in Zodiac OS.
+
+## Update 71 — Claude can edit (per person)
+Admins see a **Can edit** tick next to each connection in Account → Connect Claude (`users.claude_edit`, migration 25, off by default). With it on, that person's Claude can also:
+- update_campaign_creator: fees (initial/negotiated), client rate or margin, scope, approval, stage, next action, creator contract and signed date, archive/un-archive, remove (only with no deliverables or invoices)
+- edit_deliverables: add/update/remove up to 40 in one go: stage, content due/received, live due/went live, platform, links (no removing anything live or invoiced)
+- log_creator_invoice (marks Invoiced, never Paid), update_client_invoice (invoiced date, amount, period, new line; never Paid)
+- update_campaign (details, contact, client agreement, billing, document links; not currency), create_campaign_from_monday, resolve_monday_mismatch (Zodiac OS takes the monday value)
+- add_talent / update_talent (Index niches only; duplicate check by name and handle) and notes
+Every change returns a preview plus a confirm_token tied to the exact arguments; changing anything needs a new preview. Nothing writes to monday, nothing marks payments, everything is logged under the person's name.
+Also: get_campaign now runs a fresh monday check if the last one is over 10 minutes old, and entering a client agreement signed date now sets the status to Signed (migration 25 fixes existing ones).
