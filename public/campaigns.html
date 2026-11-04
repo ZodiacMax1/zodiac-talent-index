@@ -521,6 +521,23 @@ h2.sh,.card.fin h2.sh{font:700 15.5px var(--body)!important;letter-spacing:-.005
 .oml{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12.5px;color:var(--muted)}.oml i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}.oml b{color:var(--fg);font-weight:700!important;margin-left:3px}
 .lbl,.sh+.lbl{font-family:Aileron,var(--body)!important}
 
+/* campaign list: compact filter bar + Next up */
+.fbar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px;gap:8px!important;box-shadow:var(--shadow)}
+.fbar .fld,.fbar .sel.plain{min-height:0!important;height:34px;padding:0 30px 0 12px!important;font-size:13px!important;border-radius:9px!important;background-color:var(--soft)!important;border-color:transparent!important}
+.fbar .fld{padding:0 12px!important;flex:1 1 240px!important;max-width:320px}
+.fbar .small{margin-left:auto;padding-right:6px}
+.lnext{padding:0!important;margin-bottom:16px;overflow:hidden}
+.lnh{display:flex;align-items:center;gap:10px;padding:16px 22px 10px}
+.lng{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;padding:0 22px 10px}
+.lni{display:flex;align-items:center;gap:12px;border:0;background:none;text-align:left;padding:11px 0;border-top:1px solid var(--line);cursor:pointer;font:inherit;color:inherit;min-width:0}
+.lni:nth-child(-n+2){border-top:0}
+.lnt{flex:1;min-width:0}.lnt b{display:block;font-size:13.5px;font-weight:600!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lnt .small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lng-go{font-size:12.5px;color:var(--accent);font-weight:600;opacity:0;transition:opacity .15s}.lni:hover .lng-go{opacity:1}
+@media (max-width:760px){.lng{grid-template-columns:1fr}.lni:nth-child(2){border-top:1px solid var(--line)}.fbar .fld{max-width:none}}
+
+.fbar .fld,.fbar .sel.plain{height:32px!important;font-size:12.5px!important}
+tr.gh td,tr.gh td *{font-family:Aileron,var(--body)!important;letter-spacing:.06em}
+
 /* overview */
 .ovgrid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px;align-items:start}
 .ovl,.ovr{display:grid;gap:18px;min-width:0}
@@ -877,6 +894,26 @@ function mondayImport(){
   });
   return h+'</tbody></table><div class="row" style="justify-content:flex-end;margin-top:12px"><button class="btn pri" data-act="mimpgo"'+(n?'':' disabled')+'>Import '+(n?n+' ':'')+'as campaigns</button></div></div>';
 }
+function listNext(){
+  var it=[];
+  CAMPS.filter(function(c){return !c.archived&&c.stage!=='8 - Closed Lost';}).forEach(function(c){
+    var cm=function(k,t,w){it.push({k:k,t:t,c:c,w:w});};
+    if(c.overdue)cm('bad',c.overdue+' overdue',4);
+    if(c.readyInv)cm('money','Client invoice ready to raise · '+moneyIn(c.toInvoice||0,c),3);
+    if(c.dueWeek)cm('warn',c.dueWeek+' due this week',2);
+    if(c.unsigned)cm('neu',c.unsigned+' creator contract'+(c.unsigned===1?'':'s')+' not signed',1);
+  });
+  if(!it.length)return '';
+  it.sort(function(a,b){return b.w-a.w;});
+  var sum={bad:0,money:0,warn:0,neu:0};it.forEach(function(x){sum[x.k]+=x.k==='money'?1:parseInt(x.t,10)||1;});
+  var lab=[[sum.bad,'overdue','bad'],[sum.money,(sum.money===1?'invoice':'invoices')+' to raise','money'],[sum.warn,'due this week','warn'],[sum.neu,'contracts not signed','neu']].filter(function(x){return x[0];});
+  var open=!!S.lnOpen;
+  var h='<div class="nu"><button class="nuhead" data-act="lntog" aria-expanded="'+open+'"><span class="nulead">Next up <span class="nucnt">'+it.length+'</span></span>';
+  h+=lab.map(function(x){return '<span class="nusep"></span><span class="nuit"><i style="background:'+NUC[x[2]]+'"></i>'+x[0]+' '+x[1]+'</span>';}).join('');
+  h+='<span class="nuright"><span class="btn sm">'+(open?'Hide ▴':'Show ▾')+'</span></span></button>';
+  if(open)h+='<div class="nulist">'+it.map(function(x){return '<div class="nuli"><i style="background:'+NUC[x.k]+'"></i><span><b>'+esc(x.t)+'</b> <span class="small">· '+esc(x.c.name)+'</span></span><span class="nuact"><button class="btn sm" data-open="'+x.c.id+'">Open</button></span></div>';}).join('')+'</div>';
+  return h+'</div>';
+}
 function attention(){
   var rows=[];
   CAMPS.filter(function(c){return !c.archived&&c.stage!=='8 - Closed Lost';}).forEach(function(c){
@@ -906,7 +943,7 @@ function viewCampaigns(){
   if(LISTERR)return h+'<div class="ro">'+esc(LISTERR)+'</div>';
   if(!READY)return h+'<div class="ld">Loading campaigns…</div>';
   if(!CAMPS.length)return h+'<div class="card" style="padding:28px">No campaigns yet. Create one to start tracking influencers, rates and margin.</div>';
-  h+=attention();
+  h+=listNext();
   var act=CAMPS.filter(function(c){return !c.archived;}),arch=CAMPS.filter(function(c){return c.archived;}),F=S.lf;
   var uniq=function(f){var o={};CAMPS.forEach(function(c){var v=f(c);if(v)o[v]=1;});return Object.keys(o).sort(function(a,b){return a.localeCompare(b);});};
   var q=(F.q||'').toLowerCase().trim();
@@ -2804,6 +2841,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='pickadd'){var ids=Object.keys(S.pickSel),added=0;S.pick=false;
     ids.reduce(function(p,tid){return p.then(function(){return api(P('/talents'),{method:'POST',body:{talent_id:tid}}).then(function(j){FULL=hydrate(j.campaign);added++;});});},Promise.resolve()).then(function(){toast(added+' added from the Talent Index');render();}).catch(function(er){toast(er.message);loadOne();});}
   else if(d.act==='attall'){S.attAll=!S.attAll;render();}
+  else if(d.act==='lntog'){S.lnOpen=!S.lnOpen;render();}
   else if(d.act==='newfull'){try{window.parent.postMessage({type:'zodiac-new-talent',name:S.pickQ||''},location.origin);}catch(er){toast('Open the Talent Index and use Add Talent');}}
   else if(d.act==='hmenu'){S.hmenu=!S.hmenu;render();}
   else if(d.act==='carch'){S.hmenu=false;S.carch=!S.carch;render();}
