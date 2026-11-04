@@ -102,28 +102,29 @@
   .card-sub{color:var(--grey-light);font-size:12px;margin-top:4px;}
 
 
-  /* ---- Talent Index burgundy header (matches Campaign Management) ---- */
-  html,body{overflow-x:clip}
-  .tihero{position:relative;margin:-44px 0 30px;padding:28px 0 26px;color:#F3EFE8;isolation:isolate}
-  .tihero:before{content:"";position:absolute;top:0;bottom:0;left:-100vw;right:-100vw;z-index:-1;background:radial-gradient(1200px 420px at 70% -12%,#7a1530 0%,transparent 60%),linear-gradient(180deg,#3B000D,#2A0009)}
-  .tihero header.hero{background:none;border-radius:0;padding:0;margin:0 0 18px;box-shadow:none}
-  .tihero header.hero .eyebrow{font-family:inherit;color:#E2C48F;opacity:1;font-weight:600;font-size:11px;letter-spacing:.2em}
-  .tihero header.hero h1{font-family:'Aileron','DM Sans',sans-serif;font-weight:800;text-transform:none;font-size:42px;letter-spacing:-.02em;color:#fff}
-  .tihero header.hero .header-total{font-family:inherit;color:#D9CCCF;font-size:13px}
-  .tihero .toolbar{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);box-shadow:none;margin-bottom:18px;border-radius:14px}
-  .tihero .toolbar .btn,.tihero header.hero .btn.ghost{background:rgba(255,255,255,.06);color:#F3EFE8;border:1px solid rgba(255,255,255,.2)}
-  .tihero .toolbar .btn:hover,.tihero header.hero .btn.ghost:hover{background:rgba(255,255,255,.12)}
-  .tihero .toolbar .tb-main{background:#F3EFE8;color:#3B000D;border-color:#F3EFE8}.tihero .toolbar .tb-main:hover{background:#fff}
-  .tihero .count-pill{background:rgba(255,255,255,.14);color:#fff}
+  /* ---- Talent Index banner: black rounded card with the logo, toolbar and figure tiles inside ---- */
+  .tihero{background:#000;border-radius:18px;padding:26px 30px 28px;margin:0 0 30px;color:#E4E2DD;box-shadow:0 14px 34px -18px rgba(0,0,0,.45)}
+  .tihero header.hero{background:none;border-radius:0;padding:0;margin:0 0 22px;box-shadow:none}
+  .tihero .toolbar{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);box-shadow:none;margin-bottom:16px;border-radius:12px}
+  .tihero .toolbar .btn{background:transparent;color:#E4E2DD;border:1px solid rgba(228,226,221,.35)}
+  .tihero .toolbar .btn:hover{background:rgba(255,255,255,.1)}
+  .tihero .toolbar .tb-main{background:#E4E2DD;color:#000;border-color:#E4E2DD}.tihero .toolbar .tb-main:hover{background:#fff}
+  .tihero .count-pill{background:rgba(255,255,255,.16);color:#fff}
   .tihero .card-grid{gap:12px;border:0;background:none;box-shadow:none;overflow:visible;margin-bottom:0}
-  .tihero .card-grid .card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12)!important;border-radius:16px;padding:16px 18px}
-  .tihero .card-grid .card:hover{background:rgba(255,255,255,.12);box-shadow:none}
-  .tihero .card-grid .card.no-click:hover{background:rgba(255,255,255,.07)}
-  .tihero .card-label{font-family:inherit;color:#E3D6D9;font-size:11px;letter-spacing:.14em;font-weight:600}
-  .tihero .card-label svg{color:#E3D6D9}
-  .tihero .card-num{color:#fff;font-family:inherit;font-weight:800;font-size:32px;letter-spacing:-.025em}
-  .tihero .card-sub{color:#D2C2C5;font-size:12.5px}
-  .tihero .share{background:rgba(255,255,255,.14)!important}.tihero .share i{background:linear-gradient(90deg,#B08D57,#E2C48F)!important}
+  .tihero .card-grid .card{display:flex;flex-direction:column;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)!important;border-radius:14px;padding:16px 20px 18px}
+  .tihero .card-grid .card:hover{background:rgba(255,255,255,.13);box-shadow:none}
+  .tihero .card-grid .card.no-click:hover{background:rgba(255,255,255,.08)}
+  .tihero .card-label{font-family:inherit;color:#E4E2DD;opacity:.8;font-size:11px;letter-spacing:.14em;font-weight:700}
+  .tihero .card .pl svg{color:#E4E2DD}
+  .tihero .card-num{color:#fff;font-family:inherit;font-weight:800;font-size:32px;letter-spacing:-.025em;margin-top:auto;padding-top:10px}
+  .tihero .card-sub,.tihero .share{display:none!important}
+  .section-title h2{font-family:Aileron,'DM Sans',sans-serif!important;text-transform:none!important;font-weight:700!important;font-size:18px!important;letter-spacing:-.005em!important}
+  .section-title .bar{display:none}
+  .panel{border-radius:16px;overflow:hidden}
+  .tihero header.hero h1{font-family:Aileron,'DM Sans',sans-serif;font-weight:800;text-transform:none;font-size:40px;letter-spacing:-.02em;color:#fff}
+  .tihero header.hero .eyebrow{font-family:Aileron,'DM Sans',sans-serif;letter-spacing:.2em}
+  .tihero .header-total{font-family:Aileron,'DM Sans',sans-serif;font-size:13px}
+  .tihero .hero-logo{height:64px}
   /* stat tiles (5) */
   .card-grid{grid-template-columns:repeat(5,1fr);margin-bottom:32px;}
   .card-grid .card:nth-child(6n){border-right:1px solid var(--line);}
@@ -652,6 +653,8 @@
   <section class="tihero">
   <header class="hero">
     <div class="brand-block">
+      <img class="hero-logo" src="/zodiac-logo.png" alt="Zodiac Global Group">
+      <div class="hero-sep"></div>
       <div>
         <div class="eyebrow">Built for creators. Trusted by brands.</div>
         <h1>Talent Index</h1>
