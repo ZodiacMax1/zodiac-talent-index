@@ -308,3 +308,11 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Netlify DB charges for every hour it is awake and it only sleeps after ~5 idle minutes. The 5-minute talent sync and the 20-second page check kept it awake 24/7 (most of the credit usage).
 - Talent sync now every 30 min, 7am–9pm Dubai (was every 5 min, all night). monday deals sync hourly in the same hours (was every 30 min). The monday Sync button still works any time.
 - Open pages check for changes once a minute, and only while someone has used the page in the last 5 minutes and the tab is visible.
+
+## Update 66 · Spreadsheet import fixes (UK food creators)
+- Cause: Jonny's sheet used "Followers" and "Content Type" headings, which the import didn't recognise, so follower counts and niches were silently dropped; "~99.7K" counts couldn't be read; UK towns were kept as the location so they didn't count as UK.
+- Import now recognises Followers / Follower count, Content Type / Category / Type; reads "~99.7K", "12K+", and treats "Count not confirmed" as blank; prefers the column with full links over @handles.
+- Free-text niches are mapped onto the Index's own niches (F&B, Travel & Tourism, Lifestyle, Health & Wellness, Parenting, UGC, Events, Fashion, Beauty…); extra descriptors ("reviews", "South Asian") are dropped; anything that still doesn't match is shown as a warning in the preview before importing.
+- The preview shows which column is being read for each field, and warns if there's no niche or follower column.
+- UK towns, cities and counties (and the other emirates) are saved as UK / UAE.
+- Migration 21 (runs on deploy): talent whose location is a single UK town/city/county is changed to UK (other emirates to UAE).
