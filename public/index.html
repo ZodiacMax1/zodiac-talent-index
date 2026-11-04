@@ -2956,7 +2956,7 @@ renderShortlist();
     const cEl = document.getElementById('zh-cstats'), tick = document.getElementById('zh-tick');
     api('/campaigns').then(j => {
       const L = (j.campaigns || []).filter(c => !c.archived), won = L.filter(c => c.stage === '7 - Won');
-      const att = won.filter(c => c.overdue || c.unsigned || c.dueWeek || c.readyInv || c.mondayDiffs).length;
+      const att = won.filter(c => c.overdue || c.unsigned || c.dueWeek || c.readyInv).length;
       const byCur = {}; won.forEach(c => { if(c.toInvoice) byCur[c.cur || 'GBP'] = (byCur[c.cur || 'GBP'] || 0) + c.toInvoice; });
       const inv = Object.keys(byCur).sort((a, b) => byCur[b] - byCur[a]).map(k => money(k, byCur[k])).join(' + ') || '–';
       cEl.innerHTML = st(won.length, 'Active campaigns') + st(att, 'Need attention') + st(inv, 'To invoice');
@@ -2967,7 +2967,6 @@ renderShortlist();
       won.filter(c => c.overdue).forEach(c => ATT.push(['#e0344f', c.overdue + ' overdue · ' + c.name, c.id]));
       won.filter(c => c.dueWeek).forEach(c => ATT.push(['#D9A93F', c.dueWeek + ' due this week · ' + c.name, c.id]));
       won.filter(c => c.readyInv).forEach(c => ATT.push(['#3FA56B', 'Ready to invoice · ' + c.name, c.id]));
-      won.filter(c => c.mondayDiffs).forEach(c => ATT.push(['#5a7bd6', c.mondayDiffs + ' difference' + (c.mondayDiffs === 1 ? '' : 's') + ' with monday · ' + c.name, c.id]));
       won.filter(c => c.unsigned).forEach(c => ATT.push(['#8a8378', c.unsigned + ' contract' + (c.unsigned === 1 ? '' : 's') + ' unsigned · ' + c.name, c.id]));
       document.getElementById('zh-dot').hidden = !ATT.length;
       const pill = (cls, txt, cid) => '<button class="zh-p ' + cls + '" data-cid="' + cid + '"><span class="ico">' + ZICO[cls] + '</span><span class="tx">' + esc(txt) + '</span><span class="ar">' + ZARR + '</span></button>';

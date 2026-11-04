@@ -473,7 +473,7 @@ h2.sh,.card.fin h2.sh{font:700 15.5px var(--body)!important;letter-spacing:-.005
 .fbox{padding:20px 24px 22px}
 .fbh{display:flex;justify-content:space-between;align-items:center}
 .fbig{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:10px;font-family:Aileron,var(--body)}.fbig span{font-size:13.5px;color:var(--muted);font-weight:600;margin-left:8px;letter-spacing:0}
-.fbar{display:flex;height:10px;border-radius:9px;overflow:hidden;background:var(--bar);margin:16px 0}
+.mbar2{display:flex;height:10px;border-radius:9px;overflow:hidden;background:var(--bar);margin:16px 0}
 .fleg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .fl .flk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}.fl .flk i{width:8px;height:8px;border-radius:2px;flex:none}
 .fl b{display:block;font-size:16px;margin-top:4px;font-weight:700!important}
@@ -500,7 +500,7 @@ h2.sh,.card.fin h2.sh{font:700 15.5px var(--body)!important;letter-spacing:-.005
 @media (max-width:1100px){.civ{grid-template-columns:1fr 1fr}.ctrk{grid-column:1/-1}}
 @media (max-width:760px){.fsum{grid-template-columns:1fr}.dstrip{grid-template-columns:repeat(3,1fr)}.fleg{grid-template-columns:1fr 1fr}}
 /* page banners: actions wrap neatly */
-.phero .htop{flex-wrap:wrap}.phero .hacts{flex-wrap:wrap;justify-content:flex-end}.phero .hbrand{flex:1 1 420px}
+.phero .htop{flex-wrap:wrap;align-items:center}.phero .hacts{flex-wrap:wrap;justify-content:flex-end;margin-left:auto}.phero .hbrand{flex:0 1 auto}.phero .hh1,.phero .heye{white-space:nowrap}@media (max-width:760px){.phero .hh1,.phero .heye{white-space:normal}}
 
 /* one number style everywhere */
 .num,.in,td.r,.mc{font-family:Aileron,var(--body)!important;font-variant-numeric:tabular-nums}
@@ -814,7 +814,7 @@ function cHero(c,s,ef,w,tabs,crumb){
   if(c.owner)sub.push('Owner '+esc(c.owner));if(c.markets||c.platforms)sub.push(esc([c.markets,c.platforms].filter(Boolean).join(' · ')));
   var pills='<label class="hsel hs-'+stcls(c.stage)+'" for="mstage"><select id="mstage" class="sel" aria-label="Stage">'+MONDAY.map(function(o){return '<option'+(o===c.stage?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label>'
     +'<div class="hseg" role="group" aria-label="Currency">'+['GBP','USD','AED'].map(function(k){return '<button class="'+(c.cur===k?'on':'')+'" data-cur="'+k+'">'+(k==='GBP'?'£':k==='USD'?'$':'AED')+'</button>';}).join('')+'</div>'
-    +mdBadge(c);
+    +'';
   var acts=(c.mondayItemId?'<a class="hbtn" href="https://monday.com/boards/5092522587/pulses/'+encodeURIComponent(c.mondayItemId)+'" target="_blank" rel="noopener">Open in monday ↗</a>':'')
     +(ed?'<button class="hbtn w" data-act="pick">+ Add creators</button>':'')+(ed&&!c.archived?'<span class="hmw"><button class="hbtn hdots" data-act="hmenu" aria-label="More" title="More">⋯</button>'+(S.hmenu?'<div class="hmenu"><button data-act="carch">Archive campaign</button></div>':'')+'</span>':'');
   var k=function(l,v,sx,cls){return '<div class="hk'+(cls?' '+cls:'')+'"><div class="hl">'+l+'</div><div class="hv num">'+v+'</div><div class="hs">'+sx+'</div></div>';};
@@ -896,10 +896,10 @@ function viewCampaigns(){
   var actv=CAMPS.filter(function(c){return !c.archived;}),G=function(c){return (Number(c.budget)||0)*(Number(c.fx)||1);};
   var yr=TODAY.slice(0,4),wonY=actv.filter(function(c){return c.stage==='7 - Won'&&String(c.wonAt||c.start||'').slice(0,4)===yr;});
   var pipe=actv.filter(function(c){return c.stage!=='7 - Won'&&c.stage!=='8 - Closed Lost';});
-  var att=0,tinv=0;actv.forEach(function(c){att+=(c.overdue||0)+(c.unsigned||0)+(c.mondayDiffs?1:0);tinv+=(c.toInvoice||0)*(Number(c.fx)||1);});
+  var att=0,tinv=0;actv.forEach(function(c){att+=(c.overdue||0)+(c.unsigned||0);tinv+=(c.toInvoice||0)*(Number(c.fx)||1);});
   var acts='<button class="hbtn" data-palopen="1" title="Search everything">Search <kbd class="kbd">⌘K</kbd></button>'+(canEdit()?(CAMPS.some(function(c){return c.mondayItemId;})?'<button class="hbtn" data-act="mrefresh" title="Re-read the company name (and contact) from monday for campaigns already imported">Update from monday</button>':'')+'<button class="hbtn" data-act="mimp">Import from monday</button><button class="hbtn w" data-act="newc">+ New campaign</button>':'');
   var h=pHero({eye:'Built for creators. Trusted by brands.',title:'Campaign Management',sub:(ME&&ME.name?'<b style="color:#fff">'+esc(ME.name)+'</b><span class="hdot">·</span>':'')+actv.length+' campaign'+(actv.length===1?'':'s')+(CAMPS.length>actv.length?' · '+(CAMPS.length-actv.length)+' archived':''),acts:acts,
-    tiles:READY?[{l:'Live campaigns',v:String(nlive),s:'Closed Won and running'},{l:'Won this year',v:gbpK(wonY.reduce(function(t,c){return t+G(c);},0)),s:wonY.length+' campaign'+(wonY.length===1?'':'s')+' in '+yr},{l:'In the pipeline',v:gbpK(pipe.reduce(function(t,c){return t+G(c);},0)),s:pipe.length+' not yet won'},{l:'To invoice',v:gbpK(tinv),s:'ready to raise now'},{l:'Needs attention',v:String(att),s:'overdue, unsigned or monday',cls:att?'mgb':'mg'}]:[]});
+    tiles:READY?[{l:'Live campaigns',v:String(nlive),s:'Closed Won and running'},{l:'Won this year',v:gbpK(wonY.reduce(function(t,c){return t+G(c);},0)),s:wonY.length+' campaign'+(wonY.length===1?'':'s')+' in '+yr},{l:'In the pipeline',v:gbpK(pipe.reduce(function(t,c){return t+G(c);},0)),s:pipe.length+' not yet won'},{l:'To invoice',v:gbpK(tinv),s:'ready to raise now'},{l:'Needs attention',v:String(att),s:'overdue or unsigned',cls:att?'mgb':'mg'}]:[]});
   if(S.mimp)h+=mondayImport();
   if(!canEdit())h+='<div class="ro">View-only access. You can look around but not change anything.</div>';
   if(S.newc)h+='<form class="add card" id="newc-form" style="margin-bottom:16px"><input class="fld" style="flex:2;min-width:160px" id="nc-name" placeholder="Campaign name" required><input class="fld" style="flex:2;min-width:160px" id="nc-client" placeholder="Client / brand" required><select class="sel plain" id="nc-cur" style="width:auto"><option value="GBP">£ GBP</option><option value="USD">$ USD</option><option value="AED">AED</option></select><input class="fld" style="flex:1;min-width:140px" id="nc-budget" type="number" min="0" placeholder="Client budget" required><button class="btn pri" type="submit">Create</button><button class="btn" type="button" data-act="newc">Cancel</button></form>';
@@ -920,7 +920,7 @@ function viewCampaigns(){
     +'<span class="small">'+(list.length+alist.length)+' of '+CAMPS.length+'</span></div>';
   var row=function(c){
     var s={cost:c.cost,price:c.price,m:c.margin,pc:c.price>0?c.margin/c.price*100:0,n:c.selected};Object.assign(s,eff(c,s));
-    return '<tr class="clk" data-open="'+c.id+'"><td><div class="who2"><div class="ini">'+initials(c.name)+'</div><div><b>'+esc(c.name)+'</b>'+(c.mondayDiffs?'<span class="mdflag" title="'+c.mondayDiffs+' difference'+(c.mondayDiffs===1?'':'s')+' with monday">'+c.mondayDiffs+' ≠ monday</span>':'')+'<div>'+(c.client?'<button class="clientb" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>':'')+'</div></div></div></td><td><span class="pill '+stcls(c.stage)+'">'+esc(c.stage)+'</span></td><td class="r num">'+moneyIn(c.budget,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(c.budget,c)+'</div>':'')+'</td><td class="r num">'+moneyIn(s.cost,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.cost,c)+'</div>':'')+'</td><td class="r num"><b'+(s.m<0?' style="color:var(--bad-fg)"':'')+'>'+moneyIn(s.m,c)+'</b>'+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.m,c)+'</div>':'')+'</td><td class="r num"><b'+(s.price&&s.pc<0?' style="color:var(--bad-fg)"':'')+'>'+(s.price?s.pc.toFixed(1)+'%':'–')+'</b>'+'</td><td>'+s.n+' of '+c.total+'</td><td>'+esc(c.owner)+'</td></tr>';};
+    return '<tr class="clk" data-open="'+c.id+'"><td><div class="who2"><div class="ini">'+initials(c.name)+'</div><div><b>'+esc(c.name)+'</b>'+'<div>'+(c.client?'<button class="clientb" data-client="'+esc(c.client)+'" title="See every campaign for this client">'+esc(c.client)+'</button>':'')+'</div></div></div></td><td><span class="pill '+stcls(c.stage)+'">'+esc(c.stage)+'</span></td><td class="r num">'+moneyIn(c.budget,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(c.budget,c)+'</div>':'')+'</td><td class="r num">'+moneyIn(s.cost,c)+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.cost,c)+'</div>':'')+'</td><td class="r num"><b'+(s.m<0?' style="color:var(--bad-fg)"':'')+'>'+moneyIn(s.m,c)+'</b>'+(c.cur!=='GBP'?'<div class="small">'+gbpIn(s.m,c)+'</div>':'')+'</td><td class="r num"><b'+(s.price&&s.pc<0?' style="color:var(--bad-fg)"':'')+'>'+(s.price?s.pc.toFixed(1)+'%':'–')+'</b>'+'</td><td>'+s.n+' of '+c.total+'</td><td>'+esc(c.owner)+'</td></tr>';};
   var SC={'2 - Discovery / Scoping':'#3d9fd6','8 - Closed Lost':'#df2f4a','3 - Proposal Sent':'#2fb8b0','4 - Negotiation':'#c99a00','5 - Verbal Agreement':'#5559df','6 - Contract Sent':'#037f4c','7 - Won':'#00a05c'};
   var cols=8,open=function(k,def){return S.gcol[k]===undefined?def:S.gcol[k];};
   var hdr=function(k,title,n,color,def){var o=open(k,def);return '<tr class="gh clk" data-gtog="'+esc(k)+'"><td colspan="'+cols+'"><span class="chev">'+(o?'▾':'▸')+'</span> <span'+(color?' style="color:'+color+'"':'')+'>'+esc(title)+'</span> · '+n+'</td></tr>';};
@@ -1909,16 +1909,16 @@ function finSummary(c){
   var L=function(col,lab,val,cl){return '<div class="fl"><span class="flk"><i style="background:'+col+'"></i>'+lab+'</span><b class="num"'+(cl?' style="color:'+cl+'"':'')+'>'+val+'</b></div>';};
   var cash=m.cash,cashTxt=m.paid||m.out?'Received '+money(m.paid)+' from '+esc(c.client||'the client')+', paid '+money(m.out)+' to creators.'+(m.ready>0?' '+money(m.ready)+' is ready to pay out now.':m.inv>0?' '+money(m.inv)+' invoiced and waiting.':''):'Nothing received or paid out yet.';
   return '<div class="fsum"><div class="card fbox"><div class="fbh"><span class="eb2">Money in · client</span><span class="pill neu">'+esc(c.cTerms||'Net 30')+'</span></div><div class="fbig num">'+money(m.bud)+'<span>budget</span></div>'
-     +'<div class="fbar"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div>'
+     +'<div class="mbar2"><i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i></div>'
      +'<div class="fleg">'+L('var(--ok-fg)','Paid',money(m.paid))+L('#D9A93F','Invoiced, waiting',money(m.inv))+L('var(--bar)','Still to invoice',money(m.left))+'</div></div>'
    +'<div class="card fbox"><div class="fbh"><span class="eb2">Money out · creators</span><span class="pill neu">'+selected(c).length+' creator'+(selected(c).length===1?'':'s')+'</span></div><div class="fbig num">'+money(m.spend)+'<span>booked</span></div>'
-     +'<div class="fbar"><i style="width:'+w3+'%;background:var(--accent)"></i><i style="width:'+w4+'%;background:#B0727F"></i></div>'
+     +'<div class="mbar2"><i style="width:'+w3+'%;background:var(--accent)"></i><i style="width:'+w4+'%;background:#B0727F"></i></div>'
      +'<div class="fleg">'+L('var(--accent)','Paid out',money(m.out))+L('#B0727F','Ready to pay',money(m.ready))+L('var(--bar)','Left to pay',money(Math.max(0,m.spendLeft-m.ready)))+'</div></div>'
    +'<div class="fcash'+(cash<0?' neg':'')+'"><span class="eb2">Cash position</span><b class="num">'+(cash>0?'+':'')+money(cash)+'</b><span class="small">'+cashTxt+'</span></div></div>';
 }
 function ovMoney(c){
   var m=moneyState(c),b=m.bud||1,sp=m.spend||1,pc=function(x,t){return Math.max(0,Math.min(100,x/t*100));};
-  var row=function(lab,tot,bars,items){return '<div class="omr"><div><div class="eb2">'+lab+'</div><div class="omt num">'+tot+'</div></div><div><div class="fbar" style="margin:4px 0 10px">'+bars+'</div><div class="oml">'+items+'</div></div></div>';};
+  var row=function(lab,tot,bars,items){return '<div class="omr"><div><div class="eb2">'+lab+'</div><div class="omt num">'+tot+'</div></div><div><div class="mbar2" style="margin:4px 0 10px">'+bars+'</div><div class="oml">'+items+'</div></div></div>';};
   var it=function(col,l,v,cl){return '<span><i style="background:'+col+'"></i>'+l+' <b class="num"'+(cl?' style="color:'+cl+'"':'')+'>'+v+'</b></span>';};
   var w1=pc(m.paid,b),w2=Math.min(100-w1,pc(m.inv,b)),w3=pc(m.out,sp);
   return '<div class="card rail om"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 class="sh">Money</h2><button class="lkb" data-tab="Financials">Financials →</button></div>'
