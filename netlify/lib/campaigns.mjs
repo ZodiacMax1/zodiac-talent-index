@@ -180,6 +180,35 @@ async function loadCt(campaignId, ctId) {
   return ct || null;
 }
 
+// ---- Every deal on the Agency Sales Pipeline, for the Sales dashboard and reports (read only, cached for 5 minutes)
+let PIPE_CACHE = null;
+const PIPE_COLS = [...DEAL_COLS, 'color_mm2n4dpt', 'date_mm2nxt2p', 'date_mm2nwhwr', 'date_mm1ymaz0', 'deal_close_probability', 'color_mm12tp2j', 'text_mm12ty84'];
+async function mondayPipeline(fresh) {
+  if (!fresh && PIPE_CACHE && Date.now() - PIPE_CACHE.at < 5 * 60000) return PIPE_CACHE;
+  const ITEM = MONDAY_ITEM.replace('id name column_values', 'id name group { title } column_values');
+  const out = [];
+  let data = await gql(`query($id:[ID!], $cols:[String!]){ boards(ids:$id){ items_page(limit:200){ cursor items{ ${ITEM} } } } }`, { id: [DEALS_BOARD], cols: PIPE_COLS });
+  let page = data.boards[0]?.items_page;
+  for (let g = 0; page && g < 20; g++) {
+    out.push(...page.items);
+    if (!page.cursor) break;
+    data = await gql(`query($cols:[String!], $cursor:String!){ next_items_page(limit:200, cursor:$cursor){ cursor items{ ${ITEM} } } }`, { cols: PIPE_COLS, cursor: page.cursor });
+    page = data.next_items_page;
+  }
+  const deals = out.map((it) => {
+    const t = (id) => (it.column_values.find((c) => c.id === id) || {}).text || '';
+    const w = mondayWho(it);
+    let target = t('numeric_mm12q2jt') === '' ? null : Number(t('numeric_mm12q2jt'));
+    if (target != null && target > 0 && target <= 1) target = Math.round(target * 1000) / 10;
+    return { id: String(it.id), name: it.name, group: it.group ? it.group.title : '', client: w.client || '', owner: t('deal_owner'), stage: t('deal_stage'),
+      cur: t('color_mm1ybd67') || 'GBP', value: Number(t('deal_value').replace(/,/g, '')) || 0, target, start: t('deal_expected_close_date'), agreed: t('date_mm1ymaz0'),
+      prob: t('deal_close_probability') === '' ? null : Number(t('deal_close_probability')), market: t('dropdown_mm2ns2za'), lostReason: t('color_mm12tp2j'),
+      invStatus: t('color_mm2n4dpt'), invSent: t('date_mm2nxt2p'), paid: t('date_mm2nwhwr'), next: t('text_mm12ty84') };
+  });
+  PIPE_CACHE = { at: Date.now(), deals };
+  return PIPE_CACHE;
+}
+
 // ---- Closed Won check: compare each won campaign with its monday deal and keep the differences
 const near = (a, b, tol) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= tol;
 const normTxt = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -292,6 +321,24 @@ export async function handleCampaigns(ctx) {
   }
 
   // ---- monday: Proposal Sent deals, and importing the ticked ones as campaigns
+  if (id === 'monday-pipeline' && method === 'GET') {
+    try {
+      const p = await mondayPipeline(new URL(req.url).searchParams.get('fresh') === '1');
+      const notes = await query('SELECT deal_id, tag, note, place, updated_by, updated_at FROM report_notes').catch(() => []);
+      return json({ at: new Date(p.at).toISOString(), deals: p.deals, notes: Object.fromEntries(notes.map((n) => [n.deal_id, { tag: n.tag || '', note: n.note || '', place: n.place || 'auto', by: n.updated_by || '' }])) });
+    }
+    catch (e) { return json({ error: 'Could not read monday: ' + e.message }, 502); }
+  }
+  if (id === 'report-notes' && method === 'PUT') {
+    const b = await body();
+    const did = text(b.dealId, 40);
+    if (!did) return bad('Missing deal');
+    const place = ['auto', 'key', 'conv', 'hide'].includes(b.place) ? b.place : 'auto';
+    await query(`INSERT INTO report_notes (deal_id, tag, note, place, updated_by, updated_at) VALUES ($1,$2,$3,$4,$5,now())
+      ON CONFLICT (deal_id) DO UPDATE SET tag = EXCLUDED.tag, note = EXCLUDED.note, place = EXCLUDED.place, updated_by = EXCLUDED.updated_by, updated_at = now()`,
+      [did, text(b.tag, 60), text(b.note, 600), place, actor]);
+    return json({ ok: true });
+  }
   if (id === 'monday-deals' && method === 'GET') {
     let deals;
     try { deals = await mondayProposals(); } catch (e) { return json({ error: 'Could not read monday: ' + e.message }, 502); }
