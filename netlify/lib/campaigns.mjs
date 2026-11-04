@@ -11,6 +11,9 @@ const MONDAY_STAGES = ['2 - Discovery / Scoping', '3 - Proposal Sent', '4 - Nego
 const DEFAULT_STAGE = '3 - Proposal Sent';
 const DEALS_BOARD = '5092522587';
 const DEAL_COLS = ['deal_stage', 'deal_owner', 'color_mm1ybd67', 'deal_value', 'numeric_mm12q2jt', 'dropdown_mm2ns2za', 'deal_expected_close_date', 'board_relation_mm2179a3', 'board_relation_mm128ss1', 'board_relation_mm21kfwp'];
+// Extra monday columns read for the Closed Won check (read only, nothing is ever written to monday)
+const CHECK_COLS = [...DEAL_COLS, 'color_mm2n4dpt', 'date_mm2nxt2p', 'date_mm2nwhwr', 'date_mm1ymaz0'];
+const WON_ON_MONDAY = ['7 - Won', 'Invoiced', 'Invoice Paid'];
 
 const MONDAY_ITEM = 'id name column_values(ids: $cols) { id text ... on BoardRelationValue { linked_items { id name column_values(ids: ["email_mm12f05w","text_mm20qw8s","title5"]) { id text } } } }';
 // Client (account) and first linked contact for a monday deal item
@@ -117,7 +120,7 @@ function shapeCampaign(c) {
     start: c.start_date || '', end: c.end_date || '',
     cur: c.cur, fx: Number(c.fx), budget: Number(c.budget), target: Number(c.target_margin),
     markets: c.markets || '', platforms: c.platforms || '', brief: c.brief || '', deck: c.deck_name || '',
-    mondayItemId: c.monday_item_id || '', stage: c.monday_stage,
+    mondayItemId: c.monday_item_id || '', stage: c.monday_stage, mondayCheck: c.monday_check || null,
     contactName: c.contact_name || '', contactRole: c.contact_role || '', contactEmail: c.contact_email || '', contactPhone: c.contact_phone || '',
     cStatus: c.c_status, cValue: Number(c.c_value), cSigned: c.c_signed || '', cTerms: c.c_terms, cUsage: c.c_usage || '',
     archived: c.arch || null,
@@ -177,6 +180,60 @@ async function loadCt(campaignId, ctId) {
   return ct || null;
 }
 
+// ---- Closed Won check: compare each won campaign with its monday deal and keep the differences
+const near = (a, b, tol) => Math.abs((Number(a) || 0) - (Number(b) || 0)) <= tol;
+const normTxt = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const fmtD = (d) => (d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '');
+export async function mondayCheck(onlyIds) {
+  const rows = await query(`${CAMP_SQL} WHERE deleted_at IS NULL AND arch IS NULL AND monday_item_id IS NOT NULL AND monday_stage = '7 - Won'` + (onlyIds ? ' AND id = ANY($1::text[])' : ''), onlyIds ? [onlyIds] : []);
+  if (!rows.length) return { checked: 0 };
+  const cts = await query(`SELECT campaign_id, initial, neg, client_rate FROM campaign_talents WHERE campaign_id = ANY($1::text[]) AND approved = 'Yes' AND archived IS NULL`, [rows.map((r) => r.id)]);
+  const inv = await query(`SELECT campaign_id, invoiced_at, paid_at FROM client_invoices WHERE campaign_id = ANY($1::text[])`, [rows.map((r) => r.id)]).catch(() => []);
+  const items = new Map();
+  for (let k = 0; k < rows.length; k += 50) {
+    const chunk = rows.slice(k, k + 50);
+    const data = await gql(`query($ids:[ID!], $cols:[String!]){ items(ids:$ids){ ${MONDAY_ITEM} } }`, { ids: chunk.map((r) => r.monday_item_id), cols: CHECK_COLS });
+    (data.items || []).forEach((it) => items.set(String(it.id), it));
+  }
+  const at = new Date().toISOString();
+  let flagged = 0;
+  for (const c of rows) {
+    const it = items.get(String(c.monday_item_id));
+    const diffs = [];
+    let m = null;
+    if (!it) diffs.push({ key: 'missing', label: 'monday deal', ours: 'Linked', theirs: 'Not found on monday (deleted or moved?)' });
+    else {
+      const t = (id) => (it.column_values.find((x) => x.id === id) || {}).text || '';
+      const w = mondayWho(it);
+      m = { stage: t('deal_stage'), budget: Number(t('deal_value').replace(/,/g, '')) || 0, cur: t('color_mm1ybd67'), target: t('numeric_mm12q2jt') === '' ? null : Number(t('numeric_mm12q2jt')),
+        start: t('deal_expected_close_date'), owner: t('deal_owner'), client: w.client || '', invStatus: t('color_mm2n4dpt'), invSent: t('date_mm2nxt2p'), paid: t('date_mm2nwhwr'), agreed: t('date_mm1ymaz0') };
+      if (m.target != null && m.target > 0 && m.target <= 1) m.target = Math.round(m.target * 1000) / 10; // stored as a fraction
+      const sym = (cur) => (cur === 'GBP' ? '£' : cur === 'USD' ? '$' : cur === 'AED' ? 'AED ' : (cur ? cur + ' ' : ''));
+      const fm = (cur, v) => sym(cur) + Math.round(Number(v) || 0).toLocaleString('en-GB');
+      if (m.stage && !WON_ON_MONDAY.includes(m.stage)) diffs.push({ key: 'stage', label: 'Stage', ours: '7 - Won', theirs: m.stage, use: MONDAY_STAGES.includes(m.stage) ? { stage: m.stage } : null });
+      if (m.cur && m.cur !== c.cur) diffs.push({ key: 'cur', label: 'Currency', ours: c.cur, theirs: m.cur });
+      if (m.budget && (!m.cur || m.cur === c.cur) && !near(m.budget, c.budget, Math.max(1, Number(c.budget) * 0.005))) diffs.push({ key: 'budget', label: 'Budget', ours: fm(c.cur, c.budget), theirs: fm(m.cur || c.cur, m.budget), use: { budget: m.budget } });
+      if (m.target != null && m.target < 100 && !near(m.target, c.target_margin, 0.5)) diffs.push({ key: 'target', label: 'Target margin', ours: Number(c.target_margin) + '%', theirs: m.target + '%', use: { target: m.target } });
+      const sel = cts.filter((x) => x.campaign_id === c.id), cost = sel.reduce((a, x) => a + Number(x.neg ?? x.initial), 0), price = sel.reduce((a, x) => a + Number(x.client_rate), 0);
+      const goal = m.target != null && m.target < 100 ? m.target : Number(c.target_margin);
+      if (Number(c.budget) > 0 && sel.length) {
+        const real = (Number(c.budget) - cost) / Number(c.budget) * 100;
+        if (real < goal - 0.5) diffs.push({ key: 'margin', label: 'Real margin', ours: real.toFixed(1) + '% on creators booked', theirs: goal + '% target', note: true });
+      }
+      if (m.start && c.start_date && m.start !== c.start_date) diffs.push({ key: 'start', label: 'Start date', ours: fmtD(c.start_date), theirs: fmtD(m.start), use: { start: m.start } });
+      if (m.owner && c.owner && !normTxt(m.owner).includes(normTxt(c.owner).slice(0, 4)) && !normTxt(c.owner).includes(normTxt(m.owner.split(',')[0]).slice(0, 4))) diffs.push({ key: 'owner', label: 'Owner', ours: c.owner, theirs: m.owner, use: { owner: m.owner.split(',')[0].trim() } });
+      if (m.client && c.client && normTxt(m.client) !== normTxt(c.client)) diffs.push({ key: 'client', label: 'Client', ours: c.client, theirs: m.client, use: { client: m.client } });
+      const mine = inv.filter((v) => v.campaign_id === c.id);
+      const ourInv = !mine.length || mine.every((v) => !v.invoiced_at) ? 'Not Invoiced' : mine.every((v) => v.paid_at) ? 'Paid' : 'Issued';
+      const theirInv = m.invStatus === 'Late' ? 'Issued' : m.invStatus;
+      if (theirInv && theirInv !== ourInv) diffs.push({ key: 'invoice', label: 'Invoicing', ours: ourInv === 'Issued' ? 'Invoiced, not all paid' : ourInv, theirs: m.invStatus + (m.paid ? ' · paid ' + fmtD(m.paid) : m.invSent ? ' · sent ' + fmtD(m.invSent) : ''), note: true });
+    }
+    if (diffs.length) flagged++;
+    await query('UPDATE campaigns SET monday_check = $2 WHERE id = $1', [c.id, JSON.stringify({ at, diffs, monday: m })]);
+  }
+  return { checked: rows.length, flagged };
+}
+
 export async function handleCampaigns(ctx) {
   const { req, parts, method, json, needEdit, actor, logAct } = ctx;
   // parts[0] === 'campaigns'
@@ -210,6 +267,7 @@ export async function handleCampaigns(ctx) {
             const allLive = dd.length > 0 && dd.every((d) => d.stage === 'Live');
             const ready = cinvs.filter((v) => v.campaign_id === c.id && !v.invoiced_at && (v.ps ? v.ps <= soon : allLive));
             return { toInvoice: ready.reduce((a, v) => a + Number(v.amount || 0), 0), readyInv: ready.length }; })(),
+          mondayDiffs: c.monday_check && c.monday_check.diffs ? c.monday_check.diffs.length : 0,
           overdue: dd.filter((d) => d.late).length, unsigned: c.monday_stage === '7 - Won' ? sel.filter((x) => x.contract !== 'Signed').length : 0, uninvoiced: c.monday_stage === '7 - Won' ? sel.filter((x) => x.invoice === 'Not invoiced').length : 0 };
       }),
     });
@@ -450,6 +508,12 @@ export async function handleCampaigns(ctx) {
       return json({ campaign: await loadFull(id) });
     }
     return json({ error: 'Not found' }, 404);
+  }
+
+  // ---- Closed Won check against monday (read only)
+  if (sub === 'monday-check' && method === 'POST') {
+    try { await mondayCheck([id]); } catch (e) { return json({ error: 'Could not read monday: ' + e.message }, 502); }
+    return json({ campaign: await loadFull(id) });
   }
 
   // ---- Client invoices (Financials tab)

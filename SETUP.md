@@ -316,3 +316,10 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - The preview shows which column is being read for each field, and warns if there's no niche or follower column.
 - UK towns, cities and counties (and the other emirates) are saved as UK / UAE.
 - Migration 21 (runs on deploy): talent whose location is a single UK town/city/county is changed to UK (other emirates to UAE).
+
+## Update 67 · Closed Won campaigns checked against monday (read only)
+- For every 7 - Won campaign imported from monday, Zodiac OS reads the Agency Sales Pipeline deal and flags anything that doesn't match. Nothing is ever written to monday.
+- Compared: stage (monday "Invoiced"/"Invoice Paid" count as won), currency, budget, target margin, real margin on the creators booked vs monday's target, start date, owner, client, and invoicing status vs the Financials client invoices.
+- Campaign header: "N differences with monday" (or "Matches monday"). Click for the side-by-side, with "Use monday's" per row (budget, target margin, start date, owner, client, stage) and "Use monday's for all". Margin and invoicing rows link to Rates / Financials.
+- Runs with the hourly deals sync (7am–9pm Dubai) and when you open a won campaign (if the last check is over 10 minutes old). Campaign list shows a "≠ monday" flag; Home's bell lists them and they count towards "Need attention".
+- Migration 22 (runs on deploy): campaigns.monday_check.
