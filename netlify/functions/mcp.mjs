@@ -15,6 +15,17 @@ const r0 = (n) => Math.round(Number(n) || 0);
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const pct = (m, b) => (b ? Math.round((m / b) * 1000) / 10 : null);
 const low = (s) => String(s || '').toLowerCase();
+const ITEMS = ['IG Reel', 'IG Story', 'IG Post', 'IG Carousel', 'TikTok video', 'YouTube video', 'YouTube Short', 'YouTube integration', 'Event / attendance', 'Filming day', 'Usage rights'];
+const NOPOST = ['Filming day', 'Event / attendance'];
+const isDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '') && !isNaN(Date.parse(d));
+const plat = (x) => (/^IG/.test(x) ? 'Instagram' : /TikTok/.test(x) ? 'TikTok' : /YouTube/.test(x) ? 'YouTube' : '');
+// Same split as the app: stories go in one set, everything else one deliverable each; usage rights is scope only
+function split(item, qty) {
+  if (item === 'Usage rights') return [];
+  const noPost = NOPOST.includes(item);
+  if (/stor(y|ies)/i.test(item)) return [{ name: qty > 1 ? `${qty} × ${item}` : item, item, qty, platform: plat(item), noPost }];
+  return Array.from({ length: qty }, (_, k) => ({ name: qty > 1 ? `${item} ${k + 1}` : item, item, qty: 1, platform: plat(item), noPost }));
+}
 
 const out = (data, status = 200, extra = {}) => new Response(data == null ? null : JSON.stringify(data), {
   status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...extra },
@@ -111,8 +122,17 @@ const TOOLS = [
     description: 'Across all open campaigns: overdue deliverables, posts due this week, client invoices ready to raise, unsigned creator contracts on won campaigns, creators not yet invoiced, and monday mismatches.',
     inputSchema: { type: 'object', properties: { owner: { type: 'string' } } }, annotations: { readOnlyHint: true } },
   { name: 'add_creator_to_campaign', title: 'Shortlist a creator on a campaign',
-    description: 'Adds an existing Talent Index creator to a campaign as a shortlisted, not-yet-approved option, priced from their Index rate at the campaign\'s target margin. It never approves them or changes fees. Call first WITHOUT confirm to get a preview, show it to the user, and only call again with confirm: true once they say yes.',
-    inputSchema: { type: 'object', properties: { campaign: { type: 'string' }, creator: { type: 'string' }, confirm: { type: 'boolean' } }, required: ['campaign', 'creator'] },
+    description: 'Adds an existing Talent Index creator to a campaign as a shortlisted, not-yet-approved option. Optionally sets their fee (what the creator is paid, in the campaign currency), the client rate or margin, and their deliverables (scope) with content-due and go-live dates. Without a fee it uses their Index rate; without a client rate or margin it uses the campaign target margin. It never approves them. Call first WITHOUT confirm to get a preview, show it to the user, and only call again with exactly the same details plus confirm: true once they say yes.',
+    inputSchema: { type: 'object', properties: {
+      campaign: { type: 'string' }, creator: { type: 'string' },
+      fee: { type: 'number', description: 'Creator fee for the whole scope, in the campaign currency' },
+      client_rate: { type: 'number', description: 'What the client is charged for this creator, in the campaign currency. Use this or margin_pct, not both.' },
+      margin_pct: { type: 'number', description: 'Zodiac margin on this creator, 0-99' },
+      deliverables: { type: 'array', description: 'The creator\'s scope', items: { type: 'object', properties: {
+        item: { type: 'string', enum: ITEMS }, qty: { type: 'number', description: 'Default 1' },
+        rate: { type: 'number', description: 'Optional creator rate per item, campaign currency' },
+        content_due: { type: 'string', description: 'YYYY-MM-DD the draft is due' }, live: { type: 'string', description: 'YYYY-MM-DD it goes live (or the date of a filming day / event)' } }, required: ['item'] } },
+      confirm: { type: 'boolean' } }, required: ['campaign', 'creator'] },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true } },
 ];
 
@@ -213,19 +233,69 @@ async function run(name, a, u) {
   }
   if (name === 'add_creator_to_campaign') {
     if (u.role !== 'edit') throw new Error('Your Zodiac OS account is view-only, so it cannot add creators.');
+    // Check the details before anything is written
+    const fee = a.fee == null || a.fee === '' ? null : Number(a.fee);
+    if (fee != null && !(fee > 0)) throw new Error('fee must be above 0');
+    if (a.client_rate != null && a.margin_pct != null) throw new Error('Give a client rate or a margin, not both');
+    const cr = a.client_rate == null ? null : Number(a.client_rate);
+    const mp = a.margin_pct == null ? null : Number(a.margin_pct);
+    if (mp != null && !(mp >= 0 && mp < 100)) throw new Error('margin_pct must be between 0 and 99');
+    const lines = (Array.isArray(a.deliverables) ? a.deliverables : []).slice(0, 20).map((d, i) => {
+      const item = ITEMS.find((x) => low(x) === low(d && d.item));
+      if (!item) throw new Error(`Deliverable ${i + 1}: item must be one of ${ITEMS.join(', ')}`);
+      const qty = d.qty == null ? 1 : Math.round(Number(d.qty));
+      if (!(qty >= 1 && qty <= 50)) throw new Error(`Deliverable ${i + 1}: qty must be 1 to 50`);
+      for (const k of ['content_due', 'live']) if (d[k] && !isDate(d[k])) throw new Error(`Deliverable ${i + 1}: ${k} must be YYYY-MM-DD`);
+      if (d.content_due && d.live && d.content_due > d.live) throw new Error(`Deliverable ${i + 1}: content can't be due after it goes live`);
+      const rate = d.rate == null || d.rate === '' ? null : Number(d.rate);
+      if (rate != null && !(rate >= 0)) throw new Error(`Deliverable ${i + 1}: rate must be 0 or more`);
+      return { item, qty, rate, due: d.content_due || '', live: d.live || '' };
+    });
     const [{ campaigns }, { talents }] = await Promise.all([call('/campaigns'), call('/state')]);
     const c = pick(campaigns.filter((x) => !x.archived && !/lost/i.test(x.stage)), a.campaign, 'campaign');
     const t = pick(talents, a.creator, 'creator');
     const { campaign: full } = await call('/campaigns/' + encodeURIComponent(c.id));
-    if ((full.infl || []).some((x) => x.tid === t.id)) return { done: false, message: `${t.name} is already on ${c.name}.` };
-    if (!a.confirm) return { done: false, needs_confirmation: true,
-      preview: `Add ${t.name} (${t.niche || 'no niche'}, ${t.location || t.region || 'no location'}, ${(t.total_followers || 0).toLocaleString('en-GB')} followers, Index rate ${t.rate || 'not set'}) to "${c.name}" for ${c.client || 'no client'} as shortlisted, not approved. Fee is taken from the Index rate at the ${c.target}% target margin; the team sets the final fee in Zodiac OS.`,
-      next: 'Show this to the user. Only if they confirm, call add_creator_to_campaign again with the same campaign and creator ids and confirm: true.',
-      campaign_id: c.id, creator_id: t.id };
+    if ((full.infl || []).some((x) => x.tid === t.id)) return { done: false, message: `${t.name} is already on ${c.name}. Changes to an existing creator are made in Zodiac OS.` };
+    const effFee = fee;
+    if (cr != null && effFee != null && !(cr > effFee)) throw new Error('client_rate must be above the creator fee');
+    const cur = c.cur;
+    const m = (n) => `${cur} ${Number(n).toLocaleString('en-GB', { maximumFractionDigits: 2 })}`;
+    const dels = [];
+    lines.forEach((l) => split(l.item, l.qty).forEach((y) => dels.push({ ...y, recv: y.noPost ? (l.live || l.due) : l.due, live: y.noPost ? '' : l.live })));
+    const scope = lines.reduce((acc, l) => { const f = acc.find((x) => x.item === l.item); if (f) f.qty += l.qty; else acc.push({ item: l.item, qty: l.qty, ...(l.rate != null ? { rate: l.rate } : {}) }); return acc; }, []);
+    if (!a.confirm) {
+      const money = fee != null
+        ? `Creator fee ${m(fee)}${cr != null ? `, client rate ${m(cr)} (margin ${pct(cr - fee, cr)}%)` : `, client rate at ${mp != null ? mp : c.target}% margin = ${m(Math.round(fee / (1 - (mp != null ? mp : c.target) / 100) * 100) / 100)}`}.`
+        : `No fee given, so it uses their Index rate (${t.rate || 'not set'}) at ${mp != null ? mp : c.target}% margin${cr != null ? `, client rate ${m(cr)}` : ''}.`;
+      return { done: false, needs_confirmation: true,
+        preview: `Add ${t.name} (${t.niche || 'no niche'}, ${t.location || t.region || 'no location'}, ${(t.total_followers || 0).toLocaleString('en-GB')} followers) to "${c.name}" for ${c.client || 'no client'} as shortlisted, not approved. ${money}`
+          + (lines.length ? ` Scope: ${scope.map((x) => `${x.qty} × ${x.item}${x.rate != null ? ' @ ' + m(x.rate) : ''}`).join(', ')}. Creates ${dels.length} deliverable${dels.length === 1 ? '' : 's'}: ${dels.map((d) => d.noPost ? `${d.name}${d.recv ? ' on ' + d.recv : ''}` : `${d.name}${d.recv || d.live ? ' (' + [d.recv && 'content due ' + d.recv, d.live && 'live ' + d.live].filter(Boolean).join(', ') + ')' : ''}`).join('; ')}.` : ' No deliverables.')
+          + (fee != null ? ' The fee is also saved to their Index rate, as it is when entered in Zodiac OS.' : ''),
+        next: 'Show this to the user. Only if they confirm, call add_creator_to_campaign again with the same details and confirm: true.',
+        campaign_id: c.id, creator_id: t.id };
+    }
     const res = await call('/campaigns/' + encodeURIComponent(c.id) + '/talents', { method: 'POST', body: { talent_id: t.id } });
     const added = (res.campaign.infl || []).find((x) => x.tid === t.id);
-    return { done: true, message: `Added ${t.name} to ${c.name} as shortlisted. It shows in Zodiac OS now, logged as added by ${u.name}.`,
-      fee: added ? r2(added.initial) : null, client_rate: added ? r2(added.client) : null, currency: c.cur };
+    if (!added) throw new Error('Could not add them');
+    const base = P => '/campaigns/' + encodeURIComponent(c.id) + '/talents/' + encodeURIComponent(added.id) + P;
+    const steps = [];
+    try {
+      const patch = {};
+      if (fee != null) patch.initial = fee;
+      if (mp != null) patch.margin = mp;
+      if (scope.length) patch.scope = scope;
+      if (Object.keys(patch).length) { await call(base(''), { method: 'PATCH', body: patch }); steps.push('fee and scope'); }
+      if (cr != null) await call(base(''), { method: 'PATCH', body: { client_rate: cr } });
+      for (const d of dels) await call(base('/deliverables'), { method: 'POST', body: { name: d.name, platform: d.platform, item: d.item, qty: d.qty, noPost: d.noPost, recv: d.recv || null, live: d.live || null } });
+    } catch (e) {
+      return { done: 'partly', message: `${t.name} was added to ${c.name}, but saving the rest stopped: ${e.message}. Finish it in Zodiac OS.` };
+    }
+    const { campaign: after } = await call('/campaigns/' + encodeURIComponent(c.id));
+    const x = (after.infl || []).find((i) => i.tid === t.id) || added;
+    const f2 = x.neg != null ? x.neg : x.initial;
+    return { done: true, message: `Added ${t.name} to ${c.name} as shortlisted${dels.length ? ` with ${dels.length} deliverable${dels.length === 1 ? '' : 's'}` : ''}. It shows in Zodiac OS now, logged as added by ${u.name}.`,
+      currency: cur, fee: r2(f2), client_rate: r2(x.client), margin_pct: pct(x.client - f2, x.client),
+      scope: (x.scope || []).map((s2) => `${s2.qty} × ${s2.item}`).join(', '), deliverables: (x.deliv || []).map((d) => ({ name: d.name, content_due: d.recv, live: d.live })) };
   }
   throw new Error('Unknown tool ' + name);
 }
