@@ -316,3 +316,19 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - The preview shows which column is being read for each field, and warns if there's no niche or follower column.
 - UK towns, cities and counties (and the other emirates) are saved as UK / UAE.
 - Migration 21 (runs on deploy): talent whose location is a single UK town/city/county is changed to UK (other emirates to UAE).
+
+## Update 67 · Closed Won campaigns checked against monday (read only)
+- For every 7 - Won campaign imported from monday, Zodiac OS reads the Agency Sales Pipeline deal and flags anything that doesn't match. Nothing is ever written to monday.
+- Compared: stage (monday "Invoiced"/"Invoice Paid" count as won), currency, budget, target margin, real margin on the creators booked vs monday's target, start date, owner, client, and invoicing status vs the Financials client invoices.
+- Campaign header: "N differences with monday" (or "Matches monday"). Click for the side-by-side, with "Use monday's" per row (budget, target margin, start date, owner, client, stage) and "Use monday's for all". Margin and invoicing rows link to Rates / Financials.
+- Runs with the hourly deals sync (7am–9pm Dubai) and when you open a won campaign (if the last check is over 10 minutes old). Campaign list shows a "≠ monday" flag; Home's bell lists them and they count towards "Need attention".
+- Migration 22 (runs on deploy): campaigns.monday_check.
+- Update 67b: the monday check now also covers campaigns still in the pipeline (3 - Proposal Sent through 6 - Contract Sent): stage, currency, budget, target margin, real margin, start date, owner and client. Invoicing is only checked once Won. If a deal is marked Won on monday while the campaign is still at Proposal Sent, it's flagged with "Use monday's" to move it to 7 - Won. Closed Lost campaigns aren't checked.
+
+## Update 68 · Sales dashboard and Reports from monday; monthly Forecast report
+- Sales dashboard and Reports now read every deal on the monday Agency Sales Pipeline (read only, cached 5 minutes, "Refresh" to re-read). Deals with a campaign here use its real creator costs; others use monday's Target Margin. Monday "Invoiced" / "Invoice Paid" count as won; "1- Prospect" isn't in the revenue figures. Campaigns made by hand here (no monday deal) still count. Deals without a campaign open on monday when clicked.
+- Currency to £ uses the same rates as monday's GBP formulas (USD 0.75, AED 0.2, EUR 0.85, SAR 0.2).
+- Reports → Forecast now matches the monthly meeting PDF: headline cards; Closed Won with By Status (Invoice Paid / Agreed) and Agreed Deals; Key Updates (deals agreed this month and last, grouped by client); Active Conversations (prospect and discovery deals); Proposal Sent pipeline with likelihood (monday Close Probability) and next steps (monday Next Steps).
+- "Edit the wording": per deal, choose where it shows (Auto / Key Updates / Conversations / Hide), a tag and a line; saved for the whole team and kept month to month.
+- Save as PDF (prints one section per A4 page), Excel (Summary, Closed Won, Pipeline, Key Updates, Active Conversations), and Download HTML. Sales has Download Excel.
+- Migration 23 (runs on deploy): report_notes.
