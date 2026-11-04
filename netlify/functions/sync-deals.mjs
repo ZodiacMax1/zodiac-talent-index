@@ -1,5 +1,5 @@
-// Scheduled every 30 minutes: just kicks off the background function that does the work.
-export const config = { schedule: '*/30 * * * *' };
+// Hourly, 7am–9pm Dubai (03:15–17:15 UTC): just kicks off the background function that does the work.
+export const config = { schedule: '15 3-17 * * *' };
 
 export default async () => {
   const base = process.env.URL || process.env.DEPLOY_PRIME_URL;

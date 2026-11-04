@@ -303,3 +303,8 @@ No new migration. A slim "Next up" line under the campaign title lists what need
 - Plays when the site opens with a saved sign-in (no more flash of the sign-in card), straight after signing in, and when you come back to the tab after 30+ minutes away (it then returns you to Home).
 - If the saved sign-in has expired, the sign-in card appears as before.
 - The Home hero now uses the same high-res artwork.
+
+## Update 65 · Netlify credits: let the database sleep
+- Netlify DB charges for every hour it is awake and it only sleeps after ~5 idle minutes. The 5-minute talent sync and the 20-second page check kept it awake 24/7 (most of the credit usage).
+- Talent sync now every 30 min, 7am–9pm Dubai (was every 5 min, all night). monday deals sync hourly in the same hours (was every 30 min). The monday Sync button still works any time.
+- Open pages check for changes once a minute, and only while someone has used the page in the last 5 minutes and the tab is visible.

@@ -1,7 +1,8 @@
 import { syncTalent } from '../lib/sync.mjs';
 
-// Runs every 5 minutes on the published site
-export const config = { schedule: '*/5 * * * *' };
+// Every 30 minutes, 7am–9pm Dubai (03:00–17:30 UTC). Overnight runs kept the database awake 24/7.
+// The monday Sync button still pulls changes on demand.
+export const config = { schedule: '*/30 3-17 * * *' };
 
 export default async () => {
   try {
