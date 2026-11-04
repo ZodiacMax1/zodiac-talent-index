@@ -613,9 +613,9 @@ export default async (req, context) => {
       if (!me.uid) return json({ error: 'Sign in with your own email to connect Claude' }, 403);
       const kh = (k) => createHash('sha256').update(`${process.env.AUTH_SECRET || ''}|claude|${k}`).digest('hex');
       const list = async () => (await query(
-        `SELECT k.id, k.user_id, u.name, k.hint, k.created_at, k.last_used_at, k.uses FROM claude_keys k JOIN users u ON u.id = k.user_id
+        `SELECT k.id, k.user_id, u.name, u.role, u.claude_edit, k.hint, k.created_at, k.last_used_at, k.uses FROM claude_keys k JOIN users u ON u.id = k.user_id
           WHERE k.revoked_at IS NULL ${me.admin ? '' : 'AND k.user_id = $1'} ORDER BY lower(u.name)`, me.admin ? [] : [me.uid]))
-        .map((k) => ({ id: Number(k.id), uid: Number(k.user_id), name: k.name, hint: k.hint, created: k.created_at, lastUsed: k.last_used_at, uses: k.uses, mine: Number(k.user_id) === me.uid }));
+        .map((k) => ({ id: Number(k.id), uid: Number(k.user_id), name: k.name, edit: !!k.claude_edit && k.role !== 'viewer', viewer: k.role === 'viewer', hint: k.hint, created: k.created_at, lastUsed: k.last_used_at, uses: k.uses, mine: Number(k.user_id) === me.uid }));
       if (method === 'GET') return json({ keys: await list() });
       if (method === 'POST' && !parts[1]) {
         const chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -624,6 +624,14 @@ export default async (req, context) => {
         await query('INSERT INTO claude_keys (user_id, key_hash, hint) VALUES ($1, $2, $3)', [me.uid, kh(key), key.slice(-4)]);
         await logAct('claude.key', String(me.uid), me.name, { action: 'created' });
         return json({ url: `${url.origin}/mcp/${key}`, keys: await list() }, 201);
+      }
+      if (method === 'PATCH' && parts[1] === 'edit' && parts[2]) {
+        if (!me.admin) return json({ error: 'Only an admin can change this' }, 403);
+        const b = await req.json().catch(() => ({}));
+        const [u] = await query('UPDATE users SET claude_edit = $2 WHERE id = $1 RETURNING name', [parts[2], !!b.edit]);
+        if (!u) return json({ error: 'Not found' }, 404);
+        await logAct('claude.edit', String(parts[2]), u.name, { edit: !!b.edit });
+        return json({ keys: await list() });
       }
       if (method === 'DELETE' && parts[1]) {
         const [k] = await query('SELECT k.user_id, u.name FROM claude_keys k JOIN users u ON u.id = k.user_id WHERE k.id = $1 AND k.revoked_at IS NULL', [parts[1]]);
