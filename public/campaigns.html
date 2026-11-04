@@ -496,6 +496,10 @@ th,.sdt th,.pt th{font:700 11px var(--body)!important;letter-spacing:.05em!impor
 .mdflag{display:inline-block;margin-left:8px;background:var(--bad-bg);color:var(--bad-fg);border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:500;vertical-align:1px}
 .mdm{width:min(760px,94vw)}
 
+.fcc{margin-top:12px}.fcg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.fcg label{display:grid;gap:4px}
+.fcs{display:grid;gap:6px;margin-top:6px}.fcsr{display:grid;grid-template-columns:90px 220px minmax(0,1fr) 70px;gap:8px;align-items:center}.fcsr .fld{padding:7px 10px;font-size:13px}
+@media (max-width:900px){.fcg{grid-template-columns:1fr 1fr}.fcsr{grid-template-columns:1fr 1fr}}
+
 .fcn{padding:12px 16px;margin-bottom:14px}.fcn summary{cursor:pointer;font-weight:500}
 .fcl{display:grid;gap:8px;margin-top:12px;max-height:420px;overflow:auto}
 .fcr{display:grid;grid-template-columns:240px 140px 200px minmax(0,1fr);gap:8px;align-items:center}.fcr .fld{padding:7px 10px;font-size:13px}
@@ -1951,10 +1955,10 @@ function clientModal(){
 
 /* ---- Sales dashboard and Reports read every deal on the monday Agency Sales Pipeline (read only).
    Deals that have a campaign here use that campaign's creator costs; others use monday's target margin. */
-var DEALS=null,RNOTES={},DEALSAT='',DEALERR='',DLOAD=false;
+var DEALS=null,RNOTES={},RCFG=null,DEALSAT='',DEALERR='',DLOAD=false;
 var MFX={GBP:1,USD:0.75,AED:0.2,EUR:0.85,SAR:0.2};
 function loadDeals(fresh){if(DLOAD)return;DLOAD=true;
-  api('/campaigns/monday-pipeline'+(fresh?'?fresh=1':'')).then(function(j){DEALS=j.deals||[];RNOTES=j.notes||{};DEALSAT=j.at;DEALERR='';DLOAD=false;_SR=null;render();})
+  api('/campaigns/monday-pipeline'+(fresh?'?fresh=1':'')).then(function(j){DEALS=j.deals||[];RNOTES=j.notes||{};RCFG=j.cfg||null;DEALSAT=j.at;DEALERR='';DLOAD=false;_SR=null;render();})
     .catch(function(e){DEALERR=e.message;DLOAD=false;if(DEALS===null)DEALS=false;render();});}
 var _SR=null,_SRK='';
 function SROWS(){
@@ -2141,20 +2145,28 @@ function fc0(n){return '£'+Math.round(n).toLocaleString('en-GB');}
 function fcK(n){return '£'+(Math.round(n/10)/100).toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})+'k';}
 function fcMon(d){return d?['January','February','March','April','May','June','July','August','September','October','November','December'][+d.slice(5,7)-1]+' '+d.slice(0,4):'';}
 function fcShortSt(st){return String(st||'').replace(/^\d+\s*-\s*/,'').replace(/^1-\s*Prospect.*/,'Prospect');}
+var FCDEF={title:'Influencer Marketing Forecast',month:'',fyStart:1,keyMonths:2,stages:['3 - Proposal Sent','4 - Negotiation','5 - Verbal Agreement','6 - Contract Sent'],conv:['p','d'],
+  headline:true,byStatus:true,agreedList:true,margins:true,prob:true,topLines:true,intro:'',order:['won','key','conv','pipe'],
+  sec:{won:{show:true,title:'Closed Won',eye:'Delivered & secured'},key:{show:true,title:'Key Updates',eye:'This month'},conv:{show:true,title:'Active Conversations',eye:'Business development'},pipe:{show:true,title:'Proposal Sent (Pipeline)',eye:''}}};
+function FCFG(){var c=JSON.parse(JSON.stringify(FCDEF)),r=RCFG||{};for(var k in r){if(k==='sec'){for(var s2 in r.sec)c.sec[s2]=Object.assign(c.sec[s2]||{},r.sec[s2]);}else c[k]=r[k];}
+  c.order=(c.order||[]).filter(function(k){return FCDEF.sec[k];});FCDEF.order.forEach(function(k){if(c.order.indexOf(k)<0)c.order.push(k);});return c;}
+function fcPeriod(cf){var M=cf.month||TODAY.slice(0,7),y=+M.slice(0,4),m=+M.slice(5,7),fs=+cf.fyStart||1,sy=m>=fs?y:y-1;
+  var from=sy+'-'+('0'+fs).slice(-2)+'-01',to=addDays((fs===1?sy+1:sy+1)+'-'+('0'+fs).slice(-2)+'-01',-1);
+  return {M:M,from:from,to:to,fy:fs===1?String(sy):String(sy+1)};}
 function fcCalc(owner){
-  var y=TODAY.slice(0,4),ms=TODAY.slice(0,7),pm=addDays(ms+'-01',-1).slice(0,7);
+  var cf=FCFG(),P=fcPeriod(cf),ms=P.M,win=[],d0=ms+'-01';for(var j=0;j<Math.max(1,+cf.keyMonths||1);j++){win.push(d0.slice(0,7));d0=addDays(d0,-1).slice(0,7)+'-01';}
   var rows=SROWS().filter(function(c){return owner==='All'||(c.owner||'Unassigned')===owner;}).map(function(c){
     var g=c.fx||1,bud=c.budget*g,costed=c.selected>0,mg=costed?(c.budget-c.cost)*g:bud*((c.target||30)/100),n=RNOTES[c.mondayItemId]||{};
     return {c:c,name:fcName(c),st:c.stage,mst:c.mstage||c.stage,bud:bud,mg:mg,costed:costed,won:c.wonAt||sdDate(c),prob:c.prob,next:c.next||c.fnote||'',paid:!!c.paid,note:n,client:c.client||''};});
-  var won=rows.filter(function(x){return x.st==='7 - Won'&&x.won.slice(0,4)===y;}).sort(function(a,b){return b.bud-a.bud;});
+  var won=rows.filter(function(x){return x.st==='7 - Won'&&x.won>=P.from&&x.won<=P.to;}).sort(function(a,b){return b.bud-a.bud;});
   var paid=won.filter(function(x){return x.paid;}),agreed=won.filter(function(x){return !x.paid;});
-  var pipe=rows.filter(function(x){return ['3 - Proposal Sent','4 - Negotiation','5 - Verbal Agreement','6 - Contract Sent'].indexOf(x.st)>-1&&x.note.place!=='hide';}).sort(function(a,b){return b.bud-a.bud;});
+  var pipe=rows.filter(function(x){return cf.stages.indexOf(x.st)>-1&&x.note.place!=='hide';}).sort(function(a,b){return b.bud-a.bud;});
   var sum=function(a,f){return a.reduce(function(t,x){return t+f(x);},0);},B=function(x){return x.bud;},M=function(x){return x.mg;};
   // Key Updates: deals agreed this month or last month, one card per client; plus anything pinned to Key Updates
   var key={},conv={};
   function card(map,x,tag,txt){var k=(x.client||x.name).toLowerCase();var c=map[k]=map[k]||{title:x.client||x.name,items:[],tag:'',txt:'',rank:0};c.items.push(x);if(x.note.tag)c.tag=x.note.tag;if(x.note.note)c.txt=x.note.note;if(!c.tag)c.tag=tag;if(!c.txt)c.txt=txt;c.rank=Math.max(c.rank,x.bud);return c;}
   rows.forEach(function(x){if(x.note.place==='hide')return;
-    var recent=x.st==='7 - Won'&&(x.won.slice(0,7)===ms||x.won.slice(0,7)===pm);
+    var recent=x.st==='7 - Won'&&win.indexOf(x.won.slice(0,7))>-1;
     if(x.note.place==='key'||(x.note.place!=='conv'&&recent))card(key,x,'',''); });
   Object.keys(key).forEach(function(k){var c=key[k],ag=c.items.filter(function(x){return x.st==='7 - Won';});
     if(!c.tag)c.tag=ag.length>1?ag.length+' campaigns agreed':ag.length?'Campaign agreed':fcShortSt(c.items[0].mst);
@@ -2162,15 +2174,15 @@ function fcCalc(owner){
       var L=ag.map(nm);c.txt=(L.length>1?L.slice(0,-1).join(', ')+' and '+L[L.length-1]+' all agreed.':L[0]+' agreed.');}else c.txt=c.items[0].next;}});
   // Active Conversations: early-stage deals (prospect, discovery) and anything pinned there
   rows.forEach(function(x){if(x.note.place==='hide'||x.st==='8 - Closed Lost')return;
-    var early=/^1-|^2 - /.test(x.mst)||x.st==='2 - Discovery / Scoping';
+    var early=(cf.conv.indexOf('p')>-1&&/^1-/.test(x.mst))||(cf.conv.indexOf('d')>-1&&(/^2 - /.test(x.mst)));
     if(x.note.place==='conv'||(x.note.place!=='key'&&early))card(conv,x,fcShortSt(x.mst),x.next);});
   var keyL=Object.keys(key).map(function(k){return key[k];}).sort(function(a,b){return b.rank-a.rank;});
   var convL=Object.keys(conv).map(function(k){return conv[k];}).sort(function(a,b){return b.rank-a.rank;});
-  return {rows:rows,won:won,paid:paid,agreed:agreed,pipe:pipe,key:keyL,conv:convL,
+  return {cf:cf,P:P,rows:rows,won:won,paid:paid,agreed:agreed,pipe:pipe,key:keyL,conv:convL,
     wr:sum(won,B),wm:sum(won,M),pr:sum(paid,B),prm:sum(paid,M),ar:sum(agreed,B),arm:sum(agreed,M),pv:sum(pipe,B),pvm:sum(pipe,M)};
 }
 function fcHtml(owner){
-  var D=fcCalc(owner),y=TODAY.slice(0,4),who=owner==='All'?'':owner,mon=fcMon(TODAY).toUpperCase();
+  var D=fcCalc(owner),cf=D.cf,y=D.P.fy,who=owner==='All'?'':owner,mon=fcMon(D.P.M+'-01').toUpperCase(),S2=cf.sec;
   var pct=function(m,b){return b>0?(m/b*100).toFixed(1)+'%':'–';};
   var css='*{box-sizing:border-box;margin:0;padding:0}html{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{background:#f0eeea;color:#1a1a1a;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45}'
   +'.pg{max-width:900px;margin:0 auto;padding:40px 44px 44px}.pg+.pg{border-top:1px dashed #d6d1c6}'
@@ -2183,28 +2195,53 @@ function fcHtml(owner){
   +'.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.cd{background:#fff;border:1px solid #ddd8cd;border-radius:8px;padding:14px 15px}.cd b{display:block;font-size:14.5px;font-weight:700}.pill{display:inline-block;background:#4d0011;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border-radius:20px;padding:3px 9px;margin:7px 0 7px}.cd p{font-size:11px;color:#7a7468;line-height:1.5}'
   +'.none{color:#8a8478;font-size:12.5px;padding:14px 0}'
   +'@page{size:A4;margin:0}@media print{body{background:#f0eeea}.pg{page-break-after:always;border:0!important;min-height:100vh}.pg:last-child{page-break-after:auto}}';
+  function mg(m,b){return cf.margins?'Margin '+(Math.abs(b)>=1000&&b%1?fc2(m):fc0(m))+' · '+pct(m,b):'';}
   function row(name,sub,val,meta,w){return '<div class="dr"><div class="t"><span>'+esc(name)+'</span><b>'+val+'</b></div><div class="u"><span>'+esc(sub)+'</span><span>'+meta+'</span></div><div class="bar"><i style="width:'+Math.max(1.5,Math.min(100,w)).toFixed(1)+'%"></i></div></div>';}
   function cards(L){return L.length?'<div class="cg">'+L.map(function(c){return '<div class="cd"><b>'+esc(c.title)+'</b><span class="pill">'+esc(c.tag||'Update')+'</span><p>'+esc(c.txt||'')+'</p></div>';}).join('')+'</div>':'<div class="none">Nothing to show yet.</div>';}
-  var head='<div class="hd"><h1>Influencer Marketing Forecast</h1><div class="r"><small>Zodiac Global · '+mon+'</small><b>FY'+y+' Forecast</b>'+(who?'<span>'+esc(who)+'</span>':'')+'</div></div>';
-  var p1='<div class="pg">'+head
-    +'<div class="g3"><div class="k"><div class="l">Total Closed Won Revenue</div><div class="v">'+fcK(D.wr)+'</div></div><div class="k"><div class="l">Total Closed Won Margin</div><div class="v">'+fcK(D.wm)+'</div></div><div class="k"><div class="l">Pipeline (Proposal Sent)</div><div class="v">'+fcK(D.pv)+'</div></div></div>'
-    +'<div class="eb">Delivered &amp; secured</div><h2>Closed Won</h2>'
-    +'<div class="g3 s" style="margin-bottom:0"><div class="k"><div class="l">Total Revenue</div><div class="v">'+fcK(D.wr)+'</div></div><div class="k"><div class="l">Total Margin</div><div class="v">'+fcK(D.wm)+'</div></div><div class="k w"><div class="l">Margin %</div><div class="v">'+pct(D.wm,D.wr)+'</div></div></div>'
-    +'<div class="h3">By Status <span>· bar shows share of total Closed Won revenue</span></div><div class="bl">'
-      +(D.wr?[['Invoice Paid','Delivered and paid',D.pr,D.prm],['Closed Won · Agreed','Signed off, not yet paid',D.ar,D.arm]].filter(function(r){return r[2]>0;}).map(function(r){return row(r[0],r[1],fc2(r[2]),'Margin '+fc2(r[3])+' · '+pct(r[3],r[2]),r[2]/D.wr*100);}).join(''):'<div class="none">No Closed Won deals yet this year.</div>')+'</div>'
-    +'<div class="h3">Agreed Deals <span>· bar shows share of agreed revenue</span></div><div class="bl">'
-      +(D.agreed.length?D.agreed.map(function(x){return row(x.name,fcMon(x.won),fc0(x.bud),'Margin '+fc0(x.mg)+' · '+pct(x.mg,x.bud),D.ar?x.bud/D.ar*100:0);}).join(''):'<div class="none">Nothing agreed and waiting on payment.</div>')+'</div>'
-    +'<div class="tp">Top line: <b>'+fc2(D.pr)+' invoiced and paid'+(D.ar?', with a further '+fc0(D.ar)+' agreed':'')+'</b></div></div>';
-  var p2='<div class="pg">'+head+'<div class="eb">This month</div><h2>Key Updates</h2>'+cards(D.key)+'</div>';
-  var p3='<div class="pg">'+head+'<div class="eb">Business development</div><h2>Active Conversations</h2>'+cards(D.conv)+'</div>';
-  var top=D.pipe[0];
-  var p4='<div class="pg">'+head+'<h2>Proposal Sent (Pipeline)</h2>'
-    +'<div class="g3 s" style="margin-bottom:0"><div class="k"><div class="l">Total Revenue</div><div class="v">'+fc0(D.pv)+'</div></div><div class="k"><div class="l">Total Margin</div><div class="v">'+fc0(D.pvm)+'</div></div><div class="k w"><div class="l">Margin %</div><div class="v">'+pct(D.pvm,D.pv)+'</div></div></div>'
-    +'<div class="h3">Pipeline by Deal <span>· bar shows likelihood to close</span></div><div class="bl">'
-      +(D.pipe.length?D.pipe.map(function(x){return row(x.name,x.note.note||x.next||fcShortSt(x.mst),fc0(x.bud),'Margin '+fc0(x.mg)+' · '+pct(x.mg,x.bud)+(x.prob!=null?' · <em>'+Math.round(x.prob)+'% likely</em>':''),x.prob!=null?x.prob:0);}).join(''):'<div class="none">No open proposals.</div>')+'</div>'
-    +(top?'<div class="tp">Top deal: <b>'+esc(top.name)+', '+fc0(top.bud)+' revenue'+(top.prob!=null?' ('+Math.round(top.prob)+'% likely)':'')+'</b></div>':'')+'</div>';
-  return '<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zodiac Global · Influencer Marketing Forecast</title><style>'+css+'</style></head><body>'+p1+p2+p3+p4+'</body></html>';
+  var head='<div class="hd"><h1>'+esc(cf.title||FCDEF.title)+'</h1><div class="r"><small>Zodiac Global · '+mon+'</small><b>FY'+y+' Forecast</b>'+(who?'<span>'+esc(who)+'</span>':'')+'</div></div>';
+  var heads='<div class="g3"><div class="k"><div class="l">Total Closed Won Revenue</div><div class="v">'+fcK(D.wr)+'</div></div>'+(cf.margins?'<div class="k"><div class="l">Total Closed Won Margin</div><div class="v">'+fcK(D.wm)+'</div></div>':'')+'<div class="k"><div class="l">Pipeline (Proposal Sent)</div><div class="v">'+fcK(D.pv)+'</div></div></div>';
+  function tri(r,m,big){return '<div class="g3 s" style="margin-bottom:0"><div class="k"><div class="l">Total Revenue</div><div class="v">'+(big?fcK(r):fc0(r))+'</div></div>'+(cf.margins?'<div class="k"><div class="l">Total Margin</div><div class="v">'+(big?fcK(m):fc0(m))+'</div></div><div class="k w"><div class="l">Margin %</div><div class="v">'+pct(m,r)+'</div></div>':'')+'</div>';}
+  function title(k){var x=S2[k];return (x.eye?'<div class="eb">'+esc(x.eye)+'</div>':'')+'<h2>'+esc(x.title)+'</h2>';}
+  var BUILD={
+    won:function(){return title('won')+tri(D.wr,D.wm,true)
+      +(cf.byStatus?'<div class="h3">By Status <span>· bar shows share of total revenue</span></div><div class="bl">'+(D.wr?[['Invoice Paid','Delivered and paid',D.pr,D.prm],['Closed Won · Agreed','Signed off, not yet paid',D.ar,D.arm]].filter(function(r){return r[2]>0;}).map(function(r){return row(r[0],r[1],fc2(r[2]),mg(r[3],r[2]),r[2]/D.wr*100);}).join(''):'<div class="none">No Closed Won deals in this period.</div>')+'</div>':'')
+      +(cf.agreedList?'<div class="h3">Agreed Deals <span>· bar shows share of agreed revenue</span></div><div class="bl">'+(D.agreed.length?D.agreed.map(function(x){return row(x.name,fcMon(x.won),fc0(x.bud),cf.margins?'Margin '+fc0(x.mg)+' · '+pct(x.mg,x.bud):'',D.ar?x.bud/D.ar*100:0);}).join(''):'<div class="none">Nothing agreed and waiting on payment.</div>')+'</div>':'')
+      +(cf.topLines?'<div class="tp">Top line: <b>'+fc2(D.pr)+' invoiced and paid'+(D.ar?', with a further '+fc0(D.ar)+' agreed':'')+'</b></div>':'');},
+    key:function(){return title('key')+cards(D.key);},
+    conv:function(){return title('conv')+cards(D.conv);},
+    pipe:function(){var top=D.pipe[0];return title('pipe')+tri(D.pv,D.pvm,false)
+      +'<div class="h3">Pipeline by Deal <span>· bar shows '+(cf.prob?'likelihood to close':'share of pipeline')+'</span></div><div class="bl">'
+      +(D.pipe.length?D.pipe.map(function(x){return row(x.name,x.note.note||x.next||fcShortSt(x.mst),fc0(x.bud),[cf.margins?'Margin '+fc0(x.mg)+' · '+pct(x.mg,x.bud):'',cf.prob&&x.prob!=null?'<em>'+Math.round(x.prob)+'% likely</em>':''].filter(Boolean).join(' · '),cf.prob?(x.prob||0):(D.pv?x.bud/D.pv*100:0));}).join(''):'<div class="none">No open proposals.</div>')+'</div>'
+      +(cf.topLines&&top?'<div class="tp">Top deal: <b>'+esc(top.name)+', '+fc0(top.bud)+' revenue'+(cf.prob&&top.prob!=null?' ('+Math.round(top.prob)+'% likely)':'')+'</b></div>':'');}
+  };
+  var pages=cf.order.filter(function(k){return S2[k]&&S2[k].show!==false;}).map(function(k,i){return '<div class="pg">'+head+(i===0?(cf.intro?'<div class="intro">'+esc(cf.intro).replace(/\n/g,'<br>')+'</div>':'')+(cf.headline?heads:''):'')+BUILD[k]()+'</div>';});
+  if(!pages.length)pages=['<div class="pg">'+head+(cf.headline?heads:'')+'</div>'];
+  var p1=pages.join(''),p2='',p3='',p4='';
+  return '<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Zodiac Global · '+esc(cf.title||FCDEF.title)+'</title><style>'+css+'.intro{background:#fff;border:1px solid #ddd8cd;border-left:3px solid #4d0011;border-radius:8px;padding:12px 16px;font-size:12.5px;line-height:1.6;margin:-8px 0 22px}</style></head><body>'+p1+p2+p3+p4+'</body></html>';
 }
+/* Customise the report: one layout shared by the whole team */
+function fcCustom(){
+  if(!DEALS)return '';var cf=FCFG(),ed=canEdit(),dis=ed?'':' disabled';
+  var chk=function(k,l){return '<label class="apc"><input type="checkbox" data-fcc="'+k+'"'+(cf[k]?' checked':'')+dis+'> '+l+'</label>';};
+  var STG=[['2 - Discovery / Scoping','Discovery'],['3 - Proposal Sent','Proposal Sent'],['4 - Negotiation','Negotiation'],['5 - Verbal Agreement','Verbal Agreement'],['6 - Contract Sent','Contract Sent']];
+  var h='<details class="card fcn"'+(S.fccOpen?' open':'')+' data-fccbox="1"><summary>Customise the report<span class="small"> · sections, titles, period and what counts. Saved for the whole team.</span></summary><div class="fcc">'
+   +'<div class="fcg"><label><span class="k2">Report title</span><input class="fld" data-fcc="title" value="'+esc(cf.title)+'"'+dis+'></label>'
+   +'<label><span class="k2">Report month</span><input class="fld" type="month" data-fcc="month" value="'+esc(cf.month||'')+'"'+dis+'><span class="small">Blank = always the current month</span></label>'
+   +'<label><span class="k2">Financial year starts</span><select class="sel plain" data-fcc="fyStart"'+dis+'>'+[[1,'January'],[4,'April'],[7,'July'],[10,'October']].map(function(o){return '<option value="'+o[0]+'"'+(+cf.fyStart===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></label>'
+   +'<label><span class="k2">Key Updates covers</span><select class="sel plain" data-fcc="keyMonths"'+dis+'>'+[[1,'This month'],[2,'This and last month'],[3,'Last 3 months']].map(function(o){return '<option value="'+o[0]+'"'+(+cf.keyMonths===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></label></div>'
+   +'<div class="k2" style="margin-top:12px">Pipeline includes</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">'+STG.map(function(o){return '<label class="apc"><input type="checkbox" data-fccst="'+o[0]+'"'+(cf.stages.indexOf(o[0])>-1?' checked':'')+dis+'> '+o[1]+'</label>';}).join('')+'</div>'
+   +'<div class="k2" style="margin-top:12px">Active Conversations includes</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><label class="apc"><input type="checkbox" data-fccv="p"'+(cf.conv.indexOf('p')>-1?' checked':'')+dis+'> Prospects</label><label class="apc"><input type="checkbox" data-fccv="d"'+(cf.conv.indexOf('d')>-1?' checked':'')+dis+'> Discovery / Scoping</label><span class="small">plus anything set to Conversations in the wording</span></div>'
+   +'<div class="k2" style="margin-top:12px">Show</div><div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px">'+chk('headline','Headline cards')+chk('byStatus','By Status')+chk('agreedList','Agreed Deals list')+chk('margins','Margins')+chk('prob','Likelihood to close')+chk('topLines','Top line / Top deal')+'</div>'
+   +'<div class="k2" style="margin-top:14px">Sections <span class="small">· one page each, in this order</span></div><div class="fcs">'
+   +cf.order.map(function(k,i){var x=cf.sec[k];return '<div class="fcsr"><label class="apc"><input type="checkbox" data-fccs="'+k+'|show"'+(x.show!==false?' checked':'')+dis+'> Show</label><input class="fld" data-fccs="'+k+'|eye" value="'+esc(x.eye||'')+'" placeholder="Small heading (optional)"'+dis+'><input class="fld" data-fccs="'+k+'|title" value="'+esc(x.title)+'"'+dis+'><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="x" data-fccmv="'+k+'|-1" title="Move up"'+(i===0||!ed?' disabled':'')+'>↑</button><button class="x" data-fccmv="'+k+'|1" title="Move down"'+(i===cf.order.length-1||!ed?' disabled':'')+'>↓</button></span></div>';}).join('')+'</div>'
+   +'<label style="display:block;margin-top:12px"><span class="k2">Intro note on the first page <span class="small">· optional, e.g. a summary for the meeting</span></span><textarea class="fld" data-fcc="intro" rows="2"'+dis+'>'+esc(cf.intro||'')+'</textarea></label>'
+   +(ed?'<div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn sm" data-act="fccreset">Reset to the standard layout</button></div>':'')
+   +'</div></details>';
+  return h;
+}
+var fccT=null;
+function fccSave(cf){RCFG=cf;S.fccOpen=true;render();clearTimeout(fccT);fccT=setTimeout(function(){api('/campaigns/report-config',{method:'PUT',body:{cfg:RCFG}}).catch(function(e){toast(e.message);});},500);}
+function fccSet(fn){var cf=FCFG();fn(cf);fccSave(cf);}
 /* Wording for Key Updates / Active Conversations / pipeline lines, saved per monday deal and shared with the team */
 function fcNotes(owner){
   if(!DEALS)return '';
@@ -2235,7 +2272,7 @@ function fcXlsx(){var D=fcCalc(S.wkO),r2=function(n){return Math.round(n*100)/10
   ],'Zodiac Influencer Marketing Forecast FY'+TODAY.slice(0,4)+' '+fcMon(TODAY)+(S.wkO==='All'?'':' - '+S.wkO)+'.xlsx');}
 function sdXlsx(){var o=sdCalc(),r2=function(n){return Math.round(n*100)/100;};
   xlsxSave([['Deals',[['Deal','Client','Owner','Stage','Date','Currency','Budget','Creator costs / est.','Budget £','Creator costs £','Margin £','Likely %']].concat(o.per.map(function(x){var c=x.c;return [c.name,c.client,x.owner,c.mstage||x.st,x.date,c.cur,c.budget,x.costed?r2(c.cost):'',r2(x.bud),x.costed?r2(x.cost):'',x.costed?r2(x.bud-x.cost):'',c.prob==null?'':c.prob];}))]],'Zodiac Sales '+S.sd.per+' '+TODAY+'.xlsx');}
-function fcPdf(){var w=window.open('','_blank');if(!w){toast('Allow pop-ups to save the PDF');return;}w.document.open();w.document.write(fcHtml(S.wkO).replace('</body>','<script>setTimeout(function(){window.print();},350);<\/script></body>'));w.document.close();}
+function fcPdf(){if(fccT){clearTimeout(fccT);api('/campaigns/report-config',{method:'PUT',body:{cfg:RCFG}});fccT=null;}var w=window.open('','_blank');if(!w){toast('Allow pop-ups to save the PDF');return;}w.document.open();w.document.write(fcHtml(S.wkO).replace('</body>','<script>setTimeout(function(){window.print();},350);<\/script></body>'));w.document.close();}
 function wkOwners(){var o={};SROWS().forEach(function(c){o[c.owner||'Unassigned']=1;});return Object.keys(o).sort();}
 function viewWeekly(){
   var cur=wkMon(TODAY),opts=[],ow=wkOwners();for(var i=0;i<12;i++)opts.push(wkAdd(cur,-7*i));
@@ -2247,7 +2284,7 @@ function viewWeekly(){
    +(fc?'<button class="btn" data-act="fcxlsx">Excel</button><button class="btn pri" data-act="fcpdf">Save as PDF</button>':'')+'<button class="btn" data-act="wkdl">Download HTML</button></div></div>';
   if(!READY)return h+'<div class="ld">Loading…</div>';
   var doc=fc?fcHtml(S.wkO):wkHtml(S.wk);
-  return h+(fc?fcNotes(S.wkO):'')+'<iframe id="wkf" title="Report" style="width:100%;height:'+(fc?4200:1700)+'px;border:1px solid var(--line);border-radius:10px;background:#f0eeea" srcdoc="'+doc.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"></iframe>';
+  return h+(fc?fcCustom()+fcNotes(S.wkO):'')+'<iframe id="wkf" title="Report" style="width:100%;height:'+(fc?4200:1700)+'px;border:1px solid var(--line);border-radius:10px;background:#f0eeea" srcdoc="'+doc.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'"></iframe>';
 }
 function wkDl(){var fc=S.wkT==='fc',b=new Blob([fc?fcHtml(S.wkO):wkHtml(S.wk)],{type:'text/html'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fc?'Zodiac Influencer Marketing Forecast FY'+TODAY.slice(0,4)+(S.wkO==='All'?'':' - '+S.wkO)+'.html':'Zodiac Weekly Update '+S.wk+'.html';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
 function sdCsv(){
@@ -2259,7 +2296,11 @@ function sdCsv(){
 document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('[data-sdt]');var tp=document.getElementById('sdtip');if(!tp)return;
   if(!t){tp.style.display='none';return;}var p=t.dataset.sdt.split('|');tp.innerHTML='<b style="font-weight:500">'+esc(p[0])+'</b>'+p.slice(1).map(function(x){return '<div>'+esc(x)+'</div>';}).join('');tp.style.display='block';
   var r=t.getBoundingClientRect(),w=tp.offsetWidth,l=Math.min(window.innerWidth-w-8,Math.max(8,r.left+r.width/2-w/2));tp.style.left=l+'px';tp.style.top=Math.max(8,r.top-tp.offsetHeight-8)+'px';});
-document.addEventListener('change',function(e){var t=e.target;if(t.id==='sd-per'){S.sd.per=t.value;S.sd.all=false;render();}else if(t.id==='sd-owner'){S.sd.owner=t.value;render();}else if(t.id==='wk-sel'){S.wk=t.value;render();}else if(t.id==='wk-type'){S.wkT=t.value;render();}else if(t.id==='wk-own'){S.wkO=t.value;render();}else if(t.getAttribute&&t.getAttribute('data-fcn')){var fp=t.getAttribute('data-fcn').split('|');fcSave(fp[0],fp[1],t.value);}else if(t.getAttribute&&t.getAttribute('data-fnote')){var fid=t.getAttribute('data-fnote'),fv=t.value;api('/campaigns/'+fid,{method:'PATCH',body:{fnote:fv}}).then(function(){CAMPS.forEach(function(c){if(c.id===fid)c.fnote=fv;});render();}).catch(function(er){toast(er.message);});}});
+document.addEventListener('change',function(e){var t=e.target;if(t.id==='sd-per'){S.sd.per=t.value;S.sd.all=false;render();}else if(t.id==='sd-owner'){S.sd.owner=t.value;render();}else if(t.id==='wk-sel'){S.wk=t.value;render();}else if(t.id==='wk-type'){S.wkT=t.value;render();}else if(t.id==='wk-own'){S.wkO=t.value;render();}else if(t.getAttribute&&t.getAttribute('data-fcc')){var fk=t.getAttribute('data-fcc'),fv2=t.type==='checkbox'?t.checked:(fk==='fyStart'||fk==='keyMonths'?+t.value:t.value);fccSet(function(c){c[fk]=fv2;});}
+else if(t.getAttribute&&t.getAttribute('data-fccst')){var sv=t.getAttribute('data-fccst'),on=t.checked;fccSet(function(c){c.stages=c.stages.filter(function(x){return x!==sv;});if(on)c.stages.push(sv);});}
+else if(t.getAttribute&&t.getAttribute('data-fccv')){var cvv=t.getAttribute('data-fccv'),on2=t.checked;fccSet(function(c){c.conv=c.conv.filter(function(x){return x!==cvv;});if(on2)c.conv.push(cvv);});}
+else if(t.getAttribute&&t.getAttribute('data-fccs')){var sp=t.getAttribute('data-fccs').split('|'),sval=t.type==='checkbox'?t.checked:t.value;fccSet(function(c){c.sec[sp[0]][sp[1]]=sval;});}
+else if(t.getAttribute&&t.getAttribute('data-fcn')){var fp=t.getAttribute('data-fcn').split('|');fcSave(fp[0],fp[1],t.value);}else if(t.getAttribute&&t.getAttribute('data-fnote')){var fid=t.getAttribute('data-fnote'),fv=t.value;api('/campaigns/'+fid,{method:'PATCH',body:{fnote:fv}}).then(function(){CAMPS.forEach(function(c){if(c.id===fid)c.fnote=fv;});render();}).catch(function(er){toast(er.message);});}});
 function render(){
   if((S.view==='sales'||S.view==='weekly')&&DEALS===null&&!DLOAD&&TOKEN)loadDeals();
   CUR=S.view==='campaign'?camp():null;
@@ -2426,7 +2467,7 @@ document.addEventListener('submit',function(e){
   }
 });
 document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-shx],[data-shd],[data-mdx],[data-mduse],[data-mdgo],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
+  var t=e.target.closest('[data-go],[data-open],[data-tab],[data-filter],[data-pick],[data-act],[data-book],[data-dst],[data-restore],[data-ptab],[data-preg],[data-esec],[data-cur],[data-dd],[data-rml],[data-archrow],[data-dtab],[data-dfs],[data-mark],[data-unlink],[data-sqx],[data-sced],[data-scdone],[data-sdec],[data-sinc],[data-openix],[data-docview],[data-docrm],[data-docrmgo],[data-docrmno],[data-ltab],[data-gtog],[data-mdall],[data-mdtog],[data-client],[data-cpclose],[data-sdcur],[data-rmrow],[data-rmrowgo],[data-rmrowno],[data-calm],[data-calt],[data-calmore],[data-calx],[data-calv],[data-calpast],[data-caly],[data-callab],[data-cnew],[data-calarm],[data-caltray],[data-cday],[data-ycell],[data-cax],[data-cadec],[data-cainc],[data-carm],[data-crst],[data-crpdf],[data-cimk],[data-cifile],[data-cifrm],[data-cidel],[data-bill],[data-crx],[data-crf],[data-crpay],[data-crdel],[data-dsel],[data-dsplit],[data-ciclr],[data-rofall],[data-nutab],[data-calc],[data-apx],[data-apday],[data-shx],[data-shd],[data-mdx],[data-mduse],[data-mdgo],[data-fccmv],[data-spx],[data-spsz],[data-isel],[data-iselall],[data-bkx],[data-bkdec],[data-bkinc],[data-bkrm]');if(!t)return;
   var d=t.dataset;
   if(d.go){S.backc=null;S.backv=null;S.view=d.go;S.sel=null;S.pick=false;if(d.go==='campaigns'){S.cid=null;FULL=null;loadList().then(render);}render();}
   else if(d.client){S.clientPop=null;S.clientPage=d.client;S.view='client';S.cid=null;FULL=null;S.pick=false;S.sel=null;render();window.scrollTo(0,0);}
@@ -2460,6 +2501,7 @@ document.addEventListener('click',function(e){
   else if(d.apx){S.ap=null;render();}
   else if(d.shx){S.sh=null;render();}
   else if(d.mdx){S.md=false;render();}
+  else if(d.fccmv){var mv=d.fccmv.split('|');fccSet(function(c){var i=c.order.indexOf(mv[0]),j=i+(+mv[1]);if(j<0||j>=c.order.length)return;c.order.splice(i,1);c.order.splice(j,0,mv[0]);});}
   else if(d.mduse!==undefined){var x=(FULL.mondayCheck.diffs||[])[+d.mduse];if(x&&x.use)mdUse([x]);}
   else if(d.mdgo){S.md=false;S.tab=d.mdgo;render();}
   else if(d.shd){shSnap();S.sh.days=Number(d.shd);render();}
@@ -2552,6 +2594,7 @@ document.addEventListener('click',function(e){
   else if(d.act==='sdxlsx'){sdXlsx();}
   else if(d.act==='fcxlsx'){fcXlsx();}
   else if(d.act==='fcpdf'){fcPdf();}
+  else if(d.act==='fccreset'){if(window.confirm('Go back to the standard report layout for everyone?'))fccSave({});}
   else if(d.act==='dlfresh'){DEALS=null;loadDeals(true);}
   else if(d.act==='wkdl'){wkDl();}
   else if(d.act==='scfill'){if(FULL)scFill(FULL);}

@@ -325,9 +325,19 @@ export async function handleCampaigns(ctx) {
     try {
       const p = await mondayPipeline(new URL(req.url).searchParams.get('fresh') === '1');
       const notes = await query('SELECT deal_id, tag, note, place, updated_by, updated_at FROM report_notes').catch(() => []);
-      return json({ at: new Date(p.at).toISOString(), deals: p.deals, notes: Object.fromEntries(notes.map((n) => [n.deal_id, { tag: n.tag || '', note: n.note || '', place: n.place || 'auto', by: n.updated_by || '' }])) });
+      const [cfgRow] = await query("SELECT value FROM app_settings WHERE key = 'forecast_cfg'").catch(() => []);
+      let cfg = null; try { cfg = cfgRow ? JSON.parse(cfgRow.value) : null; } catch (e) { cfg = null; }
+      return json({ at: new Date(p.at).toISOString(), deals: p.deals, cfg, notes: Object.fromEntries(notes.map((n) => [n.deal_id, { tag: n.tag || '', note: n.note || '', place: n.place || 'auto', by: n.updated_by || '' }])) });
     }
     catch (e) { return json({ error: 'Could not read monday: ' + e.message }, 502); }
+  }
+  if (id === 'report-config' && method === 'PUT') {
+    const b = await body();
+    const v = JSON.stringify(b && typeof b.cfg === 'object' ? b.cfg : {});
+    if (v.length > 20000) return bad('Too much text in the report settings');
+    await query("INSERT INTO app_settings (key, value) VALUES ('forecast_cfg', $1) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value", [v]);
+    await logAct('report.config', null, 'Forecast report layout', {});
+    return json({ ok: true });
   }
   if (id === 'report-notes' && method === 'PUT') {
     const b = await body();
