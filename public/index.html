@@ -127,13 +127,15 @@
   .tihero .hero-logo{height:64px}
 
   /* ---- floating black sidebar ---- */
-  body.zshell{padding-left:268px}
+  body.zshell{padding-left:268px!important}
   .zside{top:14px!important;left:14px!important;bottom:14px!important;width:240px!important;height:auto!important;border-radius:24px!important;background:#000!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:0 20px 44px -22px rgba(0,0,0,.6)!important}
   .zside .znav{border-radius:12px}
   .zside .znav.on{background:linear-gradient(135deg,#7a0c25,#4D0011)!important;box-shadow:0 8px 20px -10px rgba(160,20,50,.8)}
   .zside .znav.on::before{display:none!important}
-  .cm-view{left:268px}
-  .home-view{left:0!important;padding-left:268px;box-sizing:border-box}
+  .cm-view{left:254px!important}
+  body.zshell .wrap{max-width:none;padding:14px 14px 100px 0}
+  body.zshell .tihero{margin-top:0!important}
+  .home-view{left:0!important;padding-left:254px;box-sizing:border-box}
   @media(max-width:900px){body.zshell{padding-left:0!important}.zside{top:0!important;left:0!important;right:0!important;bottom:auto!important;width:auto!important;height:58px!important;border-radius:0!important;border:0!important}.cm-view{left:0}.home-view{padding-left:0}}
   /* ---- Home: needs attention + recently viewed ---- */
   .zh-hi{font-weight:700}
