@@ -321,6 +321,24 @@ export async function handleCampaigns(ctx) {
   }
 
   // ---- monday: Proposal Sent deals, and importing the ticked ones as campaigns
+  // ---- Content calendar across every live campaign (selected creators only)
+  if (id === 'calendar' && method === 'GET') {
+    const rows = await query(
+      `SELECT d.id, d.ct_id, d.name, d.platform, d.stage, d.no_post,
+              to_char(d.recv_by,'YYYY-MM-DD') AS recv_by, to_char(d.recv_at,'YYYY-MM-DD') AS recv_at,
+              to_char(d.live_by,'YYYY-MM-DD') AS live_by, to_char(d.live_at,'YYYY-MM-DD') AS live_at,
+              c.id AS cid, c.name AS cname, c.client, c.owner, c.monday_stage, t.name AS tname, t.id AS tid
+         FROM campaign_deliverables d
+         JOIN campaign_talents ct ON ct.id = d.ct_id
+         JOIN campaigns c ON c.id = ct.campaign_id
+         JOIN talents t ON t.id = ct.talent_id
+        WHERE c.deleted_at IS NULL AND c.arch IS NULL AND c.monday_stage <> '8 - Closed Lost'
+          AND ct.approved = 'Yes' AND ct.archived IS NULL`);
+    return json({ items: rows.map((r) => ({ id: r.id, ct: r.ct_id, name: r.name, plat: r.platform || '', stage: r.stage, noPost: !!r.no_post,
+      recv: r.recv_by || '', recvAt: r.recv_at || '', live: r.live_by || '', liveAt: r.live_at || '',
+      cid: r.cid, campaign: r.cname, client: r.client || '', owner: r.owner || '', won: r.monday_stage === '7 - Won', creator: r.tname, tid: r.tid })) });
+  }
+
   if (id === 'monday-pipeline' && method === 'GET') {
     try {
       const p = await mondayPipeline(new URL(req.url).searchParams.get('fresh') === '1');
