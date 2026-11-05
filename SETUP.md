@@ -368,3 +368,8 @@ Update 73: every campaign tab redesigned to match the Overview, and one style ac
 - Deliverables: a stage strip (Brief sent → Live) with counts; click a stage to filter. Filter chips match everywhere.
 - Overview: one compact Money card.
 - Everywhere: sentence-case section titles, one number font, same chips, same cards. Client pages and Reports use the same black banner (no logo on detail pages). Talent Index section heading matches.
+
+## Update 74 — New look: black floating sidebar, burgundy banners, Home
+- Sidebar: a floating black card with rounded corners; the page you're on is a burgundy pill. Sales dashboard is always in the sidebar.
+- Banners on every page (Talent Index, campaign list, each campaign, Sales, Reports, client pages) are burgundy with rounded corners; all text on them is white.
+- Home: "Here's where everything stands" removed. Needs attention pills now take you to the work: one campaign → straight to it on the right tab (overdue → Deliverables filtered to overdue; invoices → Financials; contracts → Creators); several → the campaign list with Next up open. New Recently viewed row: the last 3 campaigns you opened (kept in your browser), click to open.

@@ -705,6 +705,23 @@ tr.gh td,tr.gh td *{font-family:Aileron,var(--body)!important;letter-spacing:.06
 @media (max-width:900px){.fcr{grid-template-columns:1fr 1fr}}
 
 @media (max-width:760px){.ovl>*,.ovr>*{min-width:0;max-width:100%}.om .omr>*{min-width:0}.hacts{flex:1 1 100%!important;flex-wrap:wrap!important;justify-content:flex-start!important}.htop{flex-wrap:wrap!important}.ovgrid{grid-template-columns:minmax(0,1fr)!important}.rings{grid-template-columns:1fr!important}.rg+.rg{border-left:0!important;border-top:1px solid var(--line)}.om .omr{grid-template-columns:1fr!important;gap:6px}.civ{grid-template-columns:1fr!important}.fleg{grid-template-columns:1fr 1fr!important}}
+
+/* ---- banners: burgundy, all text white ---- */
+.chero{background:radial-gradient(1100px 420px at 85% -20%,#8a1a38 0%,transparent 60%),linear-gradient(160deg,#4D0011 0%,#2A0009 100%)!important;box-shadow:0 20px 44px -22px rgba(42,0,9,.7)!important;color:#fff!important}
+.chero,.chero .hsub,.chero .hl,.chero .hs,.chero .hsx,.chero .heye,.chero .htab,.chero .crumb,.chero .hv small,.chero .hseg button,.chero .htl,.chero .hcl,.chero .hdot{color:#fff!important}
+.chero .hl,.chero .heye,.chero .hsx,.chero .crumb{opacity:.85}
+.chero .htab{opacity:.75}.chero .htab.on,.chero .htab:hover{opacity:1}.htab.on{border-bottom-color:#fff!important}
+.hk{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.16)!important}
+.hk.mg{background:linear-gradient(180deg,rgba(120,210,160,.18),rgba(120,210,160,.06))!important;border-color:rgba(120,210,160,.4)!important}
+.hbtn{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.22)!important;color:#fff!important}
+.hbtn.w{background:#fff!important;color:#3B000D!important;border-color:#fff!important}
+.chero .hseg{border-color:rgba(255,255,255,.22)}.chero .hseg button.on{background:#fff;color:#3B000D!important}
+.chero .htrack{background:rgba(255,255,255,.18)}.chero .htrack i{background:#fff}
+.chero .btn,.chero .sel.plain{color:#fff!important;border-color:rgba(255,255,255,.22)!important;background-color:rgba(255,255,255,.08)!important}
+.chero .seg button{color:#fff!important}.chero .seg button.on{color:#3B000D!important;background:#fff!important}
+.chero .kbd{color:#fff!important}
+.chero .hsel select#mstage{color:#fff!important}
+.chero .hlk,.chero .lkb{color:#fff!important;text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
 <body>
@@ -2617,7 +2634,7 @@ function find(iid){return FULL?FULL.infl.filter(function(i){return i.id===iid;})
 function cdel(){var i=find(S.dd.iid);return i.deliv.filter(function(z){return z.id===S.dd.did;})[0];}
 function num(v){var n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isFinite(n)?n:NaN;}
 function loadList(){return api('/campaigns').then(function(j){CAMPS=j.campaigns;LISTERR='';READY=true;}).catch(function(e){LISTERR=e.message;READY=true;});}
-function loadOne(quiet){if(!S.cid)return Promise.resolve();return api('/campaigns/'+S.cid).then(function(j){FULL=hydrate(j.campaign);if(!quiet&&canEdit()&&FULL.mondayItemId&&FULL.stage!=='8 - Closed Lost'&&(!FULL.mondayCheck||Date.now()-new Date(FULL.mondayCheck.at)>6e5))setTimeout(function(){mdRun(true);},400);if(!quiet||!document.activeElement||!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))render();}).catch(function(e){toast(e.message);});}
+function loadOne(quiet){if(!S.cid)return Promise.resolve();return api('/campaigns/'+S.cid).then(function(j){FULL=hydrate(j.campaign);if(!quiet)rvSend(FULL);if(!quiet&&canEdit()&&FULL.mondayItemId&&FULL.stage!=='8 - Closed Lost'&&(!FULL.mondayCheck||Date.now()-new Date(FULL.mondayCheck.at)>6e5))setTimeout(function(){mdRun(true);},400);if(!quiet||!document.activeElement||!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))render();}).catch(function(e){toast(e.message);});}
 function loadShares(){return api('/shares').then(function(j){S.shares=j.shares;if(S.view==='campaign'&&S.tab==='Campaign Overview')render();}).catch(function(){S.shares=[];});}
 // Send a change to the server; the answer is the full, recalculated campaign
 function post(path,method,body,o){
@@ -2953,8 +2970,10 @@ function setTal(list){TAL=list.map(function(t){return {id:t.id,name:t.name,plat:
 window.addEventListener('focus',function(){if(S.view==='campaign'&&FULL&&!S.pick)loadOne(true);else if(S.view==='campaigns'||S.view==='sales')loadList().then(render);});
 window.addEventListener('message',function(e){var m=e.data;if(e.origin!==location.origin||!m||m.type!=='zodiac-view')return;
   S.backc=null;S.backv=null;S.clientPop=null;S.sel=null;S.pick=false;
-  if(m.cid){openCid(m.cid);return;}
+  if(m.cid){openCid(m.cid);if(m.tab){S.tab=m.tab;if(m.dfs)S.dfs=m.dfs;render();}return;}
+  if(m.next)S.lnOpen=true;
   S.view=m.view==='sales'?'sales':'campaigns';S.cid=null;FULL=null;render();loadList().then(render);});
+function rvSend(c){try{if(c&&c.id)window.parent.postMessage({type:'zodiac-recent',id:c.id,name:c.name},location.origin);}catch(e){}}
 function openCid(id){S.view='campaign';S.cid=id;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.dft='All';S.isel={};S.dsel={};S.calWho='All';S.calT={};S.editSec=null;render();loadOne();}
 if(!TOKEN){document.getElementById('main').innerHTML='<div class="ld">Please sign in to the Talent Index first.</div>';}
 else{
