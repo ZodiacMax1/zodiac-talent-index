@@ -2128,6 +2128,15 @@ function finSummary(c){
    +'<div class="fcol fcash1'+(cash<0?' neg':'')+'"><div class="eb2">Cash position</div><div class="fbig num">'+(cash>0?'+':'')+money(cash)+'</div><div class="small">'+note+'</div>'
      +(m.ready>0?'<div class="fpill ok">'+money(m.ready)+' ready to pay out</div>':m.inv>0?'<div class="fpill warn">'+money(m.inv)+' waiting on the client</div>':'')+'</div></div>';
 }
+function ovMoney(c){
+  var m=moneyState(c),b=m.bud||1,sp=m.spend||1,pc=function(x,t){return Math.max(0,Math.min(100,x/t*100));};
+  var row=function(lab,tot,bars,items){return '<div class="omr"><div><div class="eb2">'+lab+'</div><div class="omt num">'+tot+'</div></div><div><div class="mbar2" style="margin:4px 0 10px">'+bars+'</div><div class="oml">'+items+'</div></div></div>';};
+  var it=function(col,l,v){return '<span><i style="background:'+col+'"></i>'+l+' <b class="num">'+v+'</b></span>';};
+  var w1=pc(m.paid,b),w2=Math.min(100-w1,pc(m.inv,b)),w3=pc(m.out,sp);
+  return '<div class="card rail om"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2 class="sh">Money</h2><button class="lkb" data-tab="Financials">Financials →</button></div>'
+    +row('Client',money(m.bud),'<i style="width:'+w1+'%;background:var(--ok-fg)"></i><i style="width:'+w2+'%;background:#D9A93F"></i>',it('var(--ok-fg)','Paid',money(m.paid))+it('#D9A93F','Invoiced',money(m.inv))+it('var(--bar)','To invoice',money(m.left)))
+    +row('Creators',money(m.spend),'<i style="width:'+w3+'%;background:var(--accent)"></i>',it('var(--accent)','Paid out',money(m.out))+it('var(--bar)','Left to pay',money(m.spendLeft))+'<span>Cash <b class="num" style="color:'+(m.cash<0?'var(--bad-fg)':'var(--ok-fg)')+'">'+(m.cash>0?'+':'')+money(m.cash)+'</b></span>')+'</div>';
+}
 function tabFin(c){
   var ed=canEdit(),v=c.cinv||[],tot=0,issued=v.some(function(x){return x.invAt||x.paidAt||x.file;});v.forEach(function(x){tot+=x.amount;});
   var h=finSummary(c);
