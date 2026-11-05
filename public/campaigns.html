@@ -768,7 +768,7 @@ tr.gh td,tr.gh td *{font-family:Aileron,var(--body)!important;letter-spacing:.06
 /* figure tiles: label and number centred, clearer labels */
 .chero .hl{font-size:12.5px!important;letter-spacing:.12em!important;font-weight:700!important;opacity:1!important}
 .hk{text-align:center;align-items:center}.hk .hv{max-width:100%}.hk.tl{text-align:left;align-items:stretch}
-.hk .hin{text-align:left}
+.hk .hin{text-align:center;min-width:3ch;padding:0 2px;line-height:1.05;vertical-align:baseline;height:auto}
 </style>
 </head>
 <body>
@@ -944,7 +944,7 @@ function cHero(c,s,ef,w,tabs,crumb){
   var k=function(l,v,sx,cls){return '<div class="hk'+(cls?' '+cls:'')+'"><div class="hl">'+l+'</div><div class="hv num">'+v+'</div><div class="hs">'+sx+'</div></div>';};
   var mv=function(n){var t=money(n),m=t.match(/^([^\d\-–]*)(.*)$/);return m&&m[1].trim()?'<small>'+esc(m[1].trim())+'</small>'+esc(m[2]):esc(t);};
   var sym=(money(0).match(/^[^\d\-–]*/)||[''])[0].trim();
-  var bud=ed?'<small>'+esc(sym)+'</small><input class="hin" inputmode="numeric" data-cf="budget" style="width:'+(money(c.budget).replace(/^[^\d]*/,'').length+.4)+'ch" value="'+money(c.budget).replace(/^[^\d]*/,'')+'" aria-label="Client budget" title="Click to change the budget">':mv(c.budget);
+  var bud=ed?'<small>'+esc(sym)+'</small><input class="hin" inputmode="numeric" data-cf="budget" style="width:'+(money(c.budget).replace(/^[^\d]*/,'').length+1.2)+'ch" value="'+money(c.budget).replace(/^[^\d]*/,'')+'" aria-label="Client budget" title="Click to change the budget">':mv(c.budget);
   var h='<section class="chero"><div class="hcrumb">'+crumb+'</div><div class="htop"><div style="min-width:0;flex:1"><h1 class="hh1">'+esc(c.name)+'</h1><div class="hsub">'+sub.join('<span class="hdot">·</span>')+'</div><div class="hpills">'+pills+'</div></div><div class="hacts">'+acts+'</div></div>';
   h+='<div class="hks">'+k('Budget',bud,ng?'≈ '+gbpIn(c.budget,c)+' · client pays':'Client pays')
     +k('Creator costs',mv(s.cost),s.n+' creator'+(s.n===1?'':'s')+' '+(w?'booked':'selected')+(ng&&s.cost?' · ≈ '+gbpIn(s.cost,c):''))
@@ -3109,6 +3109,7 @@ window.addEventListener('message',function(e){var m=e.data;if(e.origin!==locatio
   if(m.cid){openCid(m.cid);if(m.tab){S.tab=m.tab;if(m.dfs)S.dfs=m.dfs;render();}return;}
   if(m.next)S.lnOpen=true;
   S.view=m.view==='sales'?'sales':m.view==='allcal'?'allcal':'campaigns';S.cid=null;FULL=null;if(S.view==='allcal'){AC=null;}render();loadList().then(render);});
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.classList&&t.classList.contains('hin'))t.style.width=(t.value.length+1.2)+'ch';});
 function rvSend(c){try{if(c&&c.id)window.parent.postMessage({type:'zodiac-recent',id:c.id,name:c.name},location.origin);}catch(e){}}
 function openCid(id){S.backcal=false;S.view='campaign';S.cid=id;FULL=null;S.tab='Influencers';S.filter='All';S.dfs='All';S.dfg='All';S.dft='All';S.isel={};S.dsel={};S.calWho='All';S.calT={};S.editSec=null;render();loadOne();}
 if(!TOKEN){document.getElementById('main').innerHTML='<div class="ld">Please sign in to the Talent Index first.</div>';}
