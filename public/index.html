@@ -125,6 +125,42 @@
   .tihero header.hero .eyebrow{font-family:Aileron,'DM Sans',sans-serif;letter-spacing:.2em}
   .tihero .header-total{font-family:Aileron,'DM Sans',sans-serif;font-size:13px}
   .tihero .hero-logo{height:64px}
+
+  /* ---- floating black sidebar ---- */
+  body.zshell{padding-left:268px!important}
+  .zside{top:14px!important;left:14px!important;bottom:14px!important;width:240px!important;height:auto!important;border-radius:24px!important;background:#000!important;border:1px solid rgba(255,255,255,.08)!important;box-shadow:0 20px 44px -22px rgba(0,0,0,.6)!important}
+  .zside .znav{border-radius:12px}
+  .zside .znav.on{background:linear-gradient(135deg,#7a0c25,#4D0011)!important;box-shadow:0 8px 20px -10px rgba(160,20,50,.8)}
+  .zside .znav.on::before{display:none!important}
+  .cm-view{left:254px!important}
+  body.zshell .wrap{max-width:none;padding:14px 14px 100px 0}
+  body.zshell .tihero{margin-top:0!important}
+  .home-view{left:0!important;padding-left:254px;box-sizing:border-box}
+  @media(max-width:900px){body.zshell{padding-left:0!important}.zside{top:0!important;left:0!important;right:0!important;bottom:auto!important;width:auto!important;height:58px!important;border-radius:0!important;border:0!important}.cm-view{left:0}.home-view{padding-left:0}}
+  /* ---- Home: needs attention + recently viewed ---- */
+  .zh-hi{font-weight:700;font-size:clamp(24px,min(2.6vw,4.2vh),40px)!important;letter-spacing:-.03em!important;margin-top:clamp(12px,2.2vh,24px)!important}
+  .zh-hero{margin:clamp(8px,2vh,24px) 0 0!important;padding-top:clamp(8px,2vh,24px)!important}
+  .zh-cards{margin-top:clamp(24px,4.5vh,48px)}
+  .zh-p .dt{width:10px;height:10px;border-radius:50%;flex:none;margin:0 4px}
+  .zh-p.r .dt{background:#e0344f;box-shadow:0 0 10px #e0344f}.zh-p.a .dt{background:#F2B33D;box-shadow:0 0 10px #F2B33D}.zh-p.g .dt{background:#3FCF85;box-shadow:0 0 10px #3FCF85}
+  .zh-p.n .dt{opacity:.8}
+  .zh-p{padding:13px 16px;font-size:14.5px;font-weight:600}
+  .zh-att .lab{font-size:clamp(17px,1.5vw,22px)!important}
+  .zh-att .lab br{display:none}
+  .zh-att{margin-bottom:0!important}.zh-rec{margin-top:14px!important;margin-bottom:auto!important}
+  .zh-rv{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:11px;border:1px solid rgba(228,226,221,.14);background:rgba(228,226,221,.04);color:#F1EEE9;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;text-align:left;min-width:0;transition:transform .2s,background .2s}
+  .zh-rv:hover{transform:translateY(-2px);background:rgba(228,226,221,.09)}
+  .zh-rv .ic{width:22px;height:22px;flex:none;color:#F1EEE9}.zh-rv .ic svg{width:22px;height:22px}
+  .zh-rv .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .zh-rv.n{cursor:default;grid-column:1/-1;color:rgba(241,238,233,.6);font-weight:400}
+  .zh-st b{font-family:Aileron,'DM Sans',sans-serif!important;font-weight:800!important}
+  /* ---- Talent Index banner: burgundy, white text ---- */
+  .tihero{background:radial-gradient(1100px 420px at 85% -20%,#8a1a38 0%,transparent 60%),linear-gradient(160deg,#4D0011 0%,#2A0009 100%)!important;box-shadow:0 20px 44px -22px rgba(42,0,9,.7)!important;color:#fff!important}
+  .tihero *{color:#fff}
+  .tihero header.hero .eyebrow,.tihero .card-label{color:#fff!important;opacity:.85}
+  .tihero .card-grid .card{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.16)!important}
+  .tihero .toolbar .tb-main,.tihero .toolbar .tb-main *{color:#3B000D!important}
+  .tihero .live-dot{background:#3FCF85!important}
   /* stat tiles (5) */
   .card-grid{grid-template-columns:repeat(5,1fr);margin-bottom:32px;}
   .card-grid .card:nth-child(6n){border-right:1px solid var(--line);}
@@ -624,7 +660,7 @@
   <button class="znav" id="nav-home" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
   <button class="znav" id="nav-talent" data-view="talent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 14.4c1.8.8 3 2.7 3 5.6"/></svg>Talent Index<span class="zct" id="zct-t" hidden></span></button>
   <button class="znav" id="nav-campaigns" data-view="campaigns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5M8 13h4M8 16h8"/></svg><span>Campaign Management</span><span class="zct" id="zct-c" hidden></span></button>
-  <button class="znav sub" id="nav-sales" data-view="sales" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales dashboard</button>
+  <button class="znav" id="nav-sales" data-view="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales dashboard</button>
   <div class="zwho"><div class="zav" id="zav">Z</div><div><b id="zname" style="font-weight:500">Zodiac team</b><br><span id="zrole" style="opacity:.7"></span></div></div>
 </aside>
 <div class="home-view" id="home-view" hidden>
@@ -639,12 +675,13 @@
         <button class="zh-ib" id="zh-gear" aria-label="Account and settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
     </div>
-    <div class="zh-hero"><h1 class="zh-h1">zodiac <em>os.</em></h1><div class="zh-hi" id="zh-hi">Welcome back.<span>Here’s where everything stands.</span></div></div>
+    <div class="zh-hero"><h1 class="zh-h1">zodiac <em>os.</em></h1><div class="zh-hi" id="zh-hi">Welcome back.</div></div>
     <div class="zh-cards">
       <button class="zh-c" data-view="talent"><span class="zh-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><svg class="zh-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><circle cx="16" cy="7" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M14.5 14.2A6 6 0 0 1 22 20"/></svg><h2>Talent Index</h2><p>Search the roster, build shortlists and manage talent details.</p><div class="zh-st" id="zh-tstats"></div></button>
       <button class="zh-c hot" data-view="campaigns"><span class="zh-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><svg class="zh-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg><h2>Campaign Management</h2><p>Plan, manage and deliver campaigns from start to finish.</p><div class="zh-st" id="zh-cstats"></div></button>
     </div>
-    <div class="zh-att"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4M12 16.5v.01M17.5 3.5l2 2M6.5 3.5l-2 2"/></svg>Needs<br>Attention</div><div class="zh-pills" id="zh-tick"></div></div>
+    <div class="zh-att"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4M12 16.5v.01M17.5 3.5l2 2M6.5 3.5l-2 2"/></svg>Needs Attention</div><div class="zh-pills" id="zh-tick"></div></div>
+    <div class="zh-att zh-rec"><div class="lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Recently Viewed</div><div class="zh-pills" id="zh-recent"></div></div>
   </div>
 </div>
 <div class="cm-view" id="cm-view" hidden><iframe id="cm-frame" title="Campaign Management" src="about:blank"></iframe></div>
@@ -2916,12 +2953,12 @@ renderShortlist();
     if(hm) renderHome();
     document.getElementById('nav-campaigns').classList.toggle('on', v === 'campaigns');
     document.getElementById('nav-sales').classList.toggle('on', v === 'sales');
-    document.getElementById('nav-sales').hidden = !cm;
     if(cm && !frame.dataset.loaded){ frame.src = '/campaigns.html' + (cid ? '#c=' + encodeURIComponent(cid) : v === 'sales' ? '#sales' : ''); frame.dataset.loaded = '1'; }
     else if(cm){ try{ frame.contentWindow.postMessage({type:'zodiac-view', view:v, cid:cid || null}, location.origin); }catch(e){} }
     try{ history.replaceState(null, '', cm || v === 'talent' ? '#' + v : location.pathname + location.search); }catch(e){}
   }
   /* Home: live counts from the Talent Index and Campaign Management */
+  const ZLAYERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 12l10 5 10-5"/><path d="M2 17l10 5 10-5"/></svg>';
   const ZICO = {"r": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><path d=\"M14 2v6h6\"/></svg>", "a": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01\"/></svg>", "g": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><ellipse cx=\"12\" cy=\"5\" rx=\"8\" ry=\"3\"/><path d=\"M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5\"/><path d=\"M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6\"/></svg>"}, ZARR = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg>";
   const esc = x => String(x).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
   function zoneNow(tz){ const p = new Intl.DateTimeFormat('en-GB',{timeZone:tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, weekday:'long', day:'numeric', month:'long', year:'numeric'}).formatToParts(new Date()); const o = {}; p.forEach(x => o[x.type] = x.value); return o; }
@@ -2944,10 +2981,10 @@ renderShortlist();
   function money(cur, v){ const sym = cur === 'GBP' ? '£' : cur === 'USD' ? '$' : 'AED '; return sym + (v >= 1000 ? (v / 1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/, '') + 'k' : Math.round(v)); }
   let ATT = [];
   function renderHome(){
-    tickClock(); weather();
+    tickClock(); weather(); try{ renderRecent(); }catch(x){}
     const d = zoneNow('Asia/Dubai'), h = Number(d.hour);
     const first = ((typeof ME !== 'undefined' && ME && ME.name) || '').split(/\s+/)[0];
-    document.getElementById('zh-hi').innerHTML = esc((h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (first ? ', ' + first : '') + '.') + '<span>Here’s where everything stands.</span>';
+    document.getElementById('zh-hi').innerHTML = esc((h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + (first ? ', ' + first : '') + '.');
     const T = (typeof DATA !== 'undefined' && DATA) ? DATA : [], ym = new Date().toISOString().slice(0, 7);
     const added = T.filter(t => t.added && t.added.slice(0, 7) === ym).length;
     const st = (b, l) => '<div><b>' + b + '</b><span>' + l + '</span></div>';
@@ -2969,11 +3006,14 @@ renderShortlist();
       won.filter(c => c.readyInv).forEach(c => ATT.push(['#3FA56B', 'Ready to invoice · ' + c.name, c.id]));
       won.filter(c => c.unsigned).forEach(c => ATT.push(['#8a8378', c.unsigned + ' contract' + (c.unsigned === 1 ? '' : 's') + ' unsigned · ' + c.name, c.id]));
       document.getElementById('zh-dot').hidden = !ATT.length;
-      const pill = (cls, txt, cid) => '<button class="zh-p ' + cls + '" data-cid="' + cid + '"><span class="ico">' + ZICO[cls] + '</span><span class="tx">' + esc(txt) + '</span><span class="ar">' + ZARR + '</span></button>';
+      const go = (list, tab, dfs) => list.length === 1 ? JSON.stringify({cid:list[0].id, tab:tab, dfs:dfs||''}) : JSON.stringify({list:1});
+      const pill = (cls, txt, to) => '<button class="zh-p ' + cls + '" data-go=\'' + esc(to) + '\'><span class="dt"></span><span class="tx">' + esc(txt) + '</span><span class="ar">' + ZARR + '</span></button>';
+      const none = (cls, txt) => '<div class="zh-p n ' + cls + '"><span class="dt"></span><span class="tx">' + txt + '</span></div>';
       const P = [];
-      P.push(od ? pill('r', od + ' overdue', pick('overdue')) : '<div class="zh-p n"><span class="ico">' + ZICO.r + '</span><span class="tx">Nothing overdue</span></div>');
-      P.push(dw ? pill('a', dw + ' due this week', pick('dueWeek')) : '<div class="zh-p n"><span class="ico">' + ZICO.a + '</span><span class="tx">Nothing due this week</span></div>');
-      P.push(ri ? pill('g', ri + ' ready to invoice', pick('readyInv')) : us ? pill('g', us + ' creator contract' + (us === 1 ? '' : 's') + ' unsigned', pick('unsigned')) : '<div class="zh-p n"><span class="ico">' + ZICO.g + '</span><span class="tx">No invoices to raise</span></div>');
+      const odL = won.filter(c => c.overdue), dwL = won.filter(c => c.dueWeek), riL = won.filter(c => c.readyInv), usL = won.filter(c => c.unsigned);
+      P.push(od ? pill('r', od + ' overdue', go(odL, 'Deliverables', 'Overdue')) : none('r', 'Nothing overdue'));
+      P.push(dw ? pill('a', dw + ' due this week', go(dwL, 'Deliverables', '')) : none('a', 'Nothing due this week'));
+      P.push(ri ? pill('g', ri + ' invoice' + (ri === 1 ? '' : 's') + ' to raise', go(riL, 'Financials')) : us ? pill('g', us + ' contract' + (us === 1 ? '' : 's') + ' unsigned', go(usL, 'Influencers')) : none('g', 'No invoices to raise'));
       tick.innerHTML = P.join('');
     }).catch(() => { cEl.innerHTML = ''; tick.innerHTML = ''; });
   }
@@ -2987,7 +3027,26 @@ renderShortlist();
   document.addEventListener('click', e => { if(!pop.hidden && !e.target.closest('#zh-pop')) pop.hidden = true; });
   pop.addEventListener('click', e => { const b = e.target.closest('[data-cid]'); if(b){ pop.hidden = true; showView('campaigns', b.dataset.cid); } });
   document.getElementById('zh-gear').addEventListener('click', () => { const u = document.getElementById('user-btn'); if(u && u.style.display !== 'none') u.click(); else showView('talent'); });
-  document.getElementById('zh-tick').addEventListener('click', e => { const b = e.target.closest('[data-cid]'); if(b) showView('campaigns', b.dataset.cid || null); });
+  document.getElementById('zh-tick').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if(!b) return; let g = {}; try{ g = JSON.parse(b.dataset.go); }catch(x){} openCampaignsAt(g); });
+  // open Campaign Management at a campaign (and tab/filter), or the list with Next up open
+  function openCampaignsAt(g){
+    const msg = g.cid ? {type:'zodiac-view', view:'campaigns', cid:g.cid, tab:g.tab || '', dfs:g.dfs || ''} : {type:'zodiac-view', view:'campaigns', next:1};
+    const fresh = !frame.dataset.loaded;
+    showView('campaigns', fresh && g.cid ? g.cid : null);
+    setTimeout(() => { try{ frame.contentWindow.postMessage(msg, location.origin); }catch(x){} }, fresh ? 1600 : 30);
+  }
+  // Recently viewed campaigns (kept in this browser)
+  const RV_KEY = 'zodiacRecent_v1';
+  const rvGet = () => { try{ return JSON.parse(localStorage.getItem(RV_KEY) || '[]'); }catch(x){ return []; } };
+  function renderRecent(){
+    const el = document.getElementById('zh-recent'); if(!el) return;
+    const L = rvGet().slice(0, 3);
+    el.innerHTML = L.length ? L.map(r => '<button class="zh-rv" data-rv="' + esc(r.id) + '"><span class="ic">' + ZLAYERS + '</span><span class="tx">' + esc(r.name) + '</span></button>').join('') : '<div class="zh-rv n"><span class="tx">Campaigns you open will show here</span></div>';
+  }
+  window.addEventListener('message', e => { const m = e.data; if(e.origin !== location.origin || !m || m.type !== 'zodiac-recent' || !m.id) return;
+    const L = rvGet().filter(r => r.id !== m.id); L.unshift({id:m.id, name:String(m.name || 'Campaign').slice(0, 80)}); try{ localStorage.setItem(RV_KEY, JSON.stringify(L.slice(0, 6))); }catch(x){} renderRecent(); });
+  document.getElementById('zh-recent').addEventListener('click', e => { const b = e.target.closest('[data-rv]'); if(b) openCampaignsAt({cid:b.dataset.rv}); });
+  renderRecent();
   document.getElementById('zh-search').addEventListener('click', () => { const fresh = !frame.dataset.loaded; showView('campaigns'); setTimeout(() => { try{ frame.contentWindow.postMessage({type:'zodiac-palette'}, location.origin); }catch(x){} }, fresh ? 1500 : 30); });
   setInterval(() => { if(!home.hidden){ tickClock(); weather(); } }, 1000);
   document.querySelectorAll('.znav,.zbrand,.zh-c').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
